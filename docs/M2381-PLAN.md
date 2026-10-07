@@ -156,3 +156,9 @@ sudo env SHRINK_IMAGE=true bash scripts/host/03-finalize-image.sh rootfs.img /mn
 首刷其余判据全过：Mu UEFI → 7.3.0-rc3 → SDDM 自动登录 → Plasma 直连 Wayland ✓。
 （插曲：宿主侧清理 fastboot 探针残留时误杀了用户正在跑的 flash 进程一次——教训 = 清理
 必须先核对进程属主，重刷即覆盖无损失。）
+
+### 2026-10-08 P0 第三轮（固定密码轮，镜像 sha256 `af2bde33…`）
+
+- 用户拍板 root 密码 = 上游默认 `123456`（明确覆盖「不用默认密码」纪律；构建入参
+  ROOT_PW=123456，镜像 shadow 盐值复算验证过；此后各轮同密码除非再改）。
+  WiFi 仍不预配：有 NCM gadget 通道后，WiFi 在设备上远程 nmcli 配即可，不再为凭据重刷。
