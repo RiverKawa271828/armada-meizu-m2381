@@ -1,0 +1,14 @@
+# 底包镜像与构建产物（大文件，永不入 git）
+dl/
+work/
+out/
+pkgs/
+rootfs.img
+boot.img
+*.img
+*.img.bz2
+*.frame
+*.zst
+frame-os-release
+frame-src-root
+frame-src-extra
