@@ -4,7 +4,7 @@
 
 # ---- 本仓 ----
 SM20_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SM20_WORK="${SM20_WORK:-$HOME/work}"
+SM20_WORK="${SM20_WORK:-$(dirname "$SM20_ROOT")}"   # 兄弟目录布局：linux-mobile-ports/pmos_linux/nura 都在工作根
 
 # ---- 上游 provenance（克隆基点；勿动）----
 PIN_UPSTREAM_GIT="https://github.com/code002-2/Steamos-xiaomi-sheng.git"

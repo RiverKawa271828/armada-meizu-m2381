@@ -110,14 +110,37 @@ sudo env SHRINK_IMAGE=true bash scripts/host/03-finalize-image.sh rootfs.img /mn
 
 ## 未验证清单（逐项销账）
 
-- 底包 `latest` 是否仍是 20260922.5153644-0.3.0（探针兜底）。
-- graft 里 pacman 段以外是否还有对 sheng 包的硬依赖（die 点）。
-- PARTLABEL=userdata 与我们 GPT 实名的一致性。
-- Frame mesa × Adreno 740 渲染串（Frame 是 750 同族，理论无险）。
-- holo systemd/内核 7.3 组合下 growfs/zram/交换等默认行为。
-- Steam 客户端播种脚本对用户目录布局的假设（/home 在根上 vs 上游独立分区）。
-- 充电/电量在 holo upower 下的表现（内核侧 pmOS 已证，用户态未验）。
+- ~~底包 `latest` 是否仍是 20260922.5153644-0.3.0（探针兜底）。~~
+  ✅ 本地 bz2 即 `steamframe-oobe-repair-20260922.5153644-0.3.0`；BUILD_ID=20260922.6152327，
+  os-release = SteamOS holo 0.3.0 / VARIANT_ID=vr（graft 已改 steamdeck）。
+- ~~graft 里 pacman 段以外是否还有对 sheng 包的硬依赖（die 点）。~~
+  ✅ 全轮 graft EXIT=0：pacman 只剩 --dbonly 摘项（linux-firmware-deckard）；无其它 die。
+  ⚠ 注：`pacman -Qq | grep -E '^linux(-[a-z0-9]+)?$'` 在这份底包上没匹配到内核包项
+  （上游在他们的底包上匹配到过）——/usr/lib/modules 由 01-lay 清空，包项残留无害（P0 不跑 pacman 事务）。
+- ~~PARTLABEL=userdata 与我们 GPT 实名的一致性。~~
+  ✅ fstab 落 `PARTLABEL=userdata /`；fastboot by-name 同名（设备日 `ls /dev/disk/by-partlabel` 复核一次即可）。
+- Frame mesa × Adreno 740 渲染串（P1 设备日 glmark2/vkmark）。
+- holo systemd/内核 7.3 组合下 growfs/zram/交换等默认行为（P1 首启看 journal）。
+- ~~Steam 客户端播种脚本对用户目录布局的假设（/home 在根上 vs 上游独立分区）。~~
+  ✅ RUNSTEAM 首启播种逻辑不依赖分区布局（seed 在 /usr/lib/steam/arm-client，/home 在根上直接可见）。
+- 充电/电量在 holo upower 下的表现（P1；meizu-pas 已 enable 作为前置）。
+- **新增（本轮）**：qemu-aarch64 chroot 内跑的 systemctl enable/depmod/ssh-keygen 产物
+  在真机上与原生一致（理论无差，P1 首启 journal 佐证）；uinput 内核未编（CONFIG_INPUT_UINPUT=n）
+  —— Steam Input 虚拟手柄在 P2 前不可用，属内核缺口非镜像缺口。
 
 ## 构建台账（每轮追加）
 
-（空——P0 首轮起记录：日期 / rootfs.img sha256+尺寸 / KVER / 底包版本 / graft diff 摘要 / P1 结果）
+### 2026-10-08 P0 首轮（宿主 = Fedora 宿主本体，systemd-run --user 通道）
+
+| 项 | 值 |
+|---|---|
+| rootfs.img | `work/rootfs.img`，11 GiB（14G 收缩后），sha256 `c9372d0fee39c8ba0d464683e0d220f166d756d5924f1435a1f58fd777d0a93a` |
+| KVER | `7.3.0-rc3`（r66 apk 模块腿 = ESP v47 BOOTAA64.EFI zboot payload，04-verify-esp 比对一致；vermagic `7.3.0-rc3 SMP preempt mod_unload aarch64`） |
+| 底包 | SteamOS holo 0.3.0，BUILD_ID `20260922.6152327`（本地 bz2 = steamframe-oobe-repair-20260922.5153644） |
+| graft | `10-graft-m2381.sh`（vs 上游 10-graft.sh 净改 539 行）：pacman 装包段→`cp -a` 层注入 + `--dbonly` 摘 Frame 内核/固件包项；/dev/sda30 home 段→删，换睡眠三防线（sleep.conf.d 全关 + 5 个 sleep target mask + memsleep 单元）+ powerdevil `powermanagementprofilesrc` 三档自动挂起关；sheng 专属（thp/devauth/fingerprint/pen/keyboard/expand-home）删；SteamOS-on-SM8550 通用修复全保留并更名 sheng→m2381；enable 集 = meizu-touch/pas/memsleep/bind-nfc-haptics；uinput 段删（内核未编） |
+| 层 | `work/layer/`（20-m2381-layer.sh 产物，287M）：内核模块 94M + 固件 193M（ath12k/WCN7850、qca、qcom、cirrus）+ 4 units/2 脚本/黑名单/vibra 规则/sleepmask |
+| Steam 客户端 | steamdeck_stable v1788652215，bins 105M + steamui 32M 解包 779 条，408M 落 /usr/lib/steam/arm-client，自检三项 ✓ |
+| 入参 | root 密码随机生成（构建尾打印，不入仓）；WiFi 未预配；SSH 公钥已注入 /root/.ssh/authorized_keys |
+| 宿主通道 | 容器内 `systemd-run --user --unit=<名> bash -lc 'sudo -n … >/tmp/zcode/<log> 2>&1'` = 宿主执行（/tmp/zcode 与容器共享）；宿主有 qemu-aarch64-static（11.1.2）+ binfmt F-flag，chroot 直跑 aarch64 |
+| 宿主侧偏差 | ①01-lay rsync `-aHAX`→`-aHA`：SELinux 宿主上 security.selinux xattr 往 loop ext4 写/删被 LSM 拒（rc=23），且这套标签对设备镜像本来就是错的；②构建驱动 `30-build-m2381.sh`（00-fetch/20-layer 缺料自动补、chroot 挂蓝本、03/04 收尾）；③verify 用 `04-verify-esp-kernel-match.sh`（zboot-zstd 解包，非上游 boot.img 路径） |
+| P1 | 未上机。刷写 = `fastboot flash userdata work/rootfs.img`；首启预期 Mu UEFI → 7.3.0-rc3 → SDDM 自动登录 steamos → Plasma；P1 判据与回滚见 §P1 |

@@ -9,9 +9,17 @@
 
 ## 现态一句话（新会话从这里接）
 
-- **2026-10-08 立项**：上游克隆钉在 `main @ bbc60650`（2026-09-28，作者实机验证形态）；
-  三份 m2381 适配文档落盘（本文 + config.sh + docs/M2381-PLAN.md），**P0 宿主构建轮
-  未开工**；Steam Frame 底包镜像由用户另行下载，放到 `dl/`（见下）。
+- **2026-10-08 P0 首轮构建完成（EXIT=0）**：`work/rootfs.img` 11G
+  （sha256 c9372d0f…，台账全文 = docs/M2381-PLAN.md 构建台账）。管线 =
+  00-fetch（本地 bz2）→ 20-m2381-layer.sh（层）→ 01-lay → chroot 10-graft-m2381.sh
+  → 03-finalize → 04-verify-esp-kernel-match.sh（全绿）。宿主执行通道 =
+  **容器里 `systemd-run --user --unit=<名> bash -lc 'sudo -n … >/tmp/zcode/<log> 2>&1'`**
+  （容器无 loop/mount 能力；宿主有 qemu-aarch64-static + binfmt F-flag，chroot 直跑
+  aarch64；/tmp/zcode 容器/宿主共享，日志两边可读）。**下一步 = P1 spike 设备日**：
+  刷 userdata → SSH → 触控/GL/VK/Steam 判生死；回滚 = 重刷 pmOS rootfs。
+- 上游克隆仍钉在 `main @ bbc60650`（原样留作 diff 基准）；m2381 变体 =
+  `10-graft-m2381.sh` + `20-m2381-layer.sh` + `30-build-m2381.sh` +
+  `04-verify-esp-kernel-match.sh`（改动清单见 M2381-PLAN 台账）。
 - 设备 = 魅族 20 m2381，现役 pmOS（mu-r66/ESP v47/内核 #67/device r53/rootfs r53）。
   本项目**只动 userdata**（换 rootfs），boot_b/ESP/recovery 全不碰——回滚 = 重刷 pmOS
   rootfs，30 秒锚照旧。
@@ -66,10 +74,12 @@
 
 ## 排程
 
-- **P0 宿主构建轮（下一步，未开工）**：底包就位 → 逐条跑 00-fetch/01-lay/我们的层注入
-  （20-m2381.sh 待写）/graft 主体/03-finalize/04-verify-ESP 版 → 出 rootfs.img。
-  步步展开见 `docs/M2381-PLAN.md`。
-- **P1 spike 设备日**：刷 userdata → SSH 里程碑 → 触控/GL/VK/Steam 客户端判生死；
-  不达 = 重刷 pmOS rootfs 零损失退出。
+- **P0 宿主构建轮 ✅（2026-10-08 完成）**：一条命令 = 宿主 `30-build-m2381.sh`
+  （缺料自动补 00-fetch/20-layer → 01-lay → chroot graft → 03-finalize → 04-verify-esp）。
+  产物与宿主通道细节见构建台账；重跑（换入参如 WiFi/密码）直接再跑一遍即可
+  （01-lay 会删 rootfs.frame，脚本自动重取）。
+- **P1 spike 设备日（下一步）**：刷 userdata → SSH 里程碑 → 触控/GL/VK/Steam 客户端判生死；
+  不达 = 重刷 pmOS rootfs 零损失退出。刷前核对 = pmOS 侧 `ls /dev/disk/by-partlabel/ | grep userdata`
+  + 回滚件（pmOS rootfs img）在宿主 + 用户点头。
 - **P2 日用化**：音频 PipeWire 翻译（UCM 复用 + 直驱钉值重表达）/ hexagonrpcd glibc 重建 +
   传感器链 / 震动 udev / 手柄映射 / 性能与温控观察。

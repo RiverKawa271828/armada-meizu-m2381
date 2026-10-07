@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# 20-m2381-layer.sh —— 组装 m2381 设备层（替代上游 archlinux-sheng pacman 包）
+#
+# 用法: bash scripts/host/20-m2381-layer.sh
+# 产物: work/layer/          （graft 时以 cp -a 整树灌进 rootfs）
+#       work/layer/.kver     （内核版本目录名，graft/verify 都对它）
+#
+# 四件（P0 最小集，详见 docs/M2381-PLAN.md §2）：
+#   ① 内核模块   ← 在机同源 apk linux-meizu-meizu20-*-r66（usr/lib/modules/<KVER>）
+#   ② 固件       ← firmware-meizu-meizu20 apk（qcom/qca/cirrus/ath12k 收割件）
+#   ③ 设备 units ← pmaports device-meizu-meizu20（r53）：触控 bind、PAS(ADSP/CDSP，
+#                  充电判据前置)、mem_sleep 钉 s2idle、aw8697 震动 SE bind + udev 规则、
+#                  modprobe 黑名单（i2c_qcom_geni 冷插拔 = 秒级硬复位，必带）
+#   ④ 睡眠 mask  ← pmOS meizu-sleepmask(tmpfiles) + 自造补齐（hybrid-sleep/
+#                  suspend-then-hibernate + sleep.conf.d 全关）
+# P0 故意不含：音频链（PipeWire 翻译 = P2）、hexagonrpcd 传感器链（glibc 重建 = P2）、
+#              蜂窝/GNSS（RF init 硬卡死，同 pmOS）、uinput（内核 CONFIG_INPUT_UINPUT
+#              未编，写了 modules-load.d 只会让 systemd-modules-load 报错）。
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=config.sh
+source "$HERE/config.sh"
+
+PMOS_PKGS="$SM20_WORK/pmos_linux/pmos/.pmbootstrap/packages/edge/aarch64"
+DEV="$PIN_PMAPORTS/device/downstream/device-meizu-meizu20"
+LAYER="$SM20_ROOT/work/layer"
+
+log() { printf '[%s] %s\n' "${0##*/}" "$*"; }
+die() { printf '[%s] 错误: %s\n' "${0##*/}" "$*" >&2; exit 1; }
+
+need() { [[ -e "$1" ]] || die "缺 $1（$2）"; }
+
+# ① 内核模块
+need "$PMOS_PKGS" "pmbootstrap 包仓（.pmbootstrap/packages）不在预期位置"
+KAPK="$(ls -1t "$PMOS_PKGS"/linux-meizu-meizu20-*"-r${REL_LINUX_PKGREL}.apk" 2>/dev/null | head -1 || true)"
+[[ -n "$KAPK" ]] || die "找不到 r${REL_LINUX_PKGREL} 内核 apk（$PMOS_PKGS/linux-meizu-meizu20-*-r${REL_LINUX_PKGREL}.apk）"
+need "$DEV" "pmaports device-meizu-meizu20 不在（phoenix 分支）"
+
+rm -rf "$LAYER"
+mkdir -p "$LAYER"
+
+TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+log "解内核 apk: $(basename "$KAPK")"
+tar xzf "$KAPK" -C "$TMP"
+KVER="$(ls -1 "$TMP/usr/lib/modules" | head -1)"
+[[ -n "$KVER" ]] || die "apk 里没有 /usr/lib/modules/*"
+mkdir -p "$LAYER/usr/lib/modules"
+cp -a "$TMP/usr/lib/modules/$KVER" "$LAYER/usr/lib/modules/"
+printf '%s\n' "$KVER" > "$LAYER/.kver"
+log "KVER=$KVER（模块 $(du -sh "$LAYER/usr/lib/modules/$KVER" | cut -f1)）"
+
+# ② 固件
+FAPK="$(ls -1t "$PMOS_PKGS"/firmware-meizu-meizu20-*-r*.apk 2>/dev/null | head -1 || true)"
+[[ -n "$FAPK" ]] || die "找不到 firmware-meizu-meizu20 apk"
+log "解固件 apk: $(basename "$FAPK")"
+tar xzf "$FAPK" -C "$TMP"
+[[ -d "$TMP/lib/firmware" ]] || die "固件 apk 里没有 lib/firmware"
+mkdir -p "$LAYER/usr/lib"
+cp -a "$TMP/lib/firmware" "$LAYER/usr/lib/firmware"
+log "固件: $(du -sh "$LAYER/usr/lib/firmware" | cut -f1)（$(ls "$LAYER/usr/lib/firmware" | tr '\n' ' ')）"
+
+# ③ 设备 units（P0 最小集；enable 放 graft 里做）
+log "拷设备 units ← $DEV"
+install -Dm644 "$DEV/meizu-touch.service"          "$LAYER/usr/lib/systemd/system/meizu-touch.service"
+install -Dm644 "$DEV/meizu-pas.service"            "$LAYER/usr/lib/systemd/system/meizu-pas.service"
+install -Dm644 "$DEV/meizu-memsleep.service"       "$LAYER/usr/lib/systemd/system/meizu-memsleep.service"
+install -Dm644 "$DEV/meizu-bind-nfc-haptics.service" "$LAYER/usr/lib/systemd/system/meizu-bind-nfc-haptics.service"
+install -Dm755 "$DEV/meizu-touch-load.sh"          "$LAYER/usr/lib/meizu20/meizu-touch-load.sh"
+install -Dm755 "$DEV/meizu-bind-nfc-haptics.sh"    "$LAYER/usr/lib/meizu20/meizu-bind-nfc-haptics.sh"
+install -Dm644 "$DEV/modprobe.conf"                "$LAYER/etc/modprobe.d/50-meizu20-blacklist.conf"
+install -Dm644 "$DEV/70-meizu20-vibra.rules"       "$LAYER/usr/lib/udev/rules.d/70-meizu20-vibra.rules"
+
+# ④ 睡眠 mask（pmOS 结构件 + m2381 补齐）
+#  pmOS meizu-sleepmask.conf：sleep/suspend/hibernate 三 target 的 tmpfiles 屏蔽
+#  m2381 补齐：hybrid-sleep / suspend-then-hibernate 也罩住；graft 里还会在构建期
+#  直接落 /etc 软链（不等首启 tmpfiles）+ sleep.conf.d 全关（logind CanSuspend=no，
+#  powerdevil 因此直接认为「不可挂起」，自动睡眠不再尝试——10-07 实锤：新 rootfs
+#  powerdevil 自动睡眠默认开启 = 空闲睡死假重启）。
+install -Dm644 "$DEV/meizu-sleepmask.conf" "$LAYER/usr/lib/tmpfiles.d/meizu-sleepmask.conf"
+cat > "$LAYER/usr/lib/tmpfiles.d/sm20-sleepmask.conf" <<'EOF'
+# m2381: pmOS sleepmask 之外补齐其余 sleep 目标（suspend 在本移植上必睡死）
+L /etc/systemd/system/hybrid-sleep.target - - - - /dev/null
+L /etc/systemd/system/suspend-then-hibernate.target - - - - /dev/null
+EOF
+install -d "$LAYER/etc/systemd/sleep.conf.d"
+cat > "$LAYER/etc/systemd/sleep.conf.d/sm20-nosleep.conf" <<'EOF'
+# m2381: 全部睡眠路径关死（deep 必死、s2idle 睡入无 resume——见 pmos AGENTS suspend 节）
+# AllowSuspend=no 让 logind CanSuspend=no：powerdevil/SDDM 直接收「不可用」，不再尝试
+[Sleep]
+AllowSuspend=no
+AllowHibernation=no
+AllowHybridSleep=no
+AllowSuspendThenHibernate=no
+EOF
+
+# 自检：层内关键文件点名
+log "层自检："
+for f in "usr/lib/modules/$KVER/kernel" \
+         "usr/lib/modules/$KVER/modules.dep" \
+         usr/lib/firmware/qcom/sm8550 \
+         usr/lib/firmware/ath12k/WCN7850 \
+         usr/lib/systemd/system/meizu-touch.service \
+         usr/lib/systemd/system/meizu-pas.service \
+         usr/lib/meizu20/meizu-touch-load.sh \
+         etc/modprobe.d/50-meizu20-blacklist.conf \
+         usr/lib/udev/rules.d/70-meizu20-vibra.rules \
+         usr/lib/tmpfiles.d/meizu-sleepmask.conf \
+         etc/systemd/sleep.conf.d/sm20-nosleep.conf; do
+  if [[ -e "$LAYER/$f" ]]; then log "  ✓ $f"; else log "  ✗ 缺 $f"; FAIL=1; fi
+done
+[[ -z "${FAIL:-}" ]] || die "层自检有缺件"
+if [[ ! -s "$LAYER/usr/lib/modules/$KVER/modules.dep" ]]; then
+  log "  ⚠ apk 未带 modules.dep（graft 会跑 depmod -a $KVER 补）"
+fi
+log "层就绪: $LAYER（KVER=$KVER，总计 $(du -sh "$LAYER" | cut -f1)）"

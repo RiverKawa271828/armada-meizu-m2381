@@ -101,8 +101,13 @@ mount -o loop "$IMG" "$MOUNT_DST" || die "挂载新镜像失败"
 #       内容其实都拷好了，所以这里只容忍「xattr Operation not supported」，其它错误照样失败。
 log "rsync Frame userspace → 我们的镜像"
 RSYNC_LOG="$SRC_DIR/lay-rsync.log"
+# ⚠ m2381 宿主（SELinux Fedora）实测：-X 会把源上的 security.selinux 也带上，
+#    往 loop ext4 写/删 security.* 被 LSM 拒（Permission denied 13）→ rc=23 判死。
+#    而 btrfs 源的 xattr 本来就两类：btrfs.compression（ext4 无效）+ security.selinux
+#    （Fedora 宿主私有标签，设备上根本没 SELinux，带过去也是错的）→ 不拷 xattr（-aHA）。
+#    POSIX ACL（-A）保留，ext4 支持、systemd 管理的系统用户会用到。
 set +e
-rsync -aHAX --numeric-ids --info=progress2 \
+rsync -aHA --numeric-ids --info=progress2 \
   --exclude='/proc/*' --exclude='/sys/*' --exclude='/dev/*' --exclude='/run/*' \
   --exclude='/tmp/*' --exclude='/var/cache/pacman/pkg/*' \
   "$SRC_ROOT/" "$MOUNT_DST/" 2>"$RSYNC_LOG"
@@ -110,14 +115,14 @@ rc="$?"
 set -e
 if [[ "$rc" -ne 0 ]]; then
   others="$(grep -E '^rsync:' "$RSYNC_LOG" 2>/dev/null \
-    | grep -vE 'lsetxattr\(.*\) failed: Operation not supported' | head -10 || true)"
+    | grep -vE 'xattr.*failed: (Operation not supported|Permission denied)' | head -10 || true)"
   if [[ -n "$others" ]]; then
     printf '%s\n' "$others" | sed 's/^/    /' >&2
     tail -20 "$RSYNC_LOG" | sed 's/^/    /' >&2
     die "rsync 失败（rc=$rc）：见上面的错误"
   fi
-  dropped="$(grep -cE 'lsetxattr\(.*\) failed: Operation not supported' "$RSYNC_LOG" 2>/dev/null || echo 0)"
-  warn "rsync rc=$rc：只丢了 $dropped 个 btrfs 专有 xattr（ext4 不支持，无害），内容已拷完，继续"
+  dropped="$(grep -cE 'xattr.*failed: (Operation not supported|Permission denied)' "$RSYNC_LOG" 2>/dev/null || echo 0)"
+  warn "rsync rc=$rc：只丢了 $dropped 个 xattr（btrfs 专有/SELinux 标签，ext4 无效或错误，无害），内容已拷完，继续"
 fi
 
 # 5) 平级子卷并入对应目录（用第 2 步已经筛好的 MERGE_LIST；Steam Frame 的布局下这个列表是空的）
@@ -126,7 +131,7 @@ for e in "${MERGE_LIST[@]:-}"; do
   s="${e%%$'\t'*}"; d="${e##*$'\t'}"
   log "并入子卷 $s → /$d"
   mkdir -p "$MOUNT_DST/$d"
-  rsync -aHAX --numeric-ids --info=progress2 "$MOUNT_SRC/$s/" "$MOUNT_DST/$d/" \
+  rsync -aHA --numeric-ids --info=progress2 "$MOUNT_SRC/$s/" "$MOUNT_DST/$d/" \
     || warn "子卷 $s 并入侵失败（继续）"
 done
 
