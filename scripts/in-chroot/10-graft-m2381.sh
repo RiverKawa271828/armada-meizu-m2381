@@ -900,7 +900,10 @@ for u in sleep.target suspend.target hibernate.target hybrid-sleep.target \
          suspend-then-hibernate.target; do
   ln -sf /dev/null "/etc/systemd/system/$u" && log "已屏蔽 $u（m2381 睡死定律）"
 done
-install -d /home/steamos/.config
+# ⚠ 归属：install -d 默认 root 属主 —— 实机雷（P0#1）：.config root:root =
+#   steamos 全家配置 not writable。这里显式 -o -g，再兜一道 chown（目录已存在时也纠正）。
+install -d -o steamos -g steamos -m 0700 /home/steamos/.config
+chown steamos:steamos /home/steamos/.config
 cat > /home/steamos/.config/powermanagementprofilesrc <<'EOF'
 # m2381: 空闲「挂起会话」动作全关（AC/电池/低电三档）。
 # 睡眠本身已被 sleep.conf + target mask 压死；这份配置让 powerdevil 的自动档
@@ -920,6 +923,107 @@ EOF
 chown steamos:steamos /home/steamos/.config/powermanagementprofilesrc 2>/dev/null || true
 chmod 600 /home/steamos/.config/powermanagementprofilesrc 2>/dev/null || true
 log "已写入 steamos 用户 powermanagementprofilesrc（自动挂起三档全关）"
+
+# 11.9) 内屏横屏引导（实机 P0#2：面板原生扫描向 = 竖屏，kwin 跟着竖着起）
+#   内核 DTS 没声明 panel rotation（pmOS 靠传感器自动转，无静态判据），这里在
+#   会话起来后用 kscreen-doctor 把输出转 90°；结果会持久化进
+#   ~/.config/kwinoutputconfig.json，本单元只是首启/重置后的自愈引导。
+#   方向开关：/etc/default/m2381-rotation = right | left | none（横反了改 left）。
+install -d /usr/lib/steamos
+echo right > /etc/default/m2381-rotation
+cat > /usr/lib/steamos/m2381-landscape <<'EOF'
+#!/bin/bash
+# m2381: 会话起来后把内屏转成横屏（方向见 /etc/default/m2381-rotation）
+set -u
+DIR="$(cat /etc/default/m2381-rotation 2>/dev/null || echo right)"
+case "$DIR" in right|left|inverted|none) ;; *) DIR=right ;; esac
+[[ "$DIR" == "none" ]] && exit 0
+for i in $(seq 1 60); do
+  OUT="$(kscreen-doctor -o 2>/dev/null | awk '/^Output:/{print $3; exit}')"
+  if [[ -n "$OUT" ]]; then
+    if kscreen-doctor "output.$OUT.rotation.$DIR" >/dev/null 2>&1; then
+      logger "m2381-landscape: $OUT -> $DIR"
+      exit 0
+    fi
+  fi
+  sleep 2
+done
+logger "m2381-landscape: 60 轮没等到可用输出，放弃（方向 $DIR 未生效）"
+exit 0
+EOF
+chmod 0755 /usr/lib/steamos/m2381-landscape
+cat > /usr/lib/systemd/user/m2381-landscape.service <<'EOF'
+[Unit]
+Description=m2381: 内屏横屏引导（kscreen-doctor）
+After=graphical-session.target
+PartOf=graphical-session.target
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/steamos/m2381-landscape
+EOF
+install -d /etc/systemd/user/graphical-session.target.wants
+ln -sfn /usr/lib/systemd/user/m2381-landscape.service \
+  /etc/systemd/user/graphical-session.target.wants/m2381-landscape.service
+log "已放入 m2381-landscape（默认 right，开关 /etc/default/m2381-rotation）"
+
+# 11.10) USB NCM gadget 调试通道（插线即 SSH，WiFi 不配也能调）
+#   pmOS usb-moded 的等价件：VID/PID 18d1:4ee1，usb0 = 172.16.42.1（宿主侧 .2）。
+#   内核侧 CONFIG_USB_CONFIGFS=y / CONFIG_USB_F_NCM=y（编死），纯 configfs 用户态拼装。
+#   幂等：gadget 已绑定本 UDC 就跳过；UDC 不在（无 gadget 控制器）静默退出。
+cat > /usr/lib/steamos/m2381-ncm-gadget <<'EOF'
+#!/bin/bash
+set -u
+CFG=/sys/kernel/config/usb_gadget/m2381
+UDC="$(ls /sys/class/udc 2>/dev/null | head -1)"
+[[ -n "$UDC" ]] || exit 0
+if [[ -d "$CFG" ]]; then
+  [[ "$(cat "$CFG/UDC" 2>/dev/null)" == "$UDC" ]] && exit 0
+else
+  modprobe libcomposite 2>/dev/null || true
+  mkdir -p "$CFG" 2>/dev/null || exit 0
+  echo 0x18d1 > "$CFG/idVendor" 2>/dev/null || exit 0
+  echo 0x4ee1 > "$CFG/idProduct" 2>/dev/null
+  echo 0x0100 > "$CFG/bcdDevice" 2>/dev/null
+  mkdir -p "$CFG/strings/0x409" "$CFG/configs/c.1"
+  echo "m2381 NCM gadget" > "$CFG/strings/0x409/product" 2>/dev/null
+  mkdir -p "$CFG/functions/ncm.usb0"
+  ln -sf "$CFG/functions/ncm.usb0" "$CFG/configs/c.1/fncm" || exit 0
+fi
+echo "$UDC" > "$CFG/UDC" 2>/dev/null || exit 0
+ip link set usb0 up 2>/dev/null || true
+exit 0
+EOF
+chmod 0755 /usr/lib/steamos/m2381-ncm-gadget
+cat > /usr/lib/systemd/system/m2381-ncm-gadget.service <<'EOF'
+[Unit]
+Description=m2381: USB NCM gadget 调试通道（172.16.42.1）
+After=systemd-modules-load.service sys-kernel-config.mount
+Wants=sys-kernel-config.mount
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/steamos/m2381-ncm-gadget
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable m2381-ncm-gadget.service 2>/dev/null \
+  && log "已启用 m2381-ncm-gadget（插线 172.16.42.1）" || warn "启用 m2381-ncm-gadget 失败"
+# IP 交给 NM 固定：接口 usb0 一出现就配 172.16.42.1/24
+install -d -m 755 /etc/NetworkManager/system-connections
+cat > /etc/NetworkManager/system-connections/m2381-usb0.nmconnection <<'EOF'
+[connection]
+id=m2381-usb0
+type=ethernet
+interface-name=usb0
+autoconnect=true
+[ipv4]
+method=manual
+address1=172.16.42.1/24
+[ipv6]
+method=ignore
+EOF
+chmod 600 /etc/NetworkManager/system-connections/m2381-usb0.nmconnection
+log "已写入 m2381-usb0 NM keyfile（172.16.42.1/24 静态）"
 
 # 12) Steam / 会话集成（继续移植同一份 Frame 底包的修复）
 #     这一批都是「底包是给 Frame 头显写的，平板/掌机上跑不起来」的直接后果。
@@ -1200,6 +1304,8 @@ EOF
   if [[ -d /home/steamos/.local/share/Steam ]]; then
     cp -f /usr/share/deckard/RUNSTEAM.sh /home/steamos/.local/share/Steam/RUNSTEAM.sh 2>/dev/null || true
     chmod 0755 /home/steamos/.local/share/Steam/RUNSTEAM.sh 2>/dev/null || true
+    # steam.service（steamos 用户）每次启动要覆盖这份拷贝 —— 留 root 属主会让它静默失败
+    chown steamos:steamos /home/steamos/.local/share/Steam/RUNSTEAM.sh 2>/dev/null || true
   fi
   log "已替换 RUNSTEAM.sh（不再走 Frame 的 -deckard/-vrgamepadui 路径）"
 fi

@@ -144,3 +144,15 @@ sudo env SHRINK_IMAGE=true bash scripts/host/03-finalize-image.sh rootfs.img /mn
 | 宿主通道 | 容器内 `systemd-run --user --unit=<名> bash -lc 'sudo -n … >/tmp/zcode/<log> 2>&1'` = 宿主执行（/tmp/zcode 与容器共享）；宿主有 qemu-aarch64-static（11.1.2）+ binfmt F-flag，chroot 直跑 aarch64 |
 | 宿主侧偏差 | ①01-lay rsync `-aHAX`→`-aHA`：SELinux 宿主上 security.selinux xattr 往 loop ext4 写/删被 LSM 拒（rc=23），且这套标签对设备镜像本来就是错的；②构建驱动 `30-build-m2381.sh`（00-fetch/20-layer 缺料自动补、chroot 挂蓝本、03/04 收尾）；③verify 用 `04-verify-esp-kernel-match.sh`（zboot-zstd 解包，非上游 boot.img 路径） |
 | P1 | 未上机。刷写 = `fastboot flash userdata work/rootfs.img`；首启预期 Mu UEFI → 7.3.0-rc3 → SDDM 自动登录 steamos → Plasma；P1 判据与回滚见 §P1 |
+
+### 2026-10-08 P0 第二轮（实机首刷反馈三修复，镜像 sha256 `578daa7e…`，root 密码重新随机）
+
+| 实机发现 | 根因 | 修复（graft） |
+|---|---|---|
+| 登录后 ~/.config 全家 not writable（systemsettingsrc/powerdevilrc/kaccessrc…） | graft `install -d /home/steamos/.config` 默认 root 属主 → steamos 写不进任何配置 | `install -d -o steamos -g steamos -m 0700` + chown 兜底；顺带 RUNSTEAM.sh 拷贝件也 chown 给 steamos（steam.service 每次要覆盖它） |
+| 默认竖屏 | 内核 DTS 未声明 panel rotation（pmOS 靠传感器自动转，无静态判据），kwin 跟随原生扫描向 | 新增 m2381-landscape：user 单元在 graphical-session 后 kscreen-doctor 转输出（连接器 DSI-1，pmOS 文档实证）；方向开关 `/etc/default/m2381-rotation`（默认 right，横反了改 left），结果持久化进 kwinoutputconfig.json |
+| 无 WiFi 预配 = 不可调试 | 凭据属构建入参，P0 首轮没给 | 新增 m2381-ncm-gadget：USB NCM configfs gadget（18d1:4ee1，内核 F_NCM/CONFIGFS=y 编死）+ NM keyfile 固定 usb0=172.16.42.1/24 —— 插线即 `ssh root@172.16.42.1`，WiFi 之后可远程 nmcli 配 |
+
+首刷其余判据全过：Mu UEFI → 7.3.0-rc3 → SDDM 自动登录 → Plasma 直连 Wayland ✓。
+（插曲：宿主侧清理 fastboot 探针残留时误杀了用户正在跑的 flash 进程一次——教训 = 清理
+必须先核对进程属主，重刷即覆盖无损失。）
