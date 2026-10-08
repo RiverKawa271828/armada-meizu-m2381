@@ -59,7 +59,7 @@ cp -a /root/graft/layer/. /
 KVER="${KVER:-$(cat /root/graft/layer/.kver 2>/dev/null || ls -1 /usr/lib/modules 2>/dev/null | head -n1 || true)}"
 [[ -n "$KVER" ]] || die "拿不到 KVER（layer/.kver 缺失且 /usr/lib/modules 为空）"
 [[ -d "/usr/lib/modules/$KVER" ]] || die "/usr/lib/modules/$KVER 不存在（层没灌上？）"
-[[ "$KVER" == "7.3.0-rc3" ]] || warn "KVER=$KVER 与在机内核（ESP v47 = 7.3.0-rc3）不同 —— 确认 ESP 腿与模块腿是否同轮"
+# 版本一致性不在此硬编码：04-verify-esp-kernel-match 拿 ESP 实测版本对模块目录把关
 log "depmod -a $KVER"
 depmod -a "$KVER" || warn "depmod 失败"
 [[ -f "/usr/lib/modules/$KVER/modules.dep" ]] || die "modules.dep 未生成"

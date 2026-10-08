@@ -22,12 +22,12 @@ PIN_FRAME_LOCAL_BZ2="$SM20_DL_DIR/steamframe-repair-latest.img.bz2"
 # ---- 设备侧现役（= pmos_linux 主仓/nura 2026-10-07 检查轮终态；换内核须同步改）----
 PIN_LINUX_DIR="${SM20_LINUX_DIR:-$SM20_WORK/linux-mobile-ports}"   # fork 内核树
 PIN_LINUX_BRANCH="meizu20-t4b"
-PIN_LINUX_TIP="f42761da35ab"
+PIN_LINUX_TIP="02fe4629080a"
 PIN_NURA_ROOT="${SM20_NURA_DIR:-$SM20_WORK/nura-meizu-m2381}"      # 内核 apk/ESP 产物出处
-REL_LINUX_PKGREL="66"       # 在机内核 apk（r66）
-REL_KERNEL_VER="#67"        # 在机 ESP 引导的内核（uname 期望）
-REL_ESP_IMG="$PIN_NURA_ROOT/artifacts/esp-recovery-v47.img.gz"
-REL_DEVICE_PKGREL="53"
+REL_LINUX_PKGREL="77"       # r77 = 7.3.0_rc6（pmOS 2026-10-09 现役；功放风暴全套 + ath12k 暖重连 + rebase rc3→rc6）
+REL_KERNEL_VER="#78"        # r77/rc6 内核（#N=pkgrel+1 定律；uname 期望）
+REL_ESP_IMG="$PIN_NURA_ROOT/artifacts/esp-recovery-v58.img.gz"  # v58 = r77 内核；SteamOS 模块腿必须同源（两腿铁律）
+REL_DEVICE_PKGREL="58"
 PIN_PMAPORTS="${SM20_PMAPORTS_DIR:-$SM20_WORK/pmos_linux/pmos/pmaports}"  # 设备层源头（device-meizu-meizu20）
 PIN_PMAPORTS_BRANCH="phoenix"
 PIN_FW_TARBALL_TAG="r66"    # 固件 tarball 在 nura Release r66 资产里（→ /lib/firmware）

@@ -71,12 +71,21 @@ install -Dm644 "$DEV/modprobe.conf"                "$LAYER/etc/modprobe.d/50-mei
 install -Dm644 "$DEV/70-meizu20-vibra.rules"       "$LAYER/usr/lib/udev/rules.d/70-meizu20-vibra.rules"
 
 # ④ 睡眠 mask（pmOS 结构件 + m2381 补齐）
-#  pmOS meizu-sleepmask.conf：sleep/suspend/hibernate 三 target 的 tmpfiles 屏蔽
-#  m2381 补齐：hybrid-sleep / suspend-then-hibernate 也罩住；graft 里还会在构建期
-#  直接落 /etc 软链（不等首启 tmpfiles）+ sleep.conf.d 全关（logind CanSuspend=no，
-#  powerdevil 因此直接认为「不可挂起」，自动睡眠不再尝试——10-07 实锤：新 rootfs
-#  powerdevil 自动睡眠默认开启 = 空闲睡死假重启）。
-install -Dm644 "$DEV/meizu-sleepmask.conf" "$LAYER/usr/lib/tmpfiles.d/meizu-sleepmask.conf"
+#  pmOS r54 起已从设备包撤掉 sleepmask tmpfiles（内核侧治本后那边不再需要）；
+#  我们仍要 mask —— SteamOS 线没带 pmOS 的睡眠用户态栈（WoWLAN/看门狗放宽等），
+#  裸挂起照旧危险。pmOS sleepmask 文件在就用，不在（r58+）就靠自家两件顶上。
+if [[ -f "$DEV/meizu-sleepmask.conf" ]]; then
+  install -Dm644 "$DEV/meizu-sleepmask.conf" "$LAYER/usr/lib/tmpfiles.d/meizu-sleepmask.conf"
+else
+  log "pmOS 设备包已撤 sleepmask（r54+）—— 用自家 sm20-sleepmask 全量顶上"
+  install -d "$LAYER/usr/lib/tmpfiles.d"
+  cat > "$LAYER/usr/lib/tmpfiles.d/meizu-sleepmask.conf" <<'EOF'
+# m2381(SteamOS): sleep 家族全 mask（pmOS r54 起撤件，我们无其睡眠栈，保留全套）
+L /etc/systemd/system/sleep.target - - - - /dev/null
+L /etc/systemd/system/suspend.target - - - - /dev/null
+L /etc/systemd/system/hibernate.target - - - - /dev/null
+EOF
+fi
 cat > "$LAYER/usr/lib/tmpfiles.d/sm20-sleepmask.conf" <<'EOF'
 # m2381: pmOS sleepmask 之外补齐其余 sleep 目标（suspend 在本移植上必睡死）
 L /etc/systemd/system/hybrid-sleep.target - - - - /dev/null

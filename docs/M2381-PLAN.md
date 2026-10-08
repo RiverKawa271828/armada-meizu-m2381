@@ -162,3 +162,21 @@ sudo env SHRINK_IMAGE=true bash scripts/host/03-finalize-image.sh rootfs.img /mn
 - 用户拍板 root 密码 = 上游默认 `123456`（明确覆盖「不用默认密码」纪律；构建入参
   ROOT_PW=123456，镜像 shadow 盐值复算验证过；此后各轮同密码除非再改）。
   WiFi 仍不预配：有 NCM gadget 通道后，WiFi 在设备上远程 nmcli 配即可，不再为凭据重刷。
+
+
+### 2026-10-09 内核同步轮准备（rc3 → rc6，未构建 —— 新会话执行）
+
+- **触发**：pmOS 线（七十五）→（八十）轮把内核 rebase 到 7.3.0_rc6（r77，内核 #78），
+  设备 recovery_a 已刷 ESP v58。rc3 模块 vermagic 与 v58 内核不匹配 ⇒ **第三轮镜像
+  （af2bde33，rc3 模块）已不可刷**——刷上去零模块加载（无 WiFi/触控绑定）。
+- **已改**（本 commit）：config 钉子全面拨 r77（PKGREL=77 / TIP=02fe4629 / ESP=v58 /
+  内核 #78 / device r58）；graft 删 rc3 硬编码期望（把关权归 04-verify-esp）；
+  20-layer 适配 pmOS r54+ 撤 sleepmask（自家 tmpfiles 全量顶上，我们没带 pmOS 睡眠栈）。
+- **层已重组**：KVER=7.3.0-rc6，287M，自检全绿；v58 ESP 实测 `Linux version 7.3.0-rc6`
+  与模块目录同源（两腿铁律 ✓）。
+- **新会话动作**：宿主 `sudo ROOT_PW=123456 SSH_PUBKEY=$(cat ~/.ssh/id_ed25519.pub)
+  bash scripts/host/30-build-m2381.sh` → 04-verify 过 → **只刷 userdata**
+  （设备 recovery_a 已是 v58，boot/recovery 不碰；回滚 = pmOS 现役 rootfs + v58 原样，
+  或 r66 rootfs + v47 双腿）。
+- **未随轮采纳**（记 P2）：pmOS 睡眠栈移植（meizu-wowlan、看门狗放宽、暖挂起——
+  rc6 内核侧已通，holo 用户态适配另做一轮，做完才能考虑掀我们的睡眠 mask）。
