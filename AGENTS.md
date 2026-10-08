@@ -9,14 +9,14 @@
 
 ## 现态一句话（新会话从这里接）
 
-- **2026-10-08 P0 首轮构建完成（EXIT=0）**：`work/rootfs.img` 11G
-  （sha256 c9372d0f…，台账全文 = docs/M2381-PLAN.md 构建台账）。管线 =
-  00-fetch（本地 bz2）→ 20-m2381-layer.sh（层）→ 01-lay → chroot 10-graft-m2381.sh
-  → 03-finalize → 04-verify-esp-kernel-match.sh（全绿）。宿主执行通道 =
-  **容器里 `systemd-run --user --unit=<名> bash -lc 'sudo -n … >/tmp/zcode/<log> 2>&1'`**
-  （容器无 loop/mount 能力；宿主有 qemu-aarch64-static + binfmt F-flag，chroot 直跑
-  aarch64；/tmp/zcode 容器/宿主共享，日志两边可读）。**下一步 = P1 spike 设备日**：
-  刷 userdata → SSH → 触控/GL/VK/Steam 判生死；回滚 = 重刷 pmOS rootfs。
+- **2026-10-09 同步点（新会话必读）**：pmOS 线内核已 rebase **rc3→rc6（r77/#78）**，
+  设备 recovery_a 已刷 **ESP v58** ⇒ 第三轮镜像（af2bde33，rc3 模块）**作废不可刷**
+  （vermagic 不匹配 = 零模块）。同步准备已全绿（commit ee1fb99）：钉子 r77/v58、
+  层重组（KVER=7.3.0-rc6）、graft 适配。**新会话动作 = 宿主一条命令**：
+  `sudo ROOT_PW=123456 bash scripts/host/30-build-m2381.sh`（缺料自动补）→
+  04-verify 过 → **只刷 userdata**（ESP 已 v58；boot/recovery 不碰；root 密码=123456）。
+  P0 三轮历史：首轮 11G 全绿（c9372d0f）→ 实机三修复（.config 属主/横屏引导/NCM
+  gadget 通道，578daa7e）→ 固定密码 123456（af2bde33，已作废）。
 - 上游克隆仍钉在 `main @ bbc60650`（原样留作 diff 基准）；m2381 变体 =
   `10-graft-m2381.sh` + `20-m2381-layer.sh` + `30-build-m2381.sh` +
   `04-verify-esp-kernel-match.sh`（改动清单见 M2381-PLAN 台账）。
