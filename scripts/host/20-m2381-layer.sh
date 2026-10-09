@@ -70,6 +70,23 @@ install -Dm755 "$DEV/meizu-bind-nfc-haptics.sh"    "$LAYER/usr/lib/meizu20/meizu
 install -Dm644 "$DEV/modprobe.conf"                "$LAYER/etc/modprobe.d/50-meizu20-blacklist.conf"
 install -Dm644 "$DEV/70-meizu20-vibra.rules"       "$LAYER/usr/lib/udev/rules.d/70-meizu20-vibra.rules"
 
+# ③b 音频编排件（r77 内核本就有 sndcard——nura 2026-10-09 反转判词实锤；
+#  v3 Debian 实机平移此串后即出声。enable 放 graft；meizu-audio 仅入仓不 enable，
+#  SWR CLASH 链只许手动起，见 preset 注）
+install -Dm755 "$DEV/meizu-amps-load.sh"           "$LAYER/usr/lib/meizu20/meizu-amps-load.sh"
+install -Dm755 "$DEV/meizu-sndcard-bind.sh"        "$LAYER/usr/lib/meizu20/meizu-sndcard-bind.sh"
+install -Dm755 "$DEV/meizu-audio-route.sh"         "$LAYER/usr/lib/meizu20/meizu-audio-route.sh"
+install -Dm755 "$DEV/meizu-audio-load.sh"          "$LAYER/usr/lib/meizu20/meizu-audio-load.sh"
+install -Dm644 "$DEV/meizu-amps.service"           "$LAYER/usr/lib/systemd/system/meizu-amps.service"
+install -Dm644 "$DEV/meizu-sndcard-bind.service"   "$LAYER/usr/lib/systemd/system/meizu-sndcard-bind.service"
+install -Dm644 "$DEV/meizu-audio-route.service"    "$LAYER/usr/lib/systemd/system/meizu-audio-route.service"
+install -Dm644 "$DEV/meizu-audio.service"          "$LAYER/usr/lib/systemd/system/meizu-audio.service"
+install -Dm644 "$DEV/MEIZU20.conf"                 "$LAYER/usr/share/alsa/ucm2/Qualcomm/sm8550/MEIZU20.conf"
+install -Dm644 "$DEV/HiFi.conf"                    "$LAYER/usr/share/alsa/ucm2/Qualcomm/sm8550/HiFi.conf"
+install -Dm644 "$DEV/MEIZU20-tplg.bin"             "$LAYER/usr/lib/firmware/qcom/sm8550/MEIZU20-tplg.bin"
+mkdir -p "$LAYER/usr/share/alsa/ucm2/conf.d/sm8550"
+ln -sfn ../../Qualcomm/sm8550/MEIZU20.conf "$LAYER/usr/share/alsa/ucm2/conf.d/sm8550/MEIZU20.conf"
+
 # ④ 睡眠 mask（pmOS 结构件 + m2381 补齐）
 #  pmOS r54 起已从设备包撤掉 sleepmask tmpfiles（内核侧治本后那边不再需要）；
 #  我们仍要 mask —— SteamOS 线没带 pmOS 的睡眠用户态栈（WoWLAN/看门狗放宽等），

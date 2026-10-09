@@ -9,32 +9,161 @@
 
 ## 现态一句话（新会话从这里接）
 
-- **2026-10-09 同步点（新会话必读）**：pmOS 线内核已 rebase **rc3→rc6（r77/#78）**，
-  设备 recovery_a 已刷 **ESP v58** ⇒ 第三轮镜像（af2bde33，rc3 模块）**作废不可刷**
-  （vermagic 不匹配 = 零模块）。同步准备已全绿（commit ee1fb99）：钉子 r77/v58、
-  层重组（KVER=7.3.0-rc6）、graft 适配。**新会话动作 = 宿主一条命令**：
-  `sudo ROOT_PW=123456 bash scripts/host/30-build-m2381.sh`（缺料自动补）→
-  04-verify 过 → **只刷 userdata**（ESP 已 v58；boot/recovery 不碰；root 密码=123456）。
-  P0 三轮历史：首轮 11G 全绿（c9372d0f）→ 实机三修复（.config 属主/横屏引导/NCM
-  gadget 通道，578daa7e）→ 固定密码 123456（af2bde33，已作废）。
-- 上游克隆仍钉在 `main @ bbc60650`（原样留作 diff 基准）；m2381 变体 =
-  `10-graft-m2381.sh` + `20-m2381-layer.sh` + `30-build-m2381.sh` +
-  `04-verify-esp-kernel-match.sh`（改动清单见 M2381-PLAN 台账）。
+- **2026-10-09 换轨 Debian 13（新会话必读）**：用户拍板兴趣线弃 holo 底包、改
+  **Debian 13 trixie genericcloud arm64（USTC 国内源）**；定位 = 纯兴趣/游戏性能线，
+  **pmOS（nura）才是主战地，无回滚腿**（回滚 = nura 的 pmOS rootfs）。已删：Frame
+  底包管线（00-fetch-frame/01-lay/parse-gpt/05-patch/04-verify-kernel-match，git 历史
+  D 状态可考）、steamos-r77 镜像、dl bz2、frame-src/out 残留；holo 的
+  `10-graft-m2381.sh` + `30-build-m2381.sh` 已随 Debian 过闸删除（git 历史可考）。
+  **新管线四件**：`00-fetch-debian.sh`（USTC→TUNA→官方 + SHA512）→
+  `01-lay-debian.sh`（qcow2→raw→blank ext4，清自带内核/cloud-init/host key）→
+  `10-graft-debian.sh`（国内源 apt + Plasma 精简栈 + m2381 层注入 + 平移件：
+  NCM gadget/usb0-ip/横屏 autostart/Steam ARM 播种/睡眠 mask；usb0 走 NM unmanaged
+  预防针 + 直配单元，DNS 走 resolvectl）→ `30-build-debian.sh`（复用 20-m2381-layer /
+  03-finalize / 04-verify-esp；产物默认 `meizu-meizu20-debian-r77.img` 10G）。
+  Steam zip 走 `work/cache/steam-arm` 缓存（版本件名缓存，命中免下载，损坏自愈，
+  30-build bind 进 chroot）；**整包缓存 `steam-client-full.tar.zst`（2026-10-10 自 v3
+  实机 bootstrap 拉全后打包，1.5G/14500 项，含 .installed 清单）为最高优先播种源
+  ——graft 第 9 步命中即零下载，回退 zip 流程**；设备侧恢复脚本 =
+  `scripts/host/50-steam-client-restore.sh [IP] [备份]`（默认 172.16.42.1）。
+  m2381 层（work/layer，287M）base 无关直用。
+- **★ Steam 破局 + 扩满结案（2026-10-10 凌晨，新会话从这里接）**：**镜像账本**：
+  v4 = `277b985683e5…65dde`（8.2G 保守版：缺 libgtk2.0-0t64/libopenal1，已退役）；
+  **v5 = `c63d41006d5c…8e9912`（14G 整包种子版，离线扩容 14G 在案）= 设备现役**
+  （10-09 深夜上机，SSH host key 轮换 = 重刷实锤；Debian 13.7；原 10G 满态
+  SHA 1bf413c2 作废）。**扩满结案**：设备 /dev/sda22 文件系统 = 457G clean
+  （分区 463.6G，差值 = ext4 元数据开销；用 9.5G 剩 429G）；ROOTFS_SIZE/
+  zip-瘦身两案弃用，权威路径 = graft rootfs-grow.service 首启自扩（resize2fs，
+  已满则 no-op，graft 在案）。**Steam 根因 = lsof 缺失**（Debian trixie 最小集
+  不带；console_log 同一告警 1093 遍）：`GetIPCConnectionDetails` 跑
+  `lsof -P -F upnR -i TCP@127.0.0.1:<port>` 反查 webhelper IPC 端口 → exit 127
+  → steamui 连 WebUITransport 全部 "Connection rejected" → 白屏/"Unexpected
+  Transport Error"、~90s 自退。设备 `apt install lsof` 复验：0 告警、端口↔进程
+  映射解析正常、websocket accepted、**登录窗+QR 截图上屏**
+  （/tmp/zcode/steam-shot-1.png）——v3 悬案"进程起 UI 不上屏"了结
+  （libgtk2/libopenal/X11 三修仍有效，第四件 = lsof，graft PKGS 已补）。
+  **下一步 = 用户实机登录 Steam**（账号密码或手机 QR），验登录后 store/好友/
+  下载链路；未登录期 sharedconfig.vdf 的 RemoteStorage FileWrite false 属预期
+  （will retry，登录后观察）；IPv6 TIMEOUT 定性 = 非致命（IPv4 通，登录窗能出
+  即证）。会话纪律不变：SDDM Wayland 自动登录、锁屏关、调试走会话内件
+  （kwin 自管 :0 + /run/user/1000/xauth_* 票据）。
+- **★ 掌机模式定版（2026-10-10 凌晨，开机即 Deck UI · 最小 kwin 路线）**：gamescope
+  standalone **判死**——本内核 msm DPU 平面不声明 IN_FORMATS（debugfs state 里
+  in_formats=0，只吃线性缓冲），gamescope 的 turnip 平铺输出每次 atomic flip 被
+  EINVAL 拒 → 永久黑屏（color/layers/composition/60Hz 全试过无效）；llvmpipe 合成
+  缺 VK_EXT_physical_device_drm 也死。**权威路线 = 最小 kwin(DRM, GBM 线性分配,
+  本面板 120Hz 已证) + steam -gamepadui**：省 plasmashell 657M/polkit 167M/maliit
+  167M（kwin 自身 ~300M），GPU 合成不倒退。设备在役：SDDM autologin
+  Session=steamos-session → /usr/local/bin/steamos-session（kwin --xwayland +
+  steam-arm -gamepadui，横屏/120Hz 沿 kwinoutputconfig.json 持久化），Plasma 留
+  SDDM 第二会话项。会话件三坑已固化进 graft：①kwin 6.3 必须显式 `--xwayland`
+  （否则 steam "Unable to open X11 display"，sddm 拆会话连坐杀 kwin，日志只在
+  /tmp/kwin-session.log）；②本镜像 tmpfiles 不建 /tmp/.X11-unix（x11-common conf
+  缺失，graft 已补 /etc/tmpfiles.d/x11-unix.conf）；③gamescopereaper 补链
+  /usr/lib/gamescope + /usr/local/bin。快速设置（WiFi/电源/蓝牙）= Steam 客户端
+  直连 NM/BlueZ/logind（Bazzite 同构；steamos-manager 只服务真 Deck EC/TDP 硬件，
+  SM8550 不需要）；**WiFi 密码未持久化**（REDACTED-SSID 档案缺 secrets，重启即断网），
+  首件事 = 在 Deck UI 网络设置输一次 PSK。gamescope 翻案唯一路径 = 内核
+  IN_FORMATS 补丁（pmOS 主战线；新版 mainline msm 疑似自带，值得查证）；嵌套
+  gamescope（wayland 后端）不受影响照旧可用。**GPU 调频坑（同日实测）**：游戏重载
+  后 simple_ondemand 会瞎——感知不到 kwin 合成负载，钉死 220MHz 最低档（频率表
+  220→680 八档；governors 只有 userspace/simple_ondemand，无 performance）→ 全界面
+  发卡。临时修 = min_freq 钳 401MHz（会话脚本开机自动 + gpu-perf/gpu-quiet 游戏拉
+  满频开关，均已固化 graft）；根治 = pmOS 线查 devfreq busy 统计/GMU 状态（伴生
+  dmesg 痕迹：adreno_gmu "delay in fenced register write (0x8a1)"）。**已升级为
+  看护方案（同日凌晨）**：重绑 governor 即复活（`echo simple_ondemand >
+  /sys/class/devfreq/3d00000.gpu/governor`，cur 立回 615→680 正常爬，trans_stat
+  换档史 1849 次全在）——调度逻辑没坏，是重载冲击后 governor 状态卡死。
+  gpu-ondemand-watch.service（检测"钉死最低档+零换档"30s → 重绑唤醒）已固化
+  graft 并在机启用；min_freq 钳位撤除；真修复 = pmOS 线 devfreq/msm 补丁
+  （证据三件套：trans_stat 冻结 + rebind 复活 + GMU 警告），落地后删看护。
+  **掌机/桌面切换（同日）**：`sm20-session desktop|handheld|status`（设备侧）/
+  `scripts/host/60-session-switch.sh [desktop|handheld]`（宿主侧）——desktop 置
+  一次性旗标 /var/lib/sm20/want-desktop，下次 autologin 进 Plasma（注销/重启自动
+  回掌机）；黑屏自救（大屏窗口被最小化时 steam 活着但无窗）= `sm20-session
+  handheld` 重启会话。**同日收尾**：①`-steamos3` 旗标点亮 Deck 式设置面板
+  （WiFi 分栏出现，用户已在掌机界面原生连上 REDACTED-SSID——系统级+密码落盘，重念不丢；
+  Plasma 密钥环坑：applet 默认存"仅本用户+kwallet"，换会话形态=没存）；②客户端
+  频道已切 steamdeck_publicbeta（原 steamdeck_stable）；③SDDM `Relogin=true`
+  已固化（autologin 只在服务启动时生效一次，steam 更新退出会掉登录屏）；④
+  libpam-kwallet5 已卸（PAM 钩子会白白拉起 kwalletd；kwallet6 本体不能删——
+  连坐 plasma-pa/kscreenlocker/plasma-integration 等桌面内脏）。
+- **⚠ 宿主事故（2026-10-09，已恢复）**：Debian 首跑 chroot 死于宿主 binfmt 是
+  OC-flag（无 F）；修复时手写 binfmt hex 的 mask 长度写歪 → 宿主全进程 exec ELOOP，
+  用户 GRUB 加 `module_blacklist=binfmt_misc` 重启救回。复盘与正确注册法见记忆
+  sm20-binfmt-incident-20261009（要点：逐字节照抄 /usr/lib/binfmt.d/qemu-aarch64.conf
+  只改 flags=F + 当场冒烟；手写 hex = 高危）。重启后发行版新 conf 自带 F，chroot
+  冒烟（CHROOT-QEMU-OK）通过，构建续跑中。
+- **下个会话设备日执行单（2026-10-09 排定，v3）**：**用户已误刷一版裸底包**（deb3 被
+  stop 后 sudo 子进程脱管成孤儿、与 deb4 并发互踩，产物 = 09:59 的无 graft 裸 cloud
+  镜像：无触屏/无键盘/无 gadget，设备被锁在外面——**这版救不回来，直接重刷**）。
+  v3 已出炉（2026-10-09 20:59，8.1G，SHA256 d69da03c97878f64e30035c94c1f9acfe43d450b32af5a12b6ffb671a48ed571，
+  Steam 播种完整 408M + .install-complete，04-verify 过）。刷机 = `fastboot flash userdata
+  work/meizu-meizu20-debian-r77.img`（只动 userdata；root/steamos 密码均 123456）。
+- **设备日首启四修（2026-10-09 晚，v3 已刷实机并在机）**：① sshd 起不来（22 refused）
+  = Debian graft 丢了 holo 版的 `ssh-keygen -A`（01-lay 删底包 host key + openssh-server
+  预装不重跑 postinst）——设备上手动补 key 后 SSH 恢复；graft 已补该行。② USB 通道
+  "连不上"真因 = 宿主 udev 改名规则 `DEVPATH~="*18d1*4ee1*"` 从未生效（DEVPATH 不含
+  VID:PID），网卡一直叫 enp104s0f3u1、NM profile 只认 sm20ncm → 无人配 IP；已改写规则为
+  `ATTRS{idVendor}/ATTRS{idProduct}` 匹配（下次插线自动改名+autoconnect），本次会话手工
+  `ip addr add 172.16.42.2/24 dev enp104s0f3u1`，`ssh root@172.16.42.1` 实测通。③
+  应用菜单无 Steam = 种子无 .desktop，graft 从来没放过入口——设备+graft 双补
+  steam-arm.desktop（Exec=/usr/local/bin/steam-arm）。④ 根分区仅剩 1.2G（finalize 收缩
+  后 FS<分区）——在线 `resize2fs /dev/sda22` 长满 457G；graft 新增 rootfs-grow.service
+  首启自扩容。另：设备时钟已对（RTC 无电池每boot会漂，检查项）；睡眠 mask 在位
+  （sleep/suspend/hibernate 全 → /dev/null）；WiFi 用户已手动连上。设备侧待验：
+  Steam 菜单首启、Proton 兼容层、maliit 虚拟键盘。
+- **设备日晚场二：Steam 起不来定位 + 出网政策拍板 + gamescope 上机（2026-10-09 深夜）**：
+  ⑤ Steam 菜单点没反应 = 两层根因叠加：`~/.steam/steam` 数据链缺失（launcher 只建了
+  sdkarm64 一根链，客户端直启 assert 退出）——设备手补 steam/root 两根链 + graft launcher
+  已补；出网被 `m2381-usb0-ip` 的 metric-500 默认路由截胡（走宿主 NAT，而宿主 firewalld
+  对非 zone 接口的转发包一律 reject——若将来要 NAT 上行，需 firewall-cmd 把接口加
+  trusted zone，本次未做）。⑥ **用户拍板：设备出网走自身 WiFi，usb0 只做调试通道**——
+  m2381-usb0-ip 单元已剥掉默认路由+DNS（设备与 graft 双同步），撤路由后 Steam CDN
+  即通。⑦ 首启进 updater 后因无 .installed 清单走全量 651MB 重下，设备 WiFi 直连
+  CDN 仅 ~95KB/s（v6 无路由），后台挂着续传（logs/bootstrap_log.txt 看进度），预计
+  深夜跑完，跑完前菜单图标无窗口属正常。⑧ **gamescope 实锤可装**：trixie 主仓没有、
+  **trixie-backports 有 3.16.22+ds-1~bpo13+1**（USTC 镜像同步）——设备已装可跑
+  （二进制在 `/usr/games/gamescope`，非登录 shell PATH 外）；graft 已固化
+  （sources.list 加 backports 行 + 可选件段改 `-t trixie-backports` 安装）。
+  测试序列：①通道 `ssh root@172.16.42.1`（NCM gadget + m2381-usb0-ip 直配 +
+  宿主 sm20ncm/NAT 已固化；兜底 = fe80 NDP 发现法）②桌面：SDDM 自动登录
+  steamos/Plasma-Wayland、横屏 autostart、**触屏**（meizu-touch 同 holo 已验链路）、
+  **虚拟键盘**（maliit-keyboard 已装，kwin-wayland 下首验）③**Steam**：`steam-arm`
+  首启拷种子+自动更新，闪退就再跑一次（steam.md）④**兼容层**：Proton 11 Beta ARM +
+  SteamLinuxRuntimeARM → `m2381-proton-setup <tar>` 或 Steam UI 自拉，装完全退 Steam
+  再开⑤**gamescope**：trixie 主仓没有、**trixie-backports 有 3.16.22**（v3 实机已装
+  可跑 /usr/games/gamescope；graft 已固化 backports 源+安装行）⑥性能基线：
+  glmark2-wayland / vulkaninfo（freedreno a740）⑦WiFi 用户已手动连上 ✓ ⑧声音 = **不等
+  r78**（2026-10-09 主项目复核：r77 已含完整音频块，「r77 钉 9-14 源码」系误读
+  APKBUILD 出处注释 `_commit`；真缺口 = 用户态编排，清单 = `docs/M2381-SOUND-REQ.md`
+  §6；四问已由 nura AGENTS 带话节回信）——**编排串已平移实机出声 ✓**（深夜 v3 实机：
+  amps→sndcard-bind→audio-route 三件 enable 后 card0 出卡、硬件直放出声、PipeWire
+  sink「Built-in Audio Stereo」；`20-m2381-layer` ③b 段 + graft enable/自检已固化）。
+  steam.md 原方 =
+  github.com/code002-2/Xiaomi-pad-6s-pro-Linux/blob/sheng/docs/steam.md。
+  **运维铁律（本轮血泪）**：停构建绝不能只 `systemctl stop`（外层 bash 死、sudo 子进程
+  脱管成孤儿）——必须宿主侧 `pgrep -f 30-build` 核实 + kill 进程树 + 清 /mnt 残挂，
+  再起新构建；起构建前先 ps 确认无同类进程。**杀设备进程严禁裸 `pkill -f <词>`**
+  ——`-f` 匹配进程全命令行，会命中自己 SSH 远端脚本的文本把自己杀掉（SSH 假死，
+  2026-10-10 实锤）；用 `pkill -x -u steamos <进程名>`（精确名+限定用户）。
+- 设备现状：**在跑无 graft 的裸 Debian cloud 镜像**（deb3 孤儿互踩产物，无触屏/无键盘/
+  无 gadget，救不回，等 v3 重刷）；~~声音两条线同源 = 等 pmOS r78 内核（r77 钉 9-14
+  源码，早于 m2381 音频提交）。~~ **更正（10-09 主项目复核）：r77 已含完整音频块
+  （pmOS 出声至今），无声 = 缺设备包用户态编排，清单 = SOUND-REQ §6，内核侧零等待。**
+- 上游克隆仍钉在 `main @ bbc60650`（原样留作 diff 基准）；m2381 现役管线 =
+  `10-graft-debian.sh` + `20-m2381-layer.sh` + `30-build-debian.sh` +
+  `04-verify-esp-kernel-match.sh`（holo 变体已删，改动清单 git 历史可考）。
 - 设备 = 魅族 20 m2381，现役 pmOS（mu-r66/ESP v47/内核 #67/device r53/rootfs r53）。
   本项目**只动 userdata**（换 rootfs），boot_b/ESP/recovery 全不碰——回滚 = 重刷 pmOS
   rootfs，30 秒锚照旧。
 
-## 底包镜像（用户下载后放这里）
+## 底包镜像（自动获取，无需手动）
 
-- 期望路径：`dl/steamframe-repair-latest.img.bz2`（或任何 `*.img.bz2`；**勿提交进 git**，
-  `.gitignore` 已挡 `dl/`）。
-- 官方源：`https://steamdeck-images.steamos.cloud/recovery/steamframe-repair-latest.img.bz2`
-  （~4 GB bz2 → 7.5 GB GPT 整盘）。上游实测版本 `steamframe-oobe-repair-20260922.5153644-0.3.0`；
-  `latest` 若已换代，`00-fetch` 的探针（fstype/根子树/os-release）会兜底报结构变化。
-- **灌入方式（零脚本改动）**：`FRAME_IMAGE_URL="file://$PWD/dl/steamframe-repair-latest.img.bz2"
-  bash scripts/host/00-fetch-frame-rootfs.sh`（DLOAD 走 curl，支持 file://）。
-- 备选：上游已发布解好的底包资产 `frame-base-20260922`（code002-2/steamos-sheng release，
-  rootfs.partNN.zst + SHA256SUMS），需 GH_TOKEN 时 00-fetch 资产路径自动优先。
+- Debian 线：`30-build-debian.sh` 缺料自动跑 `00-fetch-debian.sh`，源序 =
+  USTC → TUNA → cloud.debian.org，SHA512SUMS 强校验，产物缓存 `work/out/*.qcow2`。
+- （已弃）holo Frame 底包管线已删，需要考古走 git 历史；Valve 官方源
+  `steamdeck-images.steamos.cloud/recovery/steamframe-repair-latest.img.bz2` 长期有效。
 
 ## 上游管线 → m2381 改造点（keep / replace / skip）
 
