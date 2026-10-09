@@ -271,6 +271,15 @@ AnimationDurationFactor=0
 [Compositing]
 OpenGLIsUnsafe=false
 X
+# 覆盖层置顶件（2026-10-10 实机复现）：kwin 默认焦点抢占防御(Medium)会把
+# steam 手柄键唤起的掌机菜单压到游戏窗口底下——kwin 看不见手柄动作，
+# 把 steam 的置顶+激活请求按抢焦点降级。关掉后请求照常生效。
+# （真 Deck 无此问题 = gamescope 是会话合成器自管覆盖层；kwin 路线须显式喂）
+grep -q "FocusStealingPreventionLevel" "$KRC" || cat >> "$KRC" <<'X'
+
+[Windows]
+FocusStealingPreventionLevel=0
+X
 
 rm -f "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/wayland-0* 2>/dev/null
 # 本镜像 tmpfiles 不建 /tmp/.X11-unix（x11-common 缺归置），kwin Xwayland 必需

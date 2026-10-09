@@ -14,8 +14,9 @@
 #   ④ 睡眠 mask  ← pmOS meizu-sleepmask(tmpfiles) + 自造补齐（hybrid-sleep/
 #                  suspend-then-hibernate + sleep.conf.d 全关）
 # P0 故意不含：音频链（PipeWire 翻译 = P2）、hexagonrpcd 传感器链（glibc 重建 = P2）、
-#              蜂窝/GNSS（RF init 硬卡死，同 pmOS）、uinput（内核 CONFIG_INPUT_UINPUT
-#              未编，写了 modules-load.d 只会让 systemd-modules-load 报错）。
+#              蜂窝/GNSS（RF init 硬卡死，同 pmOS）。
+#              uinput 原因同上曾排除；r78 起内核已编 CONFIG_INPUT_UINPUT=m，
+#              见 ⑤ Steam Input 件（2026-10-10 nura 带话闭环）。
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # shellcheck source=config.sh
@@ -119,10 +120,41 @@ AllowHybridSleep=no
 AllowSuspendThenHibernate=no
 EOF
 
+# ⑤ Steam Input 件（2026-10-10 nura 带话闭环：内核 r78 起 CONFIG_INPUT_UINPUT=m）
+#  uinput.ko ← 最新内核 apk（r78 config-only 轮新增；主模块树仍钉 r${REL_LINUX_PKGREL}，
+#  两者同 KVER 同 vermagic、无 MODVERSIONS，单补 ko 兼容，nura 实证）
+UAPK="$(ls -1t "$PMOS_PKGS"/linux-meizu-meizu20-*"-r"*.apk 2>/dev/null | head -1 || true)"
+[[ -n "$UAPK" ]] || die "找不到内核 apk（uinput.ko 来源，$PMOS_PKGS）"
+UKO_PATH="usr/lib/modules/$KVER/kernel/drivers/input/misc/uinput.ko"
+mkdir -p "$TMP/uinput"
+tar xzf "$UAPK" -C "$TMP/uinput" "$UKO_PATH" 2>/dev/null
+[[ -f "$TMP/uinput/$UKO_PATH" ]] || die "$(basename "$UAPK") 里没有 $UKO_PATH（需 r78+ 内核包）"
+install -Dm644 "$TMP/uinput/$UKO_PATH" "$LAYER/$UKO_PATH"
+log "uinput.ko ← $(basename "$UAPK")"
+#  用户态胶水三件 + s2idle 看门狗 drop-in，照抄 pmaports 设备包 r58/r59（文件名即挂点）
+install -Dm644 "$DEV/60-meizu20-uinput.rules" "$LAYER/usr/lib/udev/rules.d/60-meizu20-uinput.rules"
+install -Dm644 "$DEV/meizu20-uinput.conf"     "$LAYER/usr/lib/modules-load.d/meizu20-uinput.conf"
+#  r58: s2idle 跳过 syscore ⇒ 睡眠时长计入 monotonic ⇒ 3min 看门狗在唤醒瞬间误杀服务。
+#  会话关键（udevd/logind）关狗；内部服务放宽 30min。睡眠 mask 未解锁前 inert，解锁前置件。
+for u in systemd-udevd systemd-logind; do
+  install -Dm644 "$DEV/10-meizu-no-watchdog.conf" \
+    "$LAYER/usr/lib/systemd/system/$u.service.d/10-meizu-no-watchdog.conf"
+done
+for u in systemd-journald systemd-resolved systemd-timesyncd systemd-coredumpd \
+  systemd-hostnamed systemd-importd systemd-localed systemd-machined \
+  systemd-portabled systemd-sysupdated systemd-timedated systemd-oomd \
+  systemd-mountfsd systemd-nsresourced; do
+  install -Dm644 "$DEV/10-meizu-watchdog-relax.conf" \
+    "$LAYER/usr/lib/systemd/system/$u.service.d/10-meizu-watchdog-relax.conf"
+done
+install -Dm644 "$DEV/10-meizu-journald-sync.conf" \
+  "$LAYER/usr/lib/systemd/journald.conf.d/10-meizu-journald-sync.conf"
+
 # 自检：层内关键文件点名
 log "层自检："
 for f in "usr/lib/modules/$KVER/kernel" \
          "usr/lib/modules/$KVER/modules.dep" \
+         "usr/lib/modules/$KVER/kernel/drivers/input/misc/uinput.ko" \
          usr/lib/firmware/qcom/sm8550 \
          usr/lib/firmware/ath12k/WCN7850 \
          usr/lib/systemd/system/meizu-touch.service \
@@ -130,6 +162,10 @@ for f in "usr/lib/modules/$KVER/kernel" \
          usr/lib/meizu20/meizu-touch-load.sh \
          etc/modprobe.d/50-meizu20-blacklist.conf \
          usr/lib/udev/rules.d/70-meizu20-vibra.rules \
+         usr/lib/udev/rules.d/60-meizu20-uinput.rules \
+         usr/lib/modules-load.d/meizu20-uinput.conf \
+         usr/lib/systemd/system/systemd-logind.service.d/10-meizu-no-watchdog.conf \
+         usr/lib/systemd/journald.conf.d/10-meizu-journald-sync.conf \
          usr/lib/tmpfiles.d/meizu-sleepmask.conf \
          etc/systemd/sleep.conf.d/sm20-nosleep.conf; do
   if [[ -e "$LAYER/$f" ]]; then log "  ✓ $f"; else log "  ✗ 缺 $f"; FAIL=1; fi

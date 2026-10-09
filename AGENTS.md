@@ -9,6 +9,65 @@
 
 ## 现态一句话（新会话从这里接）
 
+- **★ 真掌机模式点火成功（2026-10-10 午，新会话从这里接）**：gamescope standalone（**master
+  自建**）+ steam -gamepadui = 真 Deck 架构**在魅族 20 上点亮**：横屏 2400x1080、flip 零失败、
+  **UBWC（QCOM_COMPRESSED）直接扫描输出**（plane49 gamescope-xwm XR30+UBWC，vsync 持续）。
+  五层洋葱全在手册出参（docs/M2381-GAMESCOPE-IGNITION.md，权威）：①msm 无 async flip →
+  GAMESCOPE_DISABLE_ASYNC_FLIPS=1；②EINVAL 根本没到内核（strace 实证零 atomic ioctl，
+  drm.debug 抓不到——拒绝在用户态 liftoff）；③libliftoff BTI-safe 补丁日志看到层带
+  rotation=8（ROTATE_270）；④msm plane 只支持 rotate-0/180 + gamescope 对竖屏面板自动
+  ORIENTATION_270 → 逐 plane 属性校验必挂；⑤3.16.22 无合成器旋转兜底 → **设备自建 master**
+  （/usr/local/bin/gamescope，依赖升栈 wayland1.24/libdrm2.4.129/xkbcommon1.8/pixman0.46/
+  protocols1.47 全 /usr/local）+ `--force-composition-rotation` = 点火。
+  ⚠ 两条旧判词再作废：「EINVAL 当场抓 dmesg」对用户态拒绝无效（strace 才是判别武器）；
+  「Debian gamescope 3.16.22 可用」作废（无 --force-composition-rotation，竖屏面板必死，
+  勿回退）。会话件 = steamos-gamescope.desktop → /usr/local/bin/steamos-gamescope-session（v4），
+  SDDM Autologin 已切；kwin steamos-session 保留为第二会话项（逃生门）；
+  sm20-session 切换器两态可用。栈快照 = work/cache/gamescope-master-stack.tar.gz（16MB）。
+  **下个会话执行单**：①用户手柄实测验收 #3/#4（home 键覆盖层回程 + 每游戏缩放/限帧——本架构
+  覆盖层 gamescope 自管，kwin 死穴理应消失）；②graft 固化：层带 gamescope-master-stack.tar.gz
+  + 会话件 + SDDM 默认切 gamescope + steamos-select-branch / jupiter-dock-updater 桩
+  （上游 11.7 参照 work/ref/upstream-10-graft-bbc6065.sh:903）；③UDEBUG=noubwc 等诊断
+  env 已全撤（TU_DEBUG 勿再加，UBWC 实测通）。
+- **★ 设备日晨场：发热结案 + uinput 实锤 + 覆盖层修复 + 频道归位（2026-10-10 晨，新会话从这里接）**：
+  ①发热排查结案 = Warframe（230410，**非 XCOM2**）下载 + 53GB staged 哈希校验的真负载：CDN 双线
+  合计 ~550Mbps、steam 六个 CContent 线程烧 2~3.5 核、校验期 ~560MB/s 磁盘读，cpu7 峰值 95°C
+  未降频、随阶段自然回落；全程无空转进程（systemd/udevd 高占用 = 开机风暴余波，瞬时 0%）。
+  ②**uinput 已闭环（nura 当日 r78/#79 内核轮 + 我方模块腿）**：前情 = 缺失实锤（console_log
+  反复 Couldn't open /dev/uinput → Proton 游戏手柄死路；原生 Linux 游戏直读 evdev 不受影响
+  ——"stable 能玩"实为玩原生游戏）。nura 已代刷 boot_b（mu-r69 同字节重刷）+ recovery_a
+  （ESP v59 = r78 内核，CONFIG_INPUT_UINPUT=m，#79 一次点亮；现有 r77 层模块树同 KVER 同
+  vermagic 兼容，无需重 graft）。模块腿四件当日双落：设备 = uinput.ko（r78 apk 解出）+depmod
+  +60-meizu20-uinput.rules（uaccess，ACL user:steamos:rw- 验收过）+modules-load.d；
+  构建 = 层脚本 ⑤ 节固化（ko 取自最新 apk+vermagic 守门，胶水照抄 pmaports r59，层重建绿）。
+  待验 = Warframe 手柄（steam 探针随控制器枚举触发，04:46 后零新增报错）。③**覆盖层置顶修复**：主页键唤起掌机菜单被游戏盖住 = kwin 焦点抢占防御（默认
+  Medium）把 steam 置顶请求按抢焦点降级（kwin 看不见手柄动作）；修 = kwinrc
+  `[Windows] FocusStealingPreventionLevel=0`，graft（10-graft-debian.sh kwinrc 段）+ 设备双落，
+  频道切换重登后已生效。④客户端频道已归位 **steamdeck_stable**（03:50 更新完成自动重登；
+  publicbeta 试验段结束，上条"已切 publicbeta"作废）。⑤真掌机模式路线图：L1 配置层（FSP=0 ✓；
+  嵌套 gamescope 包游戏可选，wayland 后端已证；Deck UI 自带 OSK 待验）/ L2 内核层（uinput→
+  Proton 手柄（✅ 已闭环，见②）；IN_FORMATS 翻案实锤→gamescope standalone = 真 Deck 会话
+  合成器，**点火排下会话，手册 = docs/M2381-GAMESCOPE-IGNITION.md**；s2idle→
+  电源键秒睡（drop-in 已平移，见⑦，解锁待拍板））/ L3 不追（steamos-manager/TDP——SM8550 无 Deck EC/TDP 硬件路径，Steam 直连
+  NM/BlueZ/logind 够用）。⑥**IN_FORMATS 翻案结案（nura 判词 + drm_info 复核，上条"疑似自带
+  待查证"升级为实锤）**：旧探针 grep state 无效（state dump 根本不打 IN_FORMATS 属性，恒 0
+  非读数）；drm_info 实测 10 个 plane 全带 IN_FORMATS blob，modifiers =
+  DRM_FORMAT_MOD_QCOM_COMPRESSED（0x500000000000001，kwin 扫描面正用 UBWC 出图）——
+  gamescope standalone 可在 #79 再点火，原 atomic flip EINVAL 真因另查（探针 =
+  drm_info / modetest -p）。⑦**s2idle 用户态件已平移**：r58 看门狗 drop-in 全家
+  （udevd/logind WatchdogSec=0、14 内部服务 30min、journald 30s sync；设备+层双落，daemon-reload
+  过）——睡眠 mask 仍保留（内核侧 r72 起 cmdline no_console_suspend 已实证在跑，但电源键
+  睡后唤醒不稳未治本，解锁待用户拍板）。⑧**覆盖层回程 bug 实锤（Warframe/Ori 复现）**：
+  game→menu 方向正常（FSP=0 生效）；menu→game 方向 steam 不发"自降+还焦点"操作——kwin
+  脚本实验钉死窗口层无碍（手动 minimize steamui 后游戏窗口立即 active=true 补位）；
+  旁证 = gameoverlayrenderer.so（x86 版）LD_PRELOAD 失败，ARM 客户端游戏内覆盖体系残缺，
+  菜单走"抬 steamui 窗口"降级路径、回程动作缺失。伴随：手柄配置 basicui↔游戏模板横跳、
+  steam 主动收拆游戏树（exit -1，非崩溃非 OOM）；GPU 220MHz 系空载瞬态非假死复发。
+  自救 = home 键进库点游戏；根修候选 = 自写手柄监听守护+kwin 脚本 / steam 旗标 / gamescope
+  再点火。⑨**镜像 r78 出炉（含本轮全部修复）**：work/meizu-meizu20-debian-r78.img 11G，
+  SHA256 148efbd075eb13f4de8c866d34ae25121f56099bdd01bec7c4d1d8e64b4b7b9f，04-verify 过
+  （ESP↔rootfs 7.3.0-rc6 一致）；uinput 腿全套 + FSP=0 + 整包缓存命中播种（stable
+  1791415817 新包 1.98G 免 CDN；v3 旧包留档 .v3.bak）。首启 rootfs-grow 自扩容照旧。
 - **2026-10-09 换轨 Debian 13（新会话必读）**：用户拍板兴趣线弃 holo 底包、改
   **Debian 13 trixie genericcloud arm64（USTC 国内源）**；定位 = 纯兴趣/游戏性能线，
   **pmOS（nura）才是主战地，无回滚腿**（回滚 = nura 的 pmOS rootfs）。已删：Frame
