@@ -45,14 +45,16 @@
   gamescope-control 绑定是唯一没打通的枢纽，strings 门禁破译排下会话主攻）。
   ⑤备份链 /root/steamos-gamescope-session.{v4,v5-nowayland,v5,v6,v7,v7-wayland}.bak；
   v7 源已收编 scripts/device/steamos-gamescope-session（work/layer 沙箱只读，graft 固化时归位）。
-  **下个会话执行单**：①**路线重评估已立档（用户提案「回官方 SteamOS 线」）=
-  docs/M2381-ROUTE-REEVAL-20261010.md，建议序 = 零刷机考据轮先行**（拉 Frame 恢复镜像
-  抄 Valve 原装 gamescope-session 的 env/旗标/身份件，diff 我们的 v7——有机会直接在
-  Debian 线把绑定救活；补不活再复活 Frame 管线 A/B 刷机对照，sheng 修法清单
-  ad1d9bc/be14f80 可整单移植）；顺手去 sheng / MaSieS4Fun issue 区问 Game Mode 手柄/
-  QAM 实况（同 SoC 双先例）。②"binding gamescope-control" 门禁破译（并入①的考据）。
-  ③graft 固化清单累积：v7-stable 会话件（VARIANT_ID=steamdeck + DMI 伪装料 + async
-  撤除，无 WAYLAND_DISPLAY）+ mangohud 包。④mangohud A/B 收口（透传在役，原件 .real）。
+  **下个会话执行单**：①**路线重评估二版已立档（docs/M2381-ROUTE-REEVAL-20261010.md），
+  用户点名双仓后权重重排：armada-sheng 升首选探索线**（sheng 作者本人已从 Frame 线迁去
+  armada 线；armada 官方支持 Odin2=SM8550 同 SoC，手柄进游戏是其主场；sheng 版砍了
+  bootc/OTA = 纯 ext4 fastboot 模型与我们一致）。执行序 = **零刷机考据轮先行**：
+  armada-sheng 会话件源码 + issue 区问实况（其 Game Mode 会话层若真解了握手，照抄即可
+  救活 Debian 线绑定），并行 Frame 底包考据（Valve 原装会话件 = 权威参照）；补不活再
+  A/B 刷机对照（armada-sheng 镜像换我们 r80+ 腿优先，Frame 线备胎），新底包铁律 =
+  构建期自带全套调试件。②"binding gamescope-control" 门禁破译（并入①考据）。③graft
+  固化清单累积：v7-stable 会话件（VARIANT_ID=steamdeck + DMI 伪装料 + async 撤除，无
+  WAYLAND_DISPLAY）+ mangohud 包。④mangohud A/B 收口（透传在役，原件 .real）。
   ⑤kwin 会话/睡眠 wow 回归补扫（nura 收官轮前要回传）。**⑥r80/v61 回归轮已应答 nura：
   等两腿交付即刷**（uhid 根因 = `# CONFIG_UHID is not set`，config-only 一行，r80+ESP
   v61 分钟级），一轮收口四件事：kwin sync 扫 + 睡眠/wow + **BLE HID 实插**（uhid 验收）
