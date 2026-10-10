@@ -24,9 +24,12 @@
   v60 + r79 现役腿，深锚 v59+r78 不动。
   ②**四合一回归**（nura 配方，底噪判据 = journalctl -k 零 DPU 报错）：
   (a) kwin sync 扫——sm20-session desktop 切 Plasma，看显示/转屏/亮度/suspend 设置
-  项，切回；(b) 睡眠/wow——⚠**现役 Debian 有 sleep mask（suspend 全 mask 到
-  /dev/null），先要用户拍板解 mask 再 rtcwake/logind 各一发 + wow 保连接**（已知
-  唤醒不稳未治本，FAIL 也是要回传的数据，但备好重启恢复预案）；(c) BLE HID——
+  项，切回；(b) 睡眠/wow——**用户已拍板解锁（2026-10-10 深夜已执行）**：sleep.target/
+  suspend.target 已解 mask（hibernate 无 swap 保持 masked），logind 电源键已改 suspend
+  （长按=poweroff 逃生，drop-in /etc/systemd/logind.conf.d/sm20-powerkey.conf，**下次
+  重启即 #81 那次生效**）——顺带修掉「一按电源键就关机」（最小会话无电源管理器，
+  logind 默认 poweroff 所致）。剩 = rtcwake/logind 各一发 + wow 保连接（已知唤醒不稳
+  未治本，FAIL 也是要回传的数据，但备好重启恢复预案）；(c) BLE HID——
   modprobe uhid 应成功，BLE 手柄/键鼠配对看 bluez HOG 出 /dev/input 事件设备
   （**需用户带 BLE 设备**），现役经典 hidp 手柄照旧回归；(d) uinput——Ori 一发
   （r78 时代验收基准，**需用户持手柄实测**）。
