@@ -83,7 +83,8 @@ gamescope 原生低延迟路径。另附一个 trivial 缺件（uhid）。
   3. ✓ strace 持续 `MODE_ATOMIC = 0`（~113 次/秒 @120Hz）；**截图差分证明帧持续推进**
      （cmd 模式 kick 每帧成立——「不冻结也不前进」未发生）。
   4. ✓ journalctl -k 无 DPU/DSI 运行期报错（仅开机期 a740_sqe.fw 探测噪音，前轮即有）。
-- 待补（用户侧）：d 项延迟主观对比 + 观察项空转功耗采样。
+- 待补（用户侧）：~~d 项延迟主观对比~~ → **已回（2026-10-10 晚用户实测）：画面跟手度
+  与 sync 基线无差异** = PASS；观察项空转功耗采样仍未采。
 - 用户态撤除记录：`GAMESCOPE_DISABLE_ASYNC_FLIPS=1` 已从会话脚本删除（v5 在役）；
   `--force-composition-rotation` 按 nura 嘱咐**保留**（等 kalama SDE catalog）。
 - 回归：kwin 会话/睡眠 wow 未跑（当日时间线让位给游戏启动修复+手柄排查），下轮补扫。

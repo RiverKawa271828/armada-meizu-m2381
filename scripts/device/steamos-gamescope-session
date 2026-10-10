@@ -1,11 +1,15 @@
 #!/bin/bash
-# steamos-gamescope-session v4（2026-10-10 点火成功版）—— gamescope standalone
-# DRM backend + steam -gamepadui = 真 Deck 架构。手册 = docs/M2381-GAMESCOPE-IGNITION.md。
+# steamos-gamescope-session v7（2026-10-10 晚）—— v6（async 已撤）+ DMI Deck 身份伪装
+# v7 新增：steamui.so 按 /sys/class/dmi/id/{board_name,board_vendor} 探测 Jupiter/Galileo
+# 才开 Deck 集成分支（gamescope-control 绑定/手柄焦点路由/QAM OSD）。本机 DMI =
+# Meizu/meizu20，用非特权 userns+bind-mount 伪装成 Jupiter（LCD Deck，避开 galileo HDR 特例）。
+# 历史：v4 点火版；v5=WALLAND_DISPLAY 实验（SDL3 自动 wayland 断 X11 属性通道 → 黑屏，已废）；
+# v6=GAMESCOPE_DISABLE_ASYNC_FLIPS 撤除（r79 #80 内核 async flip PASS）。
 # 二进制 = master 自建（/usr/local/bin/gamescope，含 --force-composition-rotation）；
 # Debian 3.16.22 无合成器旋转兜底，msm plane 只支持 0/180，竖屏面板必死，勿回退。
 # 回退会话 = steamos-session（kwin，保留为 SDDM 会话项，黑屏逃生门）。
 LOG=/tmp/steamos-gamescope-session.log
-echo "=== steamos-gamescope-session v4 $(date -Is) pid $$ ===" >> "$LOG"
+echo "=== steamos-gamescope-session v7 $(date -Is) pid $$ ===" >> "$LOG"
 exec >> "$LOG" 2>&1
 set -x
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/games
@@ -14,7 +18,8 @@ export XDG_CURRENT_DESKTOP=gamescope
 export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/freedreno_icd.json
 export VK_DRIVER_FILES=/usr/share/vulkan/icd.d/freedreno_icd.json
 export GAMESCOPE_FORCE_INTERNAL=1
-# msm DPU 无 async/immediate flip 支持（DRM cap=0）——关掉，走 vblank 同步路径
+# r79(#80) 起 msm 支持 atomic async flip（cap=1，见 docs/M2381-KERNEL-ENHANCE.md §5），
+# GAMESCOPE_DISABLE_ASYNC_FLIPS 已撤，gamescope 自动走 immediate/async 路径
 # liftoff 布局失败缓存会把失败布局拉黑（保险丝，保留）
 export GAMESCOPE_LIFTOFF_CACHE_DISABLE=1
 # 残留 socket 清理（kwin 会话 / 上轮 gamescope 崩溃残留会让启动误判）
@@ -22,20 +27,32 @@ rm -f "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/wayland-0* \
       "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/gamescope-0* 2>/dev/null
 mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
 
+# DMI Deck 身份伪装料（steamos 可读；session 内 bind-mount 盖到 sysfs 只读文件上）
+mkdir -p /tmp/sm20-dmi
+printf 'Jupiter\n'     > /tmp/sm20-dmi/board_name
+printf 'Valve\n'       > /tmp/sm20-dmi/board_vendor
+printf 'Steam Deck\n'  > /tmp/sm20-dmi/product_name
+chmod 644 /tmp/sm20-dmi/*
+
 ATTEMPTS=0
 while :; do
   ATTEMPTS=$((ATTEMPTS+1))
   echo "=== attempt $ATTEMPTS start $(date -Is) ==="
   START=$(date +%s)
-  /usr/local/bin/gamescope \
-    --backend drm \
-    --force-composition-rotation \
-    --force-orientation right \
-    -W 1080 -H 2400 \
-    -r 120 \
-    --fullscreen \
-    --xwayland-count 1 \
-    -- /usr/bin/env WAYLAND_DISPLAY=gamescope-0 /usr/local/bin/steam-arm -gamepadui -steamos3
+  /usr/bin/unshare --user --map-root-user --mount /bin/sh -c '
+    mount --bind /tmp/sm20-dmi/board_name   /sys/class/dmi/id/board_name   &&
+    mount --bind /tmp/sm20-dmi/board_vendor /sys/class/dmi/id/board_vendor &&
+    mount --bind /tmp/sm20-dmi/product_name /sys/class/dmi/id/product_name &&
+    exec /usr/local/bin/gamescope \
+      --backend drm \
+      --force-composition-rotation \
+      --force-orientation right \
+      -W 1080 -H 2400 \
+      -r 120 \
+      --fullscreen \
+      --xwayland-count 1 \
+      -- /usr/bin/env WAYLAND_DISPLAY=gamescope-0 /usr/local/bin/steam-arm -gamepadui -steamos3
+  '
   RC=$?
   ELAPSED=$(( $(date +%s) - START ))
   echo "=== attempt $ATTEMPTS ended rc=$RC after ${ELAPSED}s $(date -Is) ==="

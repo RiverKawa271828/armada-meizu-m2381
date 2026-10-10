@@ -20,23 +20,33 @@
   exit 0；今早能跑 = 当时无注入）：已 apt 装 mangohud，但 GRIS 实测冻帧（单核 70% 自旋、
   GPU 680MHz、合成器/flip 环全正常 = 游戏没吐帧），**/usr/bin/mangohud 现为透传脚本**
   （原件 mangohud.real；GL 钩子冻结嫌疑待 A/B 收口——透传后重启 GRIS 曾 GAME_ADVANCING）。
-  ③**手柄失效历史情报（用户口供）= kwin 时代游戏内手柄正常、真掌机模式后失效** →
-  gamescope 专属焦点握手嫌疑（gamescope-control 管输入焦点分发）；但注入链节点本轮全活：
-  steam 握 /dev/uinput + **虚拟手柄已建**（event6 "Microsoft X-Box 360 pad 0" =
-  /devices/virtual/input/input8，uinput 实锤；容器 /dev/input 全量可见 = wine 可读），
-  端到端等用户按键实测。④**方向 a 实验进行中**：会话件 v5 给 steam 挂
-  `WAYLAND_DISPLAY=gamescope-0`（gamescope 本来就塞了 GAMESCOPE_WAYLAND_DISPLAY 但客户端
-  不接；显式挂上后 console_log 出现 **"wayland: context initialized"** = ARM 客户端 wayland
-  路径首次点亮，UI 正常渲染）；⚠ **SDL_VIDEODRIVER=wayland 必死**（webhelper CEF 卡死报
-  "未响应"，已撤，勿再加）；"binding gamescope-control" 行尚未出现，绑定是否成立待查；
-  steamui.so 内 gamescope 协议栈代码完整（strings 实锤：gamescope-control/
-  action-binding-manager/StateChanged/"forcing gamepadui for steamdeck + gamescope"）。
-  ⑤备份链：/root/steamos-gamescope-session.v4.bak（撤开关前）/.v5-nowayland.bak；
-  v5 源已收编 work/cache/steamos-gamescope-session.v5（work/layer 沙箱只读，graft 固化时归位）。
-  **下个会话执行单**：①用户三测：UI 手柄导航 / 游戏内手柄 / 游戏内 home 键 QAM（老毛病：
-  唤菜单→游戏冻结帧盖死或菜单冻结盖死——ARM steam 覆盖层缺口家族）；②mangohud A/B 收口
-  （真钩子 vs 透传各跑一把 GRIS 差分）；③"binding gamescope-control" 追踪（wayland 接上后
-  QAM/焦点/虚拟手柄激活是否复活）；④graft 固化（v5 会话件+mangohud 包+async 撤除入层）。
+  ③**手柄失效历史情报（用户口供）= kwin 时代游戏内手柄正常、真掌机模式后失效**；注入链
+  节点全活：steam 握 /dev/uinput + 虚拟手柄已建（event6 "Microsoft X-Box 360 pad 0" =
+  /devices/virtual/input/input8，uinput 实锤；容器 /dev/input 全量可见 = wine 可读），但
+  **steam input 激活路由到错误 appid**（controller.txt：Queueing activation → 443510/413080，
+  从不 683320）= 前台感知瞎 = 焦点握手缺口。④**Deck 身份三件套已立（本晚会话件 v7）**：
+  (a) os-release 补 `VARIANT_ID="steamdeck"`（上游 graft 650 行同款；Debian 底包本来没有，
+  steamui 按 "for steamdeck + gamescope" 分流，jupiter 命令行已开始跑）；
+  (b) **steamui.so 按 /sys/class/dmi/id/{board_name,board_vendor,bios_version} 探测
+  Jupiter/Galileo**（strings 实锤），本机 = Meizu/meizu20 → 会话件 v7 用非特权
+  `unshare --user --map-root-user --mount` 把 /tmp/sm20-dmi/{board_name=Jupiter,board_vendor=
+  Valve,product_name=Steam Deck} bind-mount 盖到 sysfs 上（ns 内实测读到 Jupiter）；
+  (c) steam 挂 `WAYLAND_DISPLAY=gamescope-0`——⚠单独挂 = v5 黑屏事故（SDL3 见
+  WAYLAND_DISPLAY 自动转 wayland，弃写 X11 的 STEAM_OVERLAY/STEAM_INPUT_FOCUS 属性通道，
+  而 gamescope-control 真绑定又没发生 → gamescope 无焦点信息可合成 = 全黑有声；
+  32s 截图格式报错要用 8s；**SDL_VIDEODRIVER=wayland 更毒，直接 webhelper 未响应**）。
+  **v7 = (a)+(b)+(c) 三合一套装，UI 渲染正常 + webhelper 8 进程活**（v5 黑屏疑因缺 Deck
+  身份时 wayland 模式走错分支）；"binding gamescope-control" 行三种配置下都不出现
+  （strings 85011 行确认代码在，门禁未破译），但 v7 下游戏内 QAM 面板首次渲染成功
+  （用户实测，v4 纯 X11 时代从不映射）；menu→game 回程 / 手柄路由 / 反复切换黑屏仍未收口。
+  ⑤备份链 /root/steamos-gamescope-session.{v4,v5-nowayland,v5,v6,v7,v7-wayland}.bak；
+  v7 源已收编 scripts/device/steamos-gamescope-session（work/layer 沙箱只读，graft 固化时归位）。
+  **下个会话执行单**：①用户测 v7 三合一套装：游戏内手柄 / 游戏内 QAM / menu→game 回程；
+  黑屏自救 = ssh 改会话件摘 WAYLAND_DISPLAY 行 + systemctl restart sddm；②graft 固化清单
+  累积：v7 会话件 + VARIANT_ID=steamdeck（os-release 两副本）+ mangohud 包 + DMI 伪装料
+  （/tmp/sm20-dmi 三件在会话件内生成，graft 只需会话件）+ async 撤除；③"binding
+  gamescope-control" 门禁破译（strings 上下文挖掘/x86 会话对照）——绑定一旦成立，焦点路由
+  （手柄）+ QAM 往返 + OSD 应全线复活；④mangohud A/B 收口（透传在役，原件 .real）。
 - **★ 真掌机模式点火成功（2026-10-10 午）**：gamescope standalone（**master
   自建**）+ steam -gamepadui = 真 Deck 架构**在魅族 20 上点亮**：横屏 2400x1080、flip 零失败、
   **UBWC（QCOM_COMPRESSED）直接扫描输出**（plane49 gamescope-xwm XR30+UBWC，vsync 持续）。
