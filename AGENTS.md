@@ -53,7 +53,10 @@
   QAM 实况（同 SoC 双先例）。②"binding gamescope-control" 门禁破译（并入①的考据）。
   ③graft 固化清单累积：v7-stable 会话件（VARIANT_ID=steamdeck + DMI 伪装料 + async
   撤除，无 WAYLAND_DISPLAY）+ mangohud 包。④mangohud A/B 收口（透传在役，原件 .real）。
-  ⑤kwin 会话/睡眠 wow 回归补扫（nura 收官轮前要回传）。
+  ⑤kwin 会话/睡眠 wow 回归补扫（nura 收官轮前要回传）。**⑥r80/v61 回归轮已应答 nura：
+  等两腿交付即刷**（uhid 根因 = `# CONFIG_UHID is not set`，config-only 一行，r80+ESP
+  v61 分钟级），一轮收口四件事：kwin sync 扫 + 睡眠/wow + **BLE HID 实插**（uhid 验收）
+  + uinput 手柄回归；收官钉 = r80/device r59/v61。
 - **★ 真掌机模式点火成功（2026-10-10 午）**：gamescope standalone（**master
   自建**）+ steam -gamepadui = 真 Deck 架构**在魅族 20 上点亮**：横屏 2400x1080、flip 零失败、
   **UBWC（QCOM_COMPRESSED）直接扫描输出**（plane49 gamescope-xwm XR30+UBWC，vsync 持续）。
