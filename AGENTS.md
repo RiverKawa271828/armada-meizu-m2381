@@ -60,9 +60,13 @@
   （FEX sqsh zstd→gzip【内核诉求 CONFIG_SQUASHFS_ZSTD=y】/wireplumber 踢卡固化/
   controller-type mask【无内置手柄必炸，默认 deck-uhid】/bootc-growpart mask/Decky
   disable/os-release 归位 Armada），全部回写适配脚本保持重建同构。
-  **下一步 = 用户实机验收**：屏幕 Steam UI/WiFi 首连/BT 手柄→deck-uhid→**进游戏受控
-  （②d 墙判决）**/扬声器/QAM/往返；回滚 = 重刷 Debian r78 盘（vermagic 注：r78 模块
-  #79 vs ESP #81，重刷后宿主 loop 解 r80 apk 修配对，SSH/NCM 不受影响）。
+  **★ ②d 墙破（2026-10-11 用户实测"全部正常"）**：WiFi/登录/手柄进游戏受控/扬声器/
+  QAM/往返全绿——Debian 三堵墙在 armada 不存在，路线判决成立，**Debian 盘退役为纯
+  备份**（回滚 = 重刷 r78 盘；vermagic 注：r78 模块 #79 vs ESP #81，重刷后宿主 loop
+  解 r80 apk 修配对）。**RTC 持久化已装**（治无 RTC 电池首启时钟=盘内烤死旧时间→
+  steam TLS 全挂弹"无法下载更新"）：rtc0=efi 废件、rtc1=pm8xxx PMIC 走电正主——
+  sm20-rtc1-restore（sysinit hctosys+废值门禁）+ save.timer 每小时写回 +
+  time-wait-sync 25s 兜底，持久性待下次重启实证。
   睡眠腿备注：现
   钉 fake（真 s2idle 入睡不 resume 与上游互证）；nura wowlan 三件真睡眠（meizu-wowlan
   + WatchdogSec=0）留作上机后实验项，档案改 s2idle 即切换。选型存档：官方
