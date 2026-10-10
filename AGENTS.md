@@ -45,12 +45,15 @@
   gamescope-control 绑定是唯一没打通的枢纽，strings 门禁破译排下会话主攻）。
   ⑤备份链 /root/steamos-gamescope-session.{v4,v5-nowayland,v5,v6,v7,v7-wayland}.bak；
   v7 源已收编 scripts/device/steamos-gamescope-session（work/layer 沙箱只读，graft 固化时归位）。
-  **下个会话执行单**：①"binding gamescope-control" 门禁破译（主攻：strings 上下文挖掘/
-  x86 会话对照/ Valve ARM devkit 环境考据——绑定一旦成立，焦点路由（手柄）+ QAM 往返 +
-  OSD 应全线复活；v7 实测 QAM 面板能渲染 = 渲染腿已通，只差握手）；②graft 固化清单累积：
-  v7-stable 会话件（VARIANT_ID=steamdeck + DMI 伪装料 + async 撤除，无 WAYLAND_DISPLAY）
-  + mangohud 包；③mangohud A/B 收口（透传在役，原件 .real）；④kwin 会话/睡眠 wow 回归
-  补扫（nura 收官轮前要回传）。
+  **下个会话执行单**：①**路线重评估已立档（用户提案「回官方 SteamOS 线」）=
+  docs/M2381-ROUTE-REEVAL-20261010.md，建议序 = 零刷机考据轮先行**（拉 Frame 恢复镜像
+  抄 Valve 原装 gamescope-session 的 env/旗标/身份件，diff 我们的 v7——有机会直接在
+  Debian 线把绑定救活；补不活再复活 Frame 管线 A/B 刷机对照，sheng 修法清单
+  ad1d9bc/be14f80 可整单移植）；顺手去 sheng / MaSieS4Fun issue 区问 Game Mode 手柄/
+  QAM 实况（同 SoC 双先例）。②"binding gamescope-control" 门禁破译（并入①的考据）。
+  ③graft 固化清单累积：v7-stable 会话件（VARIANT_ID=steamdeck + DMI 伪装料 + async
+  撤除，无 WAYLAND_DISPLAY）+ mangohud 包。④mangohud A/B 收口（透传在役，原件 .real）。
+  ⑤kwin 会话/睡眠 wow 回归补扫（nura 收官轮前要回传）。
 - **★ 真掌机模式点火成功（2026-10-10 午）**：gamescope standalone（**master
   自建**）+ steam -gamepadui = 真 Deck 架构**在魅族 20 上点亮**：横屏 2400x1080、flip 零失败、
   **UBWC（QCOM_COMPRESSED）直接扫描输出**（plane49 gamescope-xwm XR30+UBWC，vsync 持续）。
