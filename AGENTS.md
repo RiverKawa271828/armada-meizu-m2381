@@ -29,6 +29,26 @@
   + 会话件 + SDDM 默认切 gamescope + steamos-select-branch / jupiter-dock-updater 桩
   （上游 11.7 参照 work/ref/upstream-10-graft-bbc6065.sh:903）；③UDEBUG=noubwc 等诊断
   env 已全撤（TU_DEBUG 勿再加，UBWC 实测通）。
+- **★ 点火后首轮实测：两大问题定性（2026-10-10 晨后段）**：
+  ①**手柄全灭 = BT 链路僵死，非 gamescope 回归**：Xbox 手柄闲置自动关机后旧链路不释放
+  （重连报 Busy），evdev 节点成僵尸（steam 握着死 fd，6 秒采样 0 字节）；`systemctl restart
+  bluetooth` 后 3 秒重枚举全链复活（steam sdl:// 热插拔 ✓）。自救命令已交用户。**nura 事项：
+  r78 内核无 uhid 模块**（modprobe FATAL）——现役手柄走经典 BT hidp 不受影响，但 BLE HID
+  全灭，下轮内核建议 CONFIG_UHID=m。
+  ②**游戏内 QAM 不显示 = 未决新案（当前最高优先）**：guide 触发后 steam 播声+内部切焦点
+  （游戏暂停渲染 = 用户看到的"死报纸"），但 **UI 窗口从不映射**（400x300 隐藏小窗，UnMapped；
+  大屏幕窗口游戏启动后即 unmap）。gamescope 机制 = 窗口带 `STEAM_OVERLAY` 属性 + 全宽/
+  STEAM_INPUT_FOCUS 才画覆盖层——实查大屏幕窗口 `STEAM_OVERLAY=0`（ARM 客户端从不置 1），
+  手动置 1 + 强制 map/activate/resize 全无效（webhelper 在游戏模式下不渲染提交）。
+  **关键差异线索：steam 0 条 wayland 连接**（纯 X11 客户端，gamescope-0 socket 没碰）——
+  Deck 上 gamepadui 走 wayland（gamescope-control 协议管焦点/OSD/UI 可见性握手），
+  ARM 客户端不走 = 集成缺口。库里 QAM 待用户耳朵/眼睛边界测试（Xbox 在库里出不出面板）。
+  诊断工具链已备：`GAMESCOPECTRL_REQUEST_SCREENSHOT` root 属性触发 gamescope 合成输出截图
+  （/tmp/gamescope.png，xwd 看不到 GPU 窗口内容，此法为唯一眼睛）+ xdotool（XTEST 可触发
+  QAM 热键 ctrl+shift+Tab）。下一方向：a) 强制 steam UI 走 wayland（SDL_VIDEODRIVER=wayland
+  / 拆 DISPLAY 引导）接上 gamescope-control；b) 自写 guide 键监听守护 + 强制 map UI 窗口
+  （卡在 webhelper 不渲染，需查 webhelper 恢复渲染信号）；c) 查 ARM 客户端是否有
+  wayland UI 开关旗标。
 - **★ 设备日晨场：发热结案 + uinput 实锤 + 覆盖层修复 + 频道归位（2026-10-10 晨，新会话从这里接）**：
   ①发热排查结案 = Warframe（230410，**非 XCOM2**）下载 + 53GB staged 哈希校验的真负载：CDN 双线
   合计 ~550Mbps、steam 六个 CContent 线程烧 2~3.5 核、校验期 ~560MB/s 磁盘读，cpu7 峰值 95°C
