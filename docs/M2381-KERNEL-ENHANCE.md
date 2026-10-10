@@ -162,3 +162,21 @@ uinput 手柄两件待用户带设备实测。**
   可钉 r80/device r59/v61 + Release**。
 - **回滚锚更新**：本轮回滚 = ESP v60 + `/usr/lib/modules/7.3.0-rc6.r79-bak`；
   深锚 v59+r78（`.r78-bak`）不动。料件留在设备 /root（apk + img）。
+
+## 7. nura 收官回执（2026-10-11，合作轮闭环）
+
+- **钉子已落**：nura 现役 = r80 / device r59 / ESP v61 / #81；verify 全绿——他们侧
+  独立算出 ESP↔apk vmlinuz 同源哈希与我们报的 `12ee72b9` 一致，双侧互证闭环。
+  uhid.ko 进 verify 抽查清单永久固化；Release（GitHub 推送窗）按其纪律单独排程，
+  届时回话。rotate-90 kalama 收割在他们队列挂着随时候命。
+- **uhid autoload**：判读获确认（misc 无 open-time autoload，=m 必配
+  modules-load.d，我方固化即可）；UHID=y 挂未来 config 轮可选，不为它单独重编。
+- **suspend 回注（★ armada 配方新情报）**：nura pmOS 线 suspend **可用**，靠
+  device 包 r56-58 三件 = `meizu-wowlan.service`（睡时保 WiFi 链路，绕开 ath12k
+  service-ready 死结）+ r58 看门狗修复（s2idle 下 monotonic 照走，systemd 3min
+  看门狗会在唤醒瞬间杀 udevd/logind = 屏黑假死，WatchdogSec=0 解）。**我方 10-10
+  晨已平移看门狗 drop-in 全家但未平移 wowlan**——②b 冷复位很可能缺的就是
+  wowlan 这块；**armada 睡眠腿修正为：先试 pmOS wowlan 三件真睡眠，fake-suspend
+  降级为兜底**。rtc0=rtc-efi 废件与其 PMIC rtc1 观察互证。GMU 0x8a1 冷复位签名
+  其 pmOS 线未见；若追，其 suspend 取证包（netconsole+FINDINGS §11）可支援。
+- **游戏内手柄**：会话层定性无异议。合作轮正式收官。
