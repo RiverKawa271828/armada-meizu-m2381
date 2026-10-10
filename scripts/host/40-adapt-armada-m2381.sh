@@ -290,6 +290,58 @@ ExecStart=/bin/sh -c "sleep 5; runuser -u armada -- env XDG_RUNTIME_DIR=/run/use
 WantedBy=multi-user.target
 EOF
 
+# RTC 时间持久化（实机实锤：RTC 无电池首启时钟=盘内烤的 2026-07-25 → steam
+# bootstrap TLS 全挂弹"无法下载更新"。rtc0=rtc-efi EIO 废件；rtc1=pm8xxx PMIC
+# RTC 走电计时——开机从 rtc1 还原 + 每小时写回 + time-wait 兜底限时 25s）
+sudo mkdir -p "${MNT}/usr/lib/meizu20"
+sudo tee "${MNT}/usr/lib/meizu20/sm20-rtc1-restore.sh" >/dev/null <<'EOF'
+#!/bin/bash
+# m2381: 开机从 PMIC RTC(rtc1) 还原系统时钟（rtc0=rtc-efi EIO 废件，不可用）
+Y=$(cut -d- -f1 /sys/class/rtc/rtc1/date 2>/dev/null || echo 0)
+if [ "$Y" -ge 2026 ] 2>/dev/null; then
+    hwclock --hctosys --rtc /dev/rtc1
+else
+    logger -t sm20-rtc1 "rtc1 date implausible (${Y}), skip restore"
+fi
+EOF
+sudo chmod 0755 "${MNT}/usr/lib/meizu20/sm20-rtc1-restore.sh"
+sudo tee "${MNT}/etc/systemd/system/sm20-rtc1-restore.service" >/dev/null <<'EOF'
+[Unit]
+Description=m2381: restore system clock from PMIC RTC rtc1 (rtc0/efi is a broken stub)
+DefaultDependencies=no
+Conflicts=shutdown.target
+Before=sysinit.target shutdown.target
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/meizu20/sm20-rtc1-restore.sh
+[Install]
+WantedBy=sysinit.target
+EOF
+sudo tee "${MNT}/etc/systemd/system/sm20-rtc1-save.service" >/dev/null <<'EOF'
+[Unit]
+Description=m2381: write system clock to PMIC RTC rtc1
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/hwclock --systohc --rtc /dev/rtc1
+EOF
+sudo tee "${MNT}/etc/systemd/system/sm20-rtc1-save.timer" >/dev/null <<'EOF'
+[Unit]
+Description=m2381: hourly RTC save
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=1h
+[Install]
+WantedBy=timers.target
+EOF
+sudo mkdir -p "${MNT}/etc/systemd/system/systemd-time-wait-sync.service.d"
+sudo tee "${MNT}/etc/systemd/system/systemd-time-wait-sync.service.d/10-sm20-cap.conf" >/dev/null <<'EOF'
+[Service]
+TimeoutStartSec=25
+EOF
+# time-wait 开启（graphical 不默认等它，rtc1 是主力；这是离线误时第二道保险）
+sudo ln -sfn /usr/lib/systemd/system/systemd-time-wait-sync.service \
+    "${MNT}/etc/systemd/system/sysinit.target.wants/systemd-time-wait-sync.service"
+
 # ssh：host key（缺则宿主生成——host key 是 arch 无关数据件）+ root 密码 + pubkey
 if ! ls "${MNT}"/etc/ssh/ssh_host_*_key >/dev/null 2>&1; then
     sudo ssh-keygen -A -f "${MNT}"
@@ -393,6 +445,11 @@ for u in m2381-ncm-gadget m2381-usb0-ip gpu-ondemand-watch meizu-audio-wireplumb
         log "  WARN: unit 缺失 ${u}"
     fi
 done
+# RTC 件 enable（restore 挂 sysinit、save.timer 挂 timers）
+sudo ln -sfn /etc/systemd/system/sm20-rtc1-restore.service \
+    "${MNT}/etc/systemd/system/sysinit.target.wants/sm20-rtc1-restore.service"
+sudo ln -sfn /etc/systemd/system/sm20-rtc1-save.timer \
+    "${MNT}/etc/systemd/system/timers.target.wants/sm20-rtc1-save.timer"
 # sshd / sddm / inputplumber 上游已 enable，复核
 for u in sshd sddm inputplumber; do
     if [ -e "${MNT}/etc/systemd/system/multi-user.target.wants/${u}.service" ] || \
