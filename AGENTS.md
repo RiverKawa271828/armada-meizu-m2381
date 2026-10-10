@@ -52,8 +52,18 @@
   重写件）/bootupd/RNDIS/sheng-thp/update-reserve + /sysroot 孤儿 ostree 仓库 2G。
   **21 项点验全绿 → work/meizu-meizu20-armada-r80.img 14.6G（.sha256 旁证）**；steam
   客户端已预种（/var/home/armada/.steam 3.3G，publicbeta 1788652215 同源）首启可离线。
-  **下一步 = 用户排期 A/B 刷 userdata**（fastboot flash userdata work/meizu-meizu20-
-  armada-r80.img；回滚 = Debian r78 盘/pmOS rootfs 重刷，30 秒锚照旧）。睡眠腿备注：现
+  **★ 已刷入实机 + 首启大半通（2026-10-11 凌晨，全文含抓虫 = docs/M2381-ARMADA-PORT-
+  20261011.md §4）**：SSH `reboot bootloader` 进 fastboot（10s）→ userdata 17 块 OKAY
+  6m08s；首启 <1min SSH 可达，growfs 457G ✓、steam 四旗标在跑 ✓、meizu 全链 active ✓、
+  card0 出卡 ✓、触摸 Goodix ✓、device-env 全对 ✓、/dev/uhid+InputPlumber ✓、fake-suspend
+  接线 ✓、gamescope 3.16.19-257 起 DRM connected ✓、终态 --failed=0。首启抓虫六件全修
+  （FEX sqsh zstd→gzip【内核诉求 CONFIG_SQUASHFS_ZSTD=y】/wireplumber 踢卡固化/
+  controller-type mask【无内置手柄必炸，默认 deck-uhid】/bootc-growpart mask/Decky
+  disable/os-release 归位 Armada），全部回写适配脚本保持重建同构。
+  **下一步 = 用户实机验收**：屏幕 Steam UI/WiFi 首连/BT 手柄→deck-uhid→**进游戏受控
+  （②d 墙判决）**/扬声器/QAM/往返；回滚 = 重刷 Debian r78 盘（vermagic 注：r78 模块
+  #79 vs ESP #81，重刷后宿主 loop 解 r80 apk 修配对，SSH/NCM 不受影响）。
+  睡眠腿备注：现
   钉 fake（真 s2idle 入睡不 resume 与上游互证）；nura wowlan 三件真睡眠（meizu-wowlan
   + WatchdogSec=0）留作上机后实验项，档案改 s2idle 即切换。选型存档：官方
   armada-os 20260926 = 整盘 UEFI+bootc 不合 fastboot 模型，留参照备胎；Frame 恢复镜像

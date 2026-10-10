@@ -53,6 +53,9 @@ done
 for t in losetup blkid rsync depmod modinfo openssl ssh-keygen e2fsck resize2fs dumpe2fs; do
     command -v "$t" >/dev/null || { echo "ERROR: 宿主缺 $t" >&2; exit 1; }
 done
+for t in unsquashfs mksquashfs setfattr; do
+    command -v "$t" >/dev/null || { echo "WARN: 宿主缺 $t（FEX 重压/os-release 步骤将跳）" >&2; }
+done
 [ -f "${PUBKEY}" ] || { echo "ERROR: 缺 ${PUBKEY}" >&2; exit 1; }
 
 log "0) 铺工作盘（保留上游原盘不动）"
@@ -273,6 +276,20 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
+# wireplumber 踢卡（首启实锤：ADSP 声卡 boot+75s 才到，wireplumber 起早了只报
+# Dummy Output，重启 pipewire/wireplumber 即见 Built-in Audio Stereo）
+sudo tee "${MNT}/etc/systemd/system/meizu-audio-wireplumber-kick.service" >/dev/null <<'EOF'
+[Unit]
+Description=Meizu 20: kick wireplumber after late ADSP card (boot+75s)
+After=meizu-audio-route.service
+Wants=meizu-audio-route.service
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "sleep 5; runuser -u armada -- env XDG_RUNTIME_DIR=/run/user/1000 systemctl --user try-restart pipewire wireplumber"
+[Install]
+WantedBy=multi-user.target
+EOF
+
 # ssh：host key（缺则宿主生成——host key 是 arch 无关数据件）+ root 密码 + pubkey
 if ! ls "${MNT}"/etc/ssh/ssh_host_*_key >/dev/null 2>&1; then
     sudo ssh-keygen -A -f "${MNT}"
@@ -301,12 +318,68 @@ for u in armada-usbgadget ostree-remount ostree-finalize-staged \
     sudo ln -sf /dev/null "${MNT}/etc/systemd/system/${u}.service" 2>/dev/null || true
     sudo ln -sf /dev/null "${MNT}/etc/systemd/system/${u}.timer" 2>/dev/null || true
 done
+# armada-controller-type：走 InputPlumber CompositeDevice D-Bus——m2381 无内置手柄
+# ⇒ 开机必无 CompositeDevice，apply 必炸（首启实锤）。默认目标本来就是
+# deck-uhid（defaults.conf 首位），接手柄后手动 `controller-type apply` 即可。
+sudo ln -sf /dev/null "${MNT}/etc/systemd/system/armada-controller-type.service"
+# plugin_loader（Decky）：首启 exit-code 连炸（首启实锤），m2381 不预装插件；要
+# 插件时在设备上 unmask + 装配。
+sudo ln -sf /dev/null "${MNT}/etc/systemd/system/plugin_loader.service"
+sudo rm -f "${MNT}/etc/systemd/system/multi-user.target.wants/plugin_loader.service" 2>/dev/null || true
+
+# os-release 归位：52-configure-os-release 的产物在容器导出路径上丢了（实测
+# /usr/lib/os-release 还是 Fedora 44 内容）。按上游脚本同款格式重写。
+ARMADA_VER=$(sudo cat "${MNT}/usr/lib/armada/version" 2>/dev/null || echo unknown)
+if command -v setfattr >/dev/null; then
+    sudo tee "${MNT}/usr/lib/os-release" >/dev/null <<EOF
+NAME="Armada"
+VERSION="${ARMADA_VER}"
+ID=armada
+ID_LIKE="fedora"
+VERSION_ID="44"
+BUILD_ID="${ARMADA_VER}"
+PRETTY_NAME="Armada ${ARMADA_VER}"
+DEFAULT_HOSTNAME=armada
+IMAGE_ID=armada
+IMAGE_VERSION="${ARMADA_VER}"
+HOME_URL="https://armadaos.dev/"
+DOCUMENTATION_URL="https://armadaos.dev/"
+SUPPORT_URL="https://armadaos.dev/troubleshooting/frequently-asked-questions/"
+BUG_REPORT_URL="https://github.com/armada-os/armada/issues"
+EOF
+    log "  os-release → Armada ${ARMADA_VER}（/etc 软链同源）"
+fi
+
+# FEX x86 腿压缩改型：r80 内核 CONFIG_SQUASHFS_ZSTD 未开（只有 zlib），上游两个
+# zstd sqsh 内核挂载必败（首启实锤）。宿主侧解包 → gzip 重压 → 原位替换。
+# Mesa 件本体 user.component=fex-mesa xattr 必须保留（FEX 用它分类组件）。
+FEX_ROOT="${MNT}/usr/share/fex-emu/RootFS"
+if command -v unsquashfs >/dev/null && command -v mksquashfs >/dev/null; then
+    WORKFEX=$(mktemp -d /mnt/armada-fex.XXXX)
+    for name in ArchLinux ArmadaMesa; do
+        src="${FEX_ROOT}/${name}.sqsh"
+        [ -f "${src}" ] || { log "  WARN: 缺 ${src}，FEX 跳过"; continue; }
+        sudo unsquashfs -d "${WORKFEX}/${name}" -no-progress "${src}" >/dev/null
+        sudo mksquashfs "${WORKFEX}/${name}" "${WORKFEX}/${name}.gzip.sqsh" \
+            -comp gzip -noappend -all-root -no-progress >/dev/null
+        sudo mv "${src}" "${src}.zstd.bak"
+        sudo mv "${WORKFEX}/${name}.gzip.sqsh" "${src}"
+        sudo rm -rf "${WORKFEX}/${name}"
+        log "  FEX ${name}.sqsh → gzip（zstd 原件留 .zstd.bak）"
+    done
+    # Mesa 件 xattr 打在 sqsh 文件本体（40-vendor 同源操作）
+    sudo setfattr -n user.component -v fex-mesa "${FEX_ROOT}/ArmadaMesa.sqsh" 2>/dev/null \
+        && log "  FEX Mesa user.component xattr 已复打" || log "  WARN: Mesa xattr 复打失败"
+    sudo rm -rf "${WORKFEX}"
+else
+    log "  WARN: 宿主无 squashfs-tools，FEX sqsh 保持 zstd（x86 游戏腿在 r80 内核上不可用）"
+fi
 # ModemManager：m2381 主线无可用 modem；黑名单已封 PAS，MM 本体直接关死
 sudo rm -f "${MNT}/etc/systemd/system/dbus-org.freedesktop.ModemManager1.service" 2>/dev/null || true
 sudo rm -f "${MNT}/etc/systemd/system/multi-user.target.wants/ModemManager.service" 2>/dev/null || true
 
 # enable 集：meizu 编排链 + 调试件（软链进 multi-user.target.wants，目标按实际落点选）
-for u in m2381-ncm-gadget m2381-usb0-ip gpu-ondemand-watch \
+for u in m2381-ncm-gadget m2381-usb0-ip gpu-ondemand-watch meizu-audio-wireplumber-kick \
          meizu-pas meizu-touch meizu-amps meizu-audio meizu-sndcard-bind \
          meizu-audio-route meizu-bind-nfc-haptics meizu-memsleep; do
     TGT=""
