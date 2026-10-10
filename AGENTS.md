@@ -49,6 +49,10 @@
   / 拆 DISPLAY 引导）接上 gamescope-control；b) 自写 guide 键监听守护 + 强制 map UI 窗口
   （卡在 webhelper 不渲染，需查 webhelper 恢复渲染信号）；c) 查 ARM 客户端是否有
   wayland UI 开关旗标。
+  **边界收口（用户实测关机前）**：**库里 QAM 正常弹出+有声** = QAM 通路/UI 层本身是好的，
+  坏的只是「游戏运行中」的切换（focus 切给 UI 但窗口不 map）。下轮主攻 = 游戏内切换，
+  方向 a（steam UI 走 wayland 接 gamescope-control）权重最高。当日会话日志已存设备
+  /root/steamos-gamescope-session.log.20261010 + gamescope-last-frame.png。
 - **★ 设备日晨场：发热结案 + uinput 实锤 + 覆盖层修复 + 频道归位（2026-10-10 晨，新会话从这里接）**：
   ①发热排查结案 = Warframe（230410，**非 XCOM2**）下载 + 53GB staged 哈希校验的真负载：CDN 双线
   合计 ~550Mbps、steam 六个 CContent 线程烧 2~3.5 核、校验期 ~560MB/s 磁盘读，cpu7 峰值 95°C
