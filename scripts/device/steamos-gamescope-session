@@ -51,7 +51,7 @@ while :; do
       -r 120 \
       --fullscreen \
       --xwayland-count 1 \
-      -- /usr/bin/env WAYLAND_DISPLAY=gamescope-0 /usr/local/bin/steam-arm -gamepadui -steamos3
+      -- /usr/local/bin/steam-arm -gamepadui -steamos3
   '
   RC=$?
   ELAPSED=$(( $(date +%s) - START ))
