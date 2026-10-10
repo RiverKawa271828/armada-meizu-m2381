@@ -32,7 +32,12 @@
   未治本，FAIL 也是要回传的数据，但备好重启恢复预案）；(c) BLE HID——
   modprobe uhid 应成功，BLE 手柄/键鼠配对看 bluez HOG 出 /dev/input 事件设备
   （**需用户带 BLE 设备**），现役经典 hidp 手柄照旧回归；(d) uinput——Ori 一发
-  （r78 时代验收基准，**需用户持手柄实测**）。
+  （r78 时代验收基准，**需用户持手柄实测**）。**手柄测试矩阵（用户备料 2026-10-10
+  确认）**：①Xbox 手柄经典蓝牙（hidp）= 日常基线；②**2.4G 接收器插扩展坞**
+  （USB/xpad 路径，与 BT 完全独立）——顺带首验 m2381 **USB host 模式**（扩展坞枚举
+  不出就查 /sys/class/usb_role 做 role switch，结果对 armada 线同样有用）；③蓝牙键鼠
+  （BLE/HOG vs 经典 HID 当场判定，打 uhid 靶心）；④steam input 虚拟手柄（uinput 链，
+  手柄路径无关，Ori 实测）。
   ③四件 PASS → 回传 nura → 收官钉 r80/device r59/v61 + Release。
   ④**armada-sheng 零刷机考据**：读其 Game Mode 会话件源码（怎么拉 steam/传什么
   env/gamescope 哪来）+ issue 区问 QAM/游戏内手柄实况——它若真解了握手，考据
