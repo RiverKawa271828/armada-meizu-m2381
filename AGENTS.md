@@ -49,6 +49,18 @@
   / 拆 DISPLAY 引导）接上 gamescope-control；b) 自写 guide 键监听守护 + 强制 map UI 窗口
   （卡在 webhelper 不渲染，需查 webhelper 恢复渲染信号）；c) 查 ARM 客户端是否有
   wayland UI 开关旗标。
+  ③**手柄游戏内控制未通（用户点名的待办）**：BT 复活后事件流到 steam（controller.txt
+  可见 sdl:// 枚举+绑定激活），但 Proton 游戏（Blasphemous 2 实测）不受控制。已知：
+  Steam 虚拟手柄（uinput）从未创建（/dev/uinput 引用计数 0，steam 不尝试）——uinput 腿
+  （r78 ko+ACL+rules）在位但端到端从未验证过；kwin 时代该路径同样未验。下轮排查 =
+  steam↔proton 控制器通道（steam input 对 proton 的注入/IPC、proton 容器内 /dev/input
+  可见性、或 steam input 设置层）。
+- **★ 内核增强件判词已立（2026-10-10，nura 协作对接文件）**：**docs/M2381-KERNEL-ENHANCE.md**
+  = async flip（先行，撤 GAMESCOPE_DISABLE_ASYNC_FLIPS）+ inline rotation rotate-90
+  （排后不弃，撤 --force-composition-rotation，master bScanoutCanRotate 自动切回）+
+  uhid（CONFIG_UHID=m，trivial）三缺件；含我方三承诺（m2381 当验证平台/两行撤除开关/
+  #80+ 回归回传）与 Pocket S2、kwin 逃生门保留、/root 诊断资产等侧锚点。nura 正在配
+  新内核。
   **边界收口（用户实测关机前）**：**库里 QAM 正常弹出+有声** = QAM 通路/UI 层本身是好的，
   坏的只是「游戏运行中」的切换（focus 切给 UI 但窗口不 map）。下轮主攻 = 游戏内切换，
   方向 a（steam UI 走 wayland 接 gamescope-control）权重最高。当日会话日志已存设备
