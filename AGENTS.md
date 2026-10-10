@@ -14,16 +14,31 @@
   官方 Frame 线（Steamos-xiaomi-sheng）冻结为参考，不再推进**。重评估全文 =
   docs/M2381-ROUTE-REEVAL-20261010.md（三线账 + 换轨真实案由补录）。冻结 ≠ 删除：
   现役 Debian 环境 = 内核回归试验台（r80 四合一回归照跑，纯内核验收不算"推进"）+
-  调试工具链库；Frame 底包 = Valve 原装会话件参照源。**下个会话执行序**：
-  ①r80/v61 到货 → 双腿刷入（配方照 KERNEL-ENHANCE §5：apk 对拍 + dd 对拍）→
-  **四合一回归**：kwin sync 扫 / 睡眠 wow / BLE HID 实插（uhid 验收）/ uinput 手柄
-  → PASS 回传 nura 收官钉 r80/device r59/v61；②**armada-sheng 零刷机考据**：读其
-  Game Mode 会话件源码（怎么拉 steam/传什么 env/gamescope 哪来）+ issue 区问
-  QAM/游戏内手柄实况——它若真解了握手，考据结论同时反哺会话件认知；③**armada
-  移植**：出 armada-sheng 镜像换我们 r80+ 内核腿 + meizu 层（固件/触屏/音频编排
-  三件/NCM/睡眠 mask）+ 调试件（NCM+ssh+autologin）构建期内置，A/B 刷 userdata
-  对照（回滚锚照旧）；④冻结项备忘：Debian graft 固化/mangohud A/B 随线冻结
-  （mangohud 透传脚本保持在役防秒退），armada 线若撞墙再解冻 Debian 作对照。
+  调试工具链库；Frame 底包 = Valve 原装会话件参照源。**下个会话执行序**（r80/v61
+  已到货并预置设备，2026-10-10 深夜更新）：
+  ①**r80/v61 双腿刷入**（料已备好：设备 /root/linux-meizu-meizu20-7.3.0_rc6-r80.apk
+  sha8 b0c865b7 + /root/esp-recovery-v61.img sha8 cb7f1e5a，端到端复核过；uhid.ko +
+  uinput.ko 均在包内实检）：mv /usr/lib/modules/7.3.0-rc6 → .r79-bak → apk 解包装
+  r80 树（tar -xzf，APK-TOOLS checksum 告警是噪音）→ depmod → dd v61 → recovery_a
+  （conv=fsync，读回对拍 **cb7f1e5a**）→ reboot，**uname 应为 #81**；本轮回滚 =
+  v60 + r79 现役腿，深锚 v59+r78 不动。
+  ②**四合一回归**（nura 配方，底噪判据 = journalctl -k 零 DPU 报错）：
+  (a) kwin sync 扫——sm20-session desktop 切 Plasma，看显示/转屏/亮度/suspend 设置
+  项，切回；(b) 睡眠/wow——⚠**现役 Debian 有 sleep mask（suspend 全 mask 到
+  /dev/null），先要用户拍板解 mask 再 rtcwake/logind 各一发 + wow 保连接**（已知
+  唤醒不稳未治本，FAIL 也是要回传的数据，但备好重启恢复预案）；(c) BLE HID——
+  modprobe uhid 应成功，BLE 手柄/键鼠配对看 bluez HOG 出 /dev/input 事件设备
+  （**需用户带 BLE 设备**），现役经典 hidp 手柄照旧回归；(d) uinput——Ori 一发
+  （r78 时代验收基准，**需用户持手柄实测**）。
+  ③四件 PASS → 回传 nura → 收官钉 r80/device r59/v61 + Release。
+  ④**armada-sheng 零刷机考据**：读其 Game Mode 会话件源码（怎么拉 steam/传什么
+  env/gamescope 哪来）+ issue 区问 QAM/游戏内手柄实况——它若真解了握手，考据
+  结论同时反哺会话件认知。
+  ⑤**armada 移植**：出 armada-sheng 镜像换我们 r80+ 内核腿 + meizu 层（固件/触屏/
+  音频编排三件/NCM/睡眠 mask）+ 调试件（NCM+ssh+autologin）构建期内置，A/B 刷
+  userdata 对照（回滚锚照旧）。
+  ⑥冻结项备忘：Debian graft 固化/mangohud A/B 随线冻结（mangohud 透传脚本保持
+  在役防秒退），armada 线若撞墙再解冻 Debian 作对照。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
   ①**r79/ESP v60 双腿已上机**（对拍 0ccfcf72 命中，uname #80；r78 模块树留
   /usr/lib/modules/7.3.0-rc6.r78-bak；回滚 = v59+r78）：cap 翻 1、"Immediate flips" 行消失、
