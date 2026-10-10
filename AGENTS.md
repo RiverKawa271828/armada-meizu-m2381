@@ -9,7 +9,22 @@
 
 ## 现态一句话（新会话从这里接）
 
-- **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚，新会话从这里接）**：
+- **★★ 路线终决（2026-10-10 深夜用户拍板，效力高于本节其余历史）**：**等 nura
+  r80/v61 内核两腿 → 全面转向 armada-sheng 线（code002-2/armada-sheng）；Debian 线与
+  官方 Frame 线（Steamos-xiaomi-sheng）冻结为参考，不再推进**。重评估全文 =
+  docs/M2381-ROUTE-REEVAL-20261010.md（三线账 + 换轨真实案由补录）。冻结 ≠ 删除：
+  现役 Debian 环境 = 内核回归试验台（r80 四合一回归照跑，纯内核验收不算"推进"）+
+  调试工具链库；Frame 底包 = Valve 原装会话件参照源。**下个会话执行序**：
+  ①r80/v61 到货 → 双腿刷入（配方照 KERNEL-ENHANCE §5：apk 对拍 + dd 对拍）→
+  **四合一回归**：kwin sync 扫 / 睡眠 wow / BLE HID 实插（uhid 验收）/ uinput 手柄
+  → PASS 回传 nura 收官钉 r80/device r59/v61；②**armada-sheng 零刷机考据**：读其
+  Game Mode 会话件源码（怎么拉 steam/传什么 env/gamescope 哪来）+ issue 区问
+  QAM/游戏内手柄实况——它若真解了握手，考据结论同时反哺会话件认知；③**armada
+  移植**：出 armada-sheng 镜像换我们 r80+ 内核腿 + meizu 层（固件/触屏/音频编排
+  三件/NCM/睡眠 mask）+ 调试件（NCM+ssh+autologin）构建期内置，A/B 刷 userdata
+  对照（回滚锚照旧）；④冻结项备忘：Debian graft 固化/mangohud A/B 随线冻结
+  （mangohud 透传脚本保持在役防秒退），armada 线若撞墙再解冻 Debian 作对照。
+- **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
   ①**r79/ESP v60 双腿已上机**（对拍 0ccfcf72 命中，uname #80；r78 模块树留
   /usr/lib/modules/7.3.0-rc6.r78-bak；回滚 = v59+r78）：cap 翻 1、"Immediate flips" 行消失、
   uAPI ASYNC 探针 0（/root/sm20-async-probe.c）、MODE_ATOMIC ~113/s 连发、**截图差分证明帧
@@ -45,20 +60,7 @@
   gamescope-control 绑定是唯一没打通的枢纽，strings 门禁破译排下会话主攻）。
   ⑤备份链 /root/steamos-gamescope-session.{v4,v5-nowayland,v5,v6,v7,v7-wayland}.bak；
   v7 源已收编 scripts/device/steamos-gamescope-session（work/layer 沙箱只读，graft 固化时归位）。
-  **下个会话执行单**：①**路线重评估二版已立档（docs/M2381-ROUTE-REEVAL-20261010.md），
-  用户点名双仓后权重重排：armada-sheng 升首选探索线**（sheng 作者本人已从 Frame 线迁去
-  armada 线；armada 官方支持 Odin2=SM8550 同 SoC，手柄进游戏是其主场；sheng 版砍了
-  bootc/OTA = 纯 ext4 fastboot 模型与我们一致）。执行序 = **零刷机考据轮先行**：
-  armada-sheng 会话件源码 + issue 区问实况（其 Game Mode 会话层若真解了握手，照抄即可
-  救活 Debian 线绑定），并行 Frame 底包考据（Valve 原装会话件 = 权威参照）；补不活再
-  A/B 刷机对照（armada-sheng 镜像换我们 r80+ 腿优先，Frame 线备胎），新底包铁律 =
-  构建期自带全套调试件。②"binding gamescope-control" 门禁破译（并入①考据）。③graft
-  固化清单累积：v7-stable 会话件（VARIANT_ID=steamdeck + DMI 伪装料 + async 撤除，无
-  WAYLAND_DISPLAY）+ mangohud 包。④mangohud A/B 收口（透传在役，原件 .real）。
-  ⑤kwin 会话/睡眠 wow 回归补扫（nura 收官轮前要回传）。**⑥r80/v61 回归轮已应答 nura：
-  等两腿交付即刷**（uhid 根因 = `# CONFIG_UHID is not set`，config-only 一行，r80+ESP
-  v61 分钟级），一轮收口四件事：kwin sync 扫 + 睡眠/wow + **BLE HID 实插**（uhid 验收）
-  + uinput 手柄回归；收官钉 = r80/device r59/v61。
+  **（执行单已上移至「路线终决」条目，本条执行单作废。）**
 - **★ 真掌机模式点火成功（2026-10-10 午）**：gamescope standalone（**master
   自建**）+ steam -gamepadui = 真 Deck 架构**在魅族 20 上点亮**：横屏 2400x1080、flip 零失败、
   **UBWC（QCOM_COMPRESSED）直接扫描输出**（plane49 gamescope-xwm XR30+UBWC，vsync 持续）。
