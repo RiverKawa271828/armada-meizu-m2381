@@ -14,35 +14,31 @@
   官方 Frame 线（Steamos-xiaomi-sheng）冻结为参考，不再推进**。重评估全文 =
   docs/M2381-ROUTE-REEVAL-20261010.md（三线账 + 换轨真实案由补录）。冻结 ≠ 删除：
   现役 Debian 环境 = 内核回归试验台（r80 四合一回归照跑，纯内核验收不算"推进"）+
-  调试工具链库；Frame 底包 = Valve 原装会话件参照源。**下个会话执行序**（r80/v61
-  已到货并预置设备，2026-10-10 深夜更新）：
-  ①**r80/v61 双腿刷入**（料已备好：设备 /root/linux-meizu-meizu20-7.3.0_rc6-r80.apk
-  sha8 b0c865b7 + /root/esp-recovery-v61.img sha8 cb7f1e5a，端到端复核过；uhid.ko +
-  uinput.ko 均在包内实检）：mv /usr/lib/modules/7.3.0-rc6 → .r79-bak → apk 解包装
-  r80 树（tar -xzf，APK-TOOLS checksum 告警是噪音）→ depmod → dd v61 → recovery_a
-  （conv=fsync，读回对拍 **cb7f1e5a**）→ reboot，**uname 应为 #81**；本轮回滚 =
-  v60 + r79 现役腿，深锚 v59+r78 不动。
-  ②**四合一回归**（nura 配方，底噪判据 = journalctl -k 零 DPU 报错）：
-  (a) kwin sync 扫——sm20-session desktop 切 Plasma，看显示/转屏/亮度/suspend 设置
-  项，切回；(b) 睡眠/wow——**用户已拍板解锁（2026-10-10 深夜已执行）**：sleep.target/
-  suspend.target 已解 mask（hibernate 无 swap 保持 masked），logind 电源键已改 suspend
-  （长按=poweroff 逃生，drop-in /etc/systemd/logind.conf.d/sm20-powerkey.conf，**下次
-  重启即 #81 那次生效**）——顺带修掉「一按电源键就关机」（最小会话无电源管理器，
-  logind 默认 poweroff 所致）。剩 = rtcwake/logind 各一发 + wow 保连接（已知唤醒不稳
-  未治本，FAIL 也是要回传的数据，但备好重启恢复预案）；(c) BLE HID——
-  modprobe uhid 应成功，BLE 手柄/键鼠配对看 bluez HOG 出 /dev/input 事件设备
-  （**需用户带 BLE 设备**），现役经典 hidp 手柄照旧回归；(d) uinput——Ori 一发
-  （r78 时代验收基准，**需用户持手柄实测**）。**手柄测试路径（用户定，2026-10-10）**：
-  全走蓝牙——①Xbox 手柄经典蓝牙（hidp）基线；②蓝牙键鼠（BLE/HOG vs 经典 HID 当场
-  判定，打 uhid 靶心）。2.4G 接收器/扩展坞路线弃测（OTG host 未做 + 占用唯一 USB-C
-  会断调试通道，等 armada 线站稳后再议）。
-  ③四件 PASS → 回传 nura → 收官钉 r80/device r59/v61 + Release。
-  ④**armada-sheng 零刷机考据**：读其 Game Mode 会话件源码（怎么拉 steam/传什么
-  env/gamescope 哪来）+ issue 区问 QAM/游戏内手柄实况——它若真解了握手，考据
-  结论同时反哺会话件认知。
+  调试工具链库；Frame 底包 = Valve 原装会话件参照源。**执行序现态（2026-10-10 深夜
+  会话收官）**：
+  ①**r80/v61 双腿刷入 ✅**（apk sha8 b0c865b7 / img cb7f1e5a 双对拍 ✓ + 腿配对加测：
+  v61 内 BOOTAA64.EFI ≡ apk vmlinuz-efi 逐字节 12ee72b9；**uname = #81**，uhid/
+  uinput 双解析+自载 ✓，底噪 = a740_sqe.fw 每 boot 底噪与 r79 同款非新伤）。回滚 =
+  v60 + `.r79-bak`，深锚 v59+r78 不动；料件留设备 /root。
+  ②**四合一回归 2/4 收口**（全文 = docs/M2381-KERNEL-ENHANCE.md §6）：
+  (a) kwin sync 扫 **PASS**（Plasma 8s 起、120Hz 横屏/亮度/powerdevil 全在、全程
+  零 DRM 报错；顺手钉死切换器两缺陷：sm20-session desktop 失灵=旗标消费者在
+  steamos-session 而 SDDM 默认已钉 gamescope + 旗标 rm 权限静默失败——随线冻结不修）；
+  (b) 睡眠 **FAIL-有数据**（rtc0=rtc-efi 读 EIO 废件，闹钟走 PMIC rtc1 ✓；s2idle
+  入睡后闹钟到点不能 resume → ~2-3min 冷复位，journal 尾丢、pstore 空，最后刷盘行
+  = adreno_gmu 0x8a1 连发；**armada fake-suspend 注释 "Real suspend hangs this
+  SoC" 互证**，armada 镜像睡眠腿=抄 fake-suspend）；logind 唤醒一发可选补（需用户
+  按电源键）；(c) modprobe uhid ✓，**实插配对待用户带 BLE 设备**；(d) **Ori 一发
+  待用户持手柄**。手柄测试路径照旧全蓝牙（Xbox 经典 BT 基线 + 蓝牙键鼠 BLE 判定）。
+  ③②c/②d 完 → 回传 nura → 收官钉 r80/device r59/v61 + Release。
+  ④**armada-sheng 零刷机考据 ✅**：全文 = docs/M2381-ARMADA-RECON-20261010.md
+  （会话栈全景/启动链、steam 四旗标 -steampal -steamdeck 增件、STEAM_GAMESCOPE_*
+  能力 env 排、InputPlumber+deck-uhid=手柄主场答案、fake-suspend、gamescope 27
+  补丁、SDDM 会话切换、客户端同源 publicbeta 1788652215、设备档案系统=m2381 接入
+  点）；**剩 issue 区问询未发**（问 sheng 实机 QAM/往返/BT 手柄三症状）。
   ⑤**armada 移植**：出 armada-sheng 镜像换我们 r80+ 内核腿 + meizu 层（固件/触屏/
-  音频编排三件/NCM/睡眠 mask）+ 调试件（NCM+ssh+autologin）构建期内置，A/B 刷
-  userdata 对照（回滚锚照旧）。
+  音频编排三件/NCM）+ 调试件（NCM+ssh+autologin）构建期内置 + 新增 meizu-meizu20
+  设备档案 + 睡眠按 fake-suspend 抄，A/B 刷 userdata 对照（回滚锚照旧）。
   ⑥冻结项备忘：Debian graft 固化/mangohud A/B 随线冻结（mangohud 透传脚本保持
   在役防秒退），armada 线若撞墙再解冻 Debian 作对照。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：

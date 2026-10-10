@@ -91,3 +91,49 @@ gamescope 原生低延迟路径。另附一个 trivial 缺件（uhid）。
 - 顺手修复：`mangohud` 缺失（新客户端性能显示层注入 `mangohud` 前缀，包不在即秒退
   exit 0）已 `apt install mangohud`；当前 /usr/bin/mangohud 为透传脚本
   （A/B 用，原件 = mangohud.real，GL 钩子在该栈的冻结嫌疑待 A/B 收口）。
+
+## 6. r80/ESP v61 回归轮（2026-10-10 深夜，#81 实机）
+
+**结论：双腿刷入 ✓、uhid/uinput ✓、kwin sync 扫 PASS；睡眠 = FAIL-有数据（s2idle
+resume 冷复位，与 armada 上游"Real suspend hangs this SoC"判词互证）；BLE HID 与
+uinput 手柄两件待用户带设备实测。**
+
+- **双腿刷入**（料件 sha8 端到端复检：apk `b0c865b7` / img `cb7f1e5a`）：
+  模块腿 = r79 树 → `.r79-bak`，r80 apk 解包（APK-TOOLS checksum 告警噪音照旧），
+  depmod 后 `modinfo -n uhid|uinput` 双解析 ✓，新树 vermagic 不带 build 号（跨
+  #80/#81 兼容，r78 树在 #79 的先例同构）；ESP 腿 = v61 dd recovery_a(sde27)
+  conv=fsync，**读回 sha256 全串精确命中 `cb7f1e5a…`**。加测一道腿配对：v61 内
+  `EFI/BOOT/BOOTAA64.EFI` 与 apk 自带 `boot/vmlinuz-efi` **sha256 逐字节相同**
+  （`12ee72b9…`）——双腿同源零风险。reboot 后 **uname = #81-meizu-meizu20**，
+  uinput 随 modules-load.d 自载，`modprobe uhid` 成功（r80 主打件落地）。
+- **底噪判据 PASS**：journalctl -k DPU 报错仅 `a740_sqe.fw` 探测对（-2 → 2 秒后
+  "loaded from new location" 自愈），与 r79/#80 上一 boot 逐行同款 = 每 boot 底噪
+  非新伤；GPU devfreq 680MHz/ondemand 正常。零 critical/oops（grep 误伤 cmdline
+  `oops=panic` 与 ramoops 字样已甄别）。
+- **(a) kwin sync 扫 PASS**：SDDM 临时覆盖 Session=steamos-session.desktop 消费
+  want-desktop 旗标 → Plasma 8 秒起；kscreen-doctor = DSI-1 1080x2400@120Hz、
+  Rotation 8 持久化在位、亮度 control supported/34%（powerdevil 在跑）、
+  kscreen+powerdevil 6.3.6 双装；**会话切换全程内核零 DRM 报错**；切回掌机会话
+  8 秒起（gamescope --force-composition-rotation --force-orientation right 照旧）。
+  **顺手发现切换器两处缺陷（不阻塞回归，armada 换轨后随线冻结）**：
+  ① `sm20-session desktop` 失灵——旗标消费者在 `steamos-session`（kwin 最小会话
+  包装器），而 SDDM 默认已钉 `steamos-gamescope.desktop`（不认旗标）→ 切桌面
+  重启后仍进 gamescope；② 旗标 `rm -f` 以 steamos 用户跑在 root:root 目录上静默
+  失败，"一次性"实为"永久直到 root 清"（`sm20-session handheld` 可清，兜底有效）。
+- **(b) 睡眠/wow FAIL-有数据**：`rtcwake -m mem`（s2idle 路径，`/sys/power/mem_sleep`
+  = `[s2idle]`）+ PMIC `rtc1`（rtc-pm8xxx）闹钟。RTC 布局实锤：rtc0 = rtc-efi
+  **读 EIO 废件**（ABL EFI RTS 不给时间），闹钟腿必须 `-d /dev/rtc1`。时间线：
+  闹钟挂上 → 入睡 → **闹钟到点平台没能 resume → ~2-3 分钟后冷复位**（uptime 归零
+  重计；journal 异步尾 ~4 分钟随复位丢失，最后刷盘行 = `adreno_gmu: delay in
+  fenced register write (0x8a1)` 连发 + ADSP GPR RX 刷屏；pstore 空 = 冷复位
+  ramoops 不保）。"wow 保连接"无从谈起。logind 一发（电源键唤醒路径）待用户配合
+  可选补打——与 rtcwake 同一内核入睡路径，增量数据有限。**对照铁证 = armada-sheng
+  `fake-suspend` 脚本注释原文 "Real suspend hangs this SoC"**——SM8550 主线 s2idle
+  resume 问题上游同样存在，他们的答案 = 假睡眠守护（systemd-suspend.service 换
+  挂起阻断 + Steam 熄屏 + 电源键唤醒）+ NM 补丁保 WiFi。**armada 镜像睡眠腿 =
+  直接抄 fake-suspend 家族**，真睡眠留 pmOS 内核线长线。
+- **(c) BLE HID**：`modprobe uhid` ✓（r80 核心目标）；实插配对（bluez HOG 出
+  /dev/input 事件设备）待用户带 BLE 设备。
+- **(d) uinput 手柄回归**：模块/ACL/rules 链在位，Ori 一发待用户持手柄。
+- **回滚锚更新**：本轮回滚 = ESP v60 + `/usr/lib/modules/7.3.0-rc6.r79-bak`；
+  深锚 v59+r78（`.r78-bak`）不动。料件留在设备 /root（apk + img）。
