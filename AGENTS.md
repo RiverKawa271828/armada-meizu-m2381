@@ -32,17 +32,20 @@
   无法控制游戏，一直如此"：activation 769/413080/261570 翻飞，虚拟手柄随之建/毁，
   容器 appid 挂 empty.vdf；UI 层全程好使=物理链全通唯前景判定坏；r78/79/80 三代
   一致 + kwin 时代正常 = 内核无关，修法在 armada InputPlumber→deck-uhid）。
-  ③**回归轮总结论（回传 nura 就绪）**：r80/v61 零回归，两交付物全验证（async
-  flip §5 + uhid ②c），两 FAIL 均已知非内核墙带完整取证——**按协议可钉
-  r80/device r59/v61 + Release**。
+  ③**nura 收官确认（2026-10-11 回执，§7）**：钉子已落 r80/device r59/v61/#81
+  （双侧哈希互证 12ee72b9 闭环），Release 排其推送窗；**suspend 回注 = pmOS wowlan
+  三件真睡眠可用**（meizu-wowlan.service + 看门狗 WatchdogSec=0——我们缺 wowlan
+  件，armada 睡眠腿改为真睡眠优先、fake-suspend 兜底）；合作轮正式闭环。
   ④**armada-sheng 零刷机考据 ✅**：全文 = docs/M2381-ARMADA-RECON-20261010.md
   （会话栈全景/启动链、steam 四旗标 -steampal -steamdeck 增件、STEAM_GAMESCOPE_*
   能力 env 排、InputPlumber+deck-uhid=手柄主场答案、fake-suspend、gamescope 27
   补丁、SDDM 会话切换、客户端同源 publicbeta 1788652215、设备档案系统=m2381 接入
   点）；**剩 issue 区问询未发**（问 sheng 实机 QAM/往返/BT 手柄三症状）。
-  ⑤**armada 移植**：出 armada-sheng 镜像换我们 r80+ 内核腿 + meizu 层（固件/触屏/
+  ⑤**armada 移植（下会话主攻）**：出 armada-sheng 镜像换我们 r80+ 内核腿 + meizu 层（固件/触屏/
   音频编排三件/NCM）+ 调试件（NCM+ssh+autologin）构建期内置 + 新增 meizu-meizu20
-  设备档案 + 睡眠按 fake-suspend 抄，A/B 刷 userdata 对照（回滚锚照旧）。
+  设备档案 + **睡眠腿 = 先试 pmOS wowlan 三件真睡眠（nura 回执：meizu-wowlan.service
+  + 看门狗 WatchdogSec=0，我们只缺 wowlan 件）、fake-suspend 兜底**，A/B 刷
+  userdata 对照（回滚锚照旧）。
   ⑥冻结项备忘：Debian graft 固化/mangohud A/B 随线冻结（mangohud 透传脚本保持
   在役防秒退），armada 线若撞墙再解冻 Debian 作对照。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
