@@ -20,25 +20,21 @@
   v61 内 BOOTAA64.EFI ≡ apk vmlinuz-efi 逐字节 12ee72b9；**uname = #81**，uhid/
   uinput 双解析+自载 ✓，底噪 = a740_sqe.fw 每 boot 底噪与 r79 同款非新伤）。回滚 =
   v60 + `.r79-bak`，深锚 v59+r78 不动；料件留设备 /root。
-  ②**四合一回归 2/4 收口**（全文 = docs/M2381-KERNEL-ENHANCE.md §6）：
-  (a) kwin sync 扫 **PASS**（Plasma 8s 起、120Hz 横屏/亮度/powerdevil 全在、全程
-  零 DRM 报错；顺手钉死切换器两缺陷：sm20-session desktop 失灵=旗标消费者在
-  steamos-session 而 SDDM 默认已钉 gamescope + 旗标 rm 权限静默失败——随线冻结不修）；
-  (b) 睡眠 **FAIL-有数据**（rtc0=rtc-efi 读 EIO 废件，闹钟走 PMIC rtc1 ✓；s2idle
-  入睡后闹钟到点不能 resume → ~2-3min 冷复位，journal 尾丢、pstore 空，最后刷盘行
-  = adreno_gmu 0x8a1 连发；**armada fake-suspend 注释 "Real suspend hangs this
-  SoC" 互证**，armada 镜像睡眠腿=抄 fake-suspend）；logind 唤醒一发可选补（需用户
-  按电源键）；(c) **BLE HID PASS（2026-10-11 凌晨）**：实机三设备——K380 键盘与
-  Xbox 手柄均经典 HID（00001124/hidp）出节点 ✓；MCHOSE A7 Pro 鼠标 = BLE HOG
-  （00001812），**/dev/uhid 不在时 bluetoothd 拒收（"input-hog profile accept
-  failed"）→ modprobe uhid 后重连即出 event8/9（/sys/.../virtual/misc/uhid 出身
-  实锤）+ 25s 采样 22920 字节事件流**——r80 CONFIG_UHID=m 靶心验证 PASS； uhid
-  开机自载已补（设备 /usr/lib/modules-load.d/uinput.conf=uinput+uhid 两行；层源
-  pmos_linux device-meizu-meizu20/meizu20-uinput.conf 同步，pmos/ 为 gitignore
-  工作树落盘即可）；(d) **Ori 一发待用户持手柄**（steam 已枚举手柄 sdl://2 +
-  SDL 映射+配置集加载，前置全通）。手柄测试路径照旧全蓝牙（Xbox 经典 BT 基线 +
-  蓝牙键鼠 BLE 判定）。
-  ③②c/②d 完 → 回传 nura → 收官钉 r80/device r59/v61 + Release。
+  ②**四合一回归 ✅ 全部收口（2026-10-11 凌晨，全文 = docs/M2381-KERNEL-ENHANCE.md
+  §6）**：(a) kwin sync 扫 **PASS**（Plasma 8s 起、120Hz 横屏/亮度/powerdevil 全在、
+  全程零 DRM 报错；切换器两缺陷随线冻结不修）；(b) 睡眠 **FAIL-有数据**（rtc0=
+  rtc-efi 读 EIO 废件，闹钟走 PMIC rtc1 ✓；s2idle 入睡后闹钟到点不能 resume →
+  ~2-3min 冷复位，最后刷盘行 = adreno_gmu 0x8a1 连发；**armada fake-suspend
+  "Real suspend hangs this SoC" 互证**，armada 镜像睡眠腿=抄 fake-suspend）；
+  (c) **BLE HID PASS**：MCHOSE 鼠标 BLE HOG 靶心——/dev/uhid 缺失时 bluetoothd
+  拒收，modprobe uhid 后出节点+事件流实锤，uhid 自载双落（设备+层源，pmos/ 落盘
+  即可）；(d) **uinput 手柄 FAIL = 已知会话层墙原子级取证**（用户判词"能开游戏、
+  无法控制游戏，一直如此"：activation 769/413080/261570 翻飞，虚拟手柄随之建/毁，
+  容器 appid 挂 empty.vdf；UI 层全程好使=物理链全通唯前景判定坏；r78/79/80 三代
+  一致 + kwin 时代正常 = 内核无关，修法在 armada InputPlumber→deck-uhid）。
+  ③**回归轮总结论（回传 nura 就绪）**：r80/v61 零回归，两交付物全验证（async
+  flip §5 + uhid ②c），两 FAIL 均已知非内核墙带完整取证——**按协议可钉
+  r80/device r59/v61 + Release**。
   ④**armada-sheng 零刷机考据 ✅**：全文 = docs/M2381-ARMADA-RECON-20261010.md
   （会话栈全景/启动链、steam 四旗标 -steampal -steamdeck 增件、STEAM_GAMESCOPE_*
   能力 env 排、InputPlumber+deck-uhid=手柄主场答案、fake-suspend、gamescope 27

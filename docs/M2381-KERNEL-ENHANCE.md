@@ -132,8 +132,33 @@ uinput 手柄两件待用户带设备实测。**
   resume 问题上游同样存在，他们的答案 = 假睡眠守护（systemd-suspend.service 换
   挂起阻断 + Steam 熄屏 + 电源键唤醒）+ NM 补丁保 WiFi。**armada 镜像睡眠腿 =
   直接抄 fake-suspend 家族**，真睡眠留 pmOS 内核线长线。
-- **(c) BLE HID**：`modprobe uhid` ✓（r80 核心目标）；实插配对（bluez HOG 出
-  /dev/input 事件设备）待用户带 BLE 设备。
-- **(d) uinput 手柄回归**：模块/ACL/rules 链在位，Ori 一发待用户持手柄。
+- **(c) BLE HID PASS（2026-10-11 凌晨，用户实机三设备）**：K380 键盘与 Xbox 手柄均
+  走经典 HID（00001124/hidp）正常出节点；MCHOSE A7 Pro 鼠标 = **BLE HOG
+  （00001812）**，初次连接被 bluetoothd 拒收（`input-hog profile accept failed`）
+  ——根因 = `/dev/uhid` 不在（=m 模块无自启，bluez 打不开就放弃）；`modprobe uhid`
+  后重连即出 event8/9（`/sys/devices/virtual/misc/uhid/0005:005D:4762` 出身实锤），
+  25s 采样 22920 字节事件流，三设备全活。**r80 CONFIG_UHID=m 靶心验证 PASS**。
+  修复固化 = uhid 开机自载双落（设备 `/usr/lib/modules-load.d/uinput.conf` 增行；
+  层源 pmos_linux `device-meizu-meizu20/meizu20-uinput.conf` 同步，pmos/ 为
+  gitignore 工作树落盘即可）。⚠ 对 nura 的可操作建议：**UHID 若改 =y 可省自载件**
+  （与 uinput 同理，misc 设备无 open-time autoload）。
+- **(d) uinput 手柄 FAIL = 已知会话层墙的原子级取证（2026-10-11 凌晨，用户实测判词
+  "能开游戏、无法控制游戏，一直如此"）**：Ori（261570，Proton 11 ARM64 容器链）
+  由 `steam://run` 拉起、标题画面完美渲染；steam 正确采纳 Ori 绑定
+  （xboxone 模板 + Config Cache 261570 hit），Xbox 手柄（经典 hidp，event5）事件流
+  到内核、steam sdl:// 枚举正常。**死穴原子动作 = steam input 前景感知瞎**：
+  activation 在 769/413080（SLR 容器，配置 empty.vdf）/261570 之间翻飞，虚拟手柄
+  随之创建/销毁（00:49:01 Created → 00:52:20 Destroyed → 00:54:04 又 Created），
+  销毁窗口内游戏无输入通道。手柄在 Steam UI 层全程好使（能导航、能启动游戏）=
+  物理链路/枚举/绑定全通，唯「游戏前台」判定坏。**内核无关实锤**：r78/r79/r80
+  三代行为一致（本代对照）+ kwin 时代正常（用户口供）= gamescope 会话集成缺口，
+  非 uinput 非内核。**修法方向已由 armada 考据给出**：InputPlumber → deck-uhid
+  第一方 Deck 手柄（绕开 steam 自建虚拟手柄/焦点握手）+ gamescope 焦点回退补丁，
+  见 docs/M2381-ARMADA-RECON-20261010.md。
+- **回归轮总结论（回传 nura 用）**：r80/v61 **零回归**——两件交付物全验证（async
+  flip r79 §5 PASS + uhid r80 ②c PASS）；两件 FAIL 均为已知非内核墙且带完整取证
+  （睡眠 = SM8550 主线 s2idle resume 冷复位，与 armada 上游 "Real suspend hangs
+  this SoC" 互证；游戏内手柄 = steam 会话焦点握手，内核无关三代一致）。**按协议
+  可钉 r80/device r59/v61 + Release**。
 - **回滚锚更新**：本轮回滚 = ESP v60 + `/usr/lib/modules/7.3.0-rc6.r79-bak`；
   深锚 v59+r78（`.r78-bak`）不动。料件留在设备 /root（apk + img）。
