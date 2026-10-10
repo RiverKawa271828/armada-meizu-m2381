@@ -28,8 +28,16 @@
   入睡后闹钟到点不能 resume → ~2-3min 冷复位，journal 尾丢、pstore 空，最后刷盘行
   = adreno_gmu 0x8a1 连发；**armada fake-suspend 注释 "Real suspend hangs this
   SoC" 互证**，armada 镜像睡眠腿=抄 fake-suspend）；logind 唤醒一发可选补（需用户
-  按电源键）；(c) modprobe uhid ✓，**实插配对待用户带 BLE 设备**；(d) **Ori 一发
-  待用户持手柄**。手柄测试路径照旧全蓝牙（Xbox 经典 BT 基线 + 蓝牙键鼠 BLE 判定）。
+  按电源键）；(c) **BLE HID PASS（2026-10-11 凌晨）**：实机三设备——K380 键盘与
+  Xbox 手柄均经典 HID（00001124/hidp）出节点 ✓；MCHOSE A7 Pro 鼠标 = BLE HOG
+  （00001812），**/dev/uhid 不在时 bluetoothd 拒收（"input-hog profile accept
+  failed"）→ modprobe uhid 后重连即出 event8/9（/sys/.../virtual/misc/uhid 出身
+  实锤）+ 25s 采样 22920 字节事件流**——r80 CONFIG_UHID=m 靶心验证 PASS； uhid
+  开机自载已补（设备 /usr/lib/modules-load.d/uinput.conf=uinput+uhid 两行；层源
+  pmos_linux device-meizu-meizu20/meizu20-uinput.conf 同步，pmos/ 为 gitignore
+  工作树落盘即可）；(d) **Ori 一发待用户持手柄**（steam 已枚举手柄 sdl://2 +
+  SDL 映射+配置集加载，前置全通）。手柄测试路径照旧全蓝牙（Xbox 经典 BT 基线 +
+  蓝牙键鼠 BLE 判定）。
   ③②c/②d 完 → 回传 nura → 收官钉 r80/device r59/v61 + Release。
   ④**armada-sheng 零刷机考据 ✅**：全文 = docs/M2381-ARMADA-RECON-20261010.md
   （会话栈全景/启动链、steam 四旗标 -steampal -steamdeck 增件、STEAM_GAMESCOPE_*
