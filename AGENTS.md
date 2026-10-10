@@ -9,7 +9,35 @@
 
 ## 现态一句话（新会话从这里接）
 
-- **★ 真掌机模式点火成功（2026-10-10 午，新会话从这里接）**：gamescope standalone（**master
+- **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚，新会话从这里接）**：
+  ①**r79/ESP v60 双腿已上机**（对拍 0ccfcf72 命中，uname #80；r78 模块树留
+  /usr/lib/modules/7.3.0-rc6.r78-bak；回滚 = v59+r78）：cap 翻 1、"Immediate flips" 行消失、
+  uAPI ASYNC 探针 0（/root/sm20-async-probe.c）、MODE_ATOMIC ~113/s 连发、**截图差分证明帧
+  推进**（cmd 模式 kick 每帧成立），journalctl 干净；GAMESCOPE_DISABLE_ASYNC_FLIPS 已撤
+  （会话件升 **v5**，`--force-composition-rotation` 保留）；回传全文 =
+  docs/M2381-KERNEL-ENHANCE.md §5；待补 = 用户延迟主观对比 + 空转功耗；kwin/睡眠回归未跑。
+  ②**游戏打不开根因 = 新客户端性能显示层注入 `mangohud` 前缀而包不在机**（启动链 exec 秒退
+  exit 0；今早能跑 = 当时无注入）：已 apt 装 mangohud，但 GRIS 实测冻帧（单核 70% 自旋、
+  GPU 680MHz、合成器/flip 环全正常 = 游戏没吐帧），**/usr/bin/mangohud 现为透传脚本**
+  （原件 mangohud.real；GL 钩子冻结嫌疑待 A/B 收口——透传后重启 GRIS 曾 GAME_ADVANCING）。
+  ③**手柄失效历史情报（用户口供）= kwin 时代游戏内手柄正常、真掌机模式后失效** →
+  gamescope 专属焦点握手嫌疑（gamescope-control 管输入焦点分发）；但注入链节点本轮全活：
+  steam 握 /dev/uinput + **虚拟手柄已建**（event6 "Microsoft X-Box 360 pad 0" =
+  /devices/virtual/input/input8，uinput 实锤；容器 /dev/input 全量可见 = wine 可读），
+  端到端等用户按键实测。④**方向 a 实验进行中**：会话件 v5 给 steam 挂
+  `WAYLAND_DISPLAY=gamescope-0`（gamescope 本来就塞了 GAMESCOPE_WAYLAND_DISPLAY 但客户端
+  不接；显式挂上后 console_log 出现 **"wayland: context initialized"** = ARM 客户端 wayland
+  路径首次点亮，UI 正常渲染）；⚠ **SDL_VIDEODRIVER=wayland 必死**（webhelper CEF 卡死报
+  "未响应"，已撤，勿再加）；"binding gamescope-control" 行尚未出现，绑定是否成立待查；
+  steamui.so 内 gamescope 协议栈代码完整（strings 实锤：gamescope-control/
+  action-binding-manager/StateChanged/"forcing gamepadui for steamdeck + gamescope"）。
+  ⑤备份链：/root/steamos-gamescope-session.v4.bak（撤开关前）/.v5-nowayland.bak；
+  v5 源已收编 work/cache/steamos-gamescope-session.v5（work/layer 沙箱只读，graft 固化时归位）。
+  **下个会话执行单**：①用户三测：UI 手柄导航 / 游戏内手柄 / 游戏内 home 键 QAM（老毛病：
+  唤菜单→游戏冻结帧盖死或菜单冻结盖死——ARM steam 覆盖层缺口家族）；②mangohud A/B 收口
+  （真钩子 vs 透传各跑一把 GRIS 差分）；③"binding gamescope-control" 追踪（wayland 接上后
+  QAM/焦点/虚拟手柄激活是否复活）；④graft 固化（v5 会话件+mangohud 包+async 撤除入层）。
+- **★ 真掌机模式点火成功（2026-10-10 午）**：gamescope standalone（**master
   自建**）+ steam -gamepadui = 真 Deck 架构**在魅族 20 上点亮**：横屏 2400x1080、flip 零失败、
   **UBWC（QCOM_COMPRESSED）直接扫描输出**（plane49 gamescope-xwm XR30+UBWC，vsync 持续）。
   五层洋葱全在手册出参（docs/M2381-GAMESCOPE-IGNITION.md，权威）：①msm 无 async flip →

@@ -67,3 +67,26 @@ gamescope 原生低延迟路径。另附一个 trivial 缺件（uhid）。
   平台、§1 接入开关两行、§2 回归回传）以此文档为准入册。
 - 关口承诺：点火线 #3（home 键覆盖层 menu→game 回程）+ #4（每游戏缩放/限帧）手柄实测
   = 最后一步，"近期收口、结果回传两边档案"。
+
+## 5. async flip 点火回传（2026-10-10 晚，r79/ESP v60 双腿实机）
+
+**结论：PASS，三项机器验证全绿， kicking 每帧实锤；用户态开关已撤。**
+
+- 双腿配对刷入：模块腿 r79 apk（sha8 57f468b0 对拍 ✓，/usr/lib/modules 整树替换，
+  r78 树留设备 `/usr/lib/modules/7.3.0-rc6.r78-bak`）+ ESP 腿 v60（分区级 dd 读回
+  0ccfcf72 精确命中）。uname = **#80-meizu-meizu20**。
+- 验证配方逐项：
+  1. ✓ "Immediate flips are not supported by the KMS driver" 会话开场行**消失**；
+     drm_info `DRM_CAP_ASYNC_PAGE_FLIP = 1`（r78 为 0）。
+  2. ✓ uAPI 层：空原子提交 `TEST_ONLY|DRM_MODE_PAGE_FLIP_ASYNC` 返回 0
+     （探针 /root/sm20-async-probe.c 在役；r78 同探针 = -EINVAL 路径）。
+  3. ✓ strace 持续 `MODE_ATOMIC = 0`（~113 次/秒 @120Hz）；**截图差分证明帧持续推进**
+     （cmd 模式 kick 每帧成立——「不冻结也不前进」未发生）。
+  4. ✓ journalctl -k 无 DPU/DSI 运行期报错（仅开机期 a740_sqe.fw 探测噪音，前轮即有）。
+- 待补（用户侧）：d 项延迟主观对比 + 观察项空转功耗采样。
+- 用户态撤除记录：`GAMESCOPE_DISABLE_ASYNC_FLIPS=1` 已从会话脚本删除（v5 在役）；
+  `--force-composition-rotation` 按 nura 嘱咐**保留**（等 kalama SDE catalog）。
+- 回归：kwin 会话/睡眠 wow 未跑（当日时间线让位给游戏启动修复+手柄排查），下轮补扫。
+- 顺手修复：`mangohud` 缺失（新客户端性能显示层注入 `mangohud` 前缀，包不在即秒退
+  exit 0）已 `apt install mangohud`；当前 /usr/bin/mangohud 为透传脚本
+  （A/B 用，原件 = mangohud.real，GL 钩子在该栈的冻结嫌疑待 A/B 收口）。
