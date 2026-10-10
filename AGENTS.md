@@ -41,11 +41,24 @@
   能力 env 排、InputPlumber+deck-uhid=手柄主场答案、fake-suspend、gamescope 27
   补丁、SDDM 会话切换、客户端同源 publicbeta 1788652215、设备档案系统=m2381 接入
   点）；**剩 issue 区问询未发**（问 sheng 实机 QAM/往返/BT 手柄三症状）。
-  ⑤**armada 移植（下会话主攻）**：出 armada-sheng 镜像换我们 r80+ 内核腿 + meizu 层（固件/触屏/
-  音频编排三件/NCM）+ 调试件（NCM+ssh+autologin）构建期内置 + 新增 meizu-meizu20
-  设备档案 + **睡眠腿 = 先试 pmOS wowlan 三件真睡眠（nura 回执：meizu-wowlan.service
-  + 看门狗 WatchdogSec=0，我们只缺 wowlan 件）、fake-suspend 兜底**，A/B 刷
-  userdata 对照（回滚锚照旧）。
+  ⑤**armada 移植 ✅ 出盘（2026-10-11 凌晨，全文 = docs/M2381-ARMADA-PORT-20261011.md）**：
+  底盘 = armada-sheng v1.2（`sheng-flashable`；实测 **container-export 单分区裸 ext4**——
+  不是 ostree 盘，原计划摊平步骤取消；fstab 自带 PARTLABEL=userdata+growfs 与 m2381
+  同字零改）+ 腿配对门禁实锤（apk vmlinuz-efi ≡ ESP v61 BOOTAA64.EFI = 12ee72b9 逐字节）
+  + meizu 层 287M（固件/音频编排三件/触屏/UCM/黑名单硬定律，modules 弃用改解 r80 apk）
+  + 新档案 meizu-meizu20.conf（竖屏 right + USE_ROTATION_SHADER=1 + SUSPEND_MODE=fake）
+  + device-env case 行（"Meizu 20 (m2381)"）+ uhid 自载（deck-uhid 前置）+ NCM gadget/
+  usb0-ip/ssh(root 123456)/GPU 看护构建期内置；手术摘除 armada-bootimg-sync（boot_b
+  重写件）/bootupd/RNDIS/sheng-thp/update-reserve + /sysroot 孤儿 ostree 仓库 2G。
+  **21 项点验全绿 → work/meizu-meizu20-armada-r80.img 14.6G（.sha256 旁证）**；steam
+  客户端已预种（/var/home/armada/.steam 3.3G，publicbeta 1788652215 同源）首启可离线。
+  **下一步 = 用户排期 A/B 刷 userdata**（fastboot flash userdata work/meizu-meizu20-
+  armada-r80.img；回滚 = Debian r78 盘/pmOS rootfs 重刷，30 秒锚照旧）。睡眠腿备注：现
+  钉 fake（真 s2idle 入睡不 resume 与上游互证）；nura wowlan 三件真睡眠（meizu-wowlan
+  + WatchdogSec=0）留作上机后实验项，档案改 s2idle 即切换。选型存档：官方
+  armada-os 20260926 = 整盘 UEFI+bootc 不合 fastboot 模型，留参照备胎；Frame 恢复镜像
+  20260922 用户已手落 dl/ 收档。适配脚本 = scripts/host/40-adapt-armada-m2381.sh
+  （宿主 systemd-run，可重入）。
   ⑥冻结项备忘：Debian graft 固化/mangohud A/B 随线冻结（mangohud 透传脚本保持
   在役防秒退），armada 线若撞墙再解冻 Debian 作对照。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
