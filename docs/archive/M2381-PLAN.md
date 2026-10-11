@@ -1,3 +1,5 @@
+> ⚠ 已归档（2026-10-11）：Frame/holo 时代执行计划（已被 armada 线取代）。现行文档见 docs/README.md 索引。
+
 # M2381 适配执行计划（P0 宿主轮 → P1 spike → P2 日用化）
 
 > 判词与三路线对比 = `pmos_linux/docs/meizu20/steam-armada-assessment-20261008.md`；

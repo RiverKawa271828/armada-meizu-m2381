@@ -2,7 +2,7 @@
 
 > 本仓 = **改造自 code002-2/Steamos-xiaomi-sheng 的 m2381 适配项目**（fork 时代模式：
 > 本地先行零网络，推送目标 = 自建 fork 待建）。
-> 新会话必读本文；子系统细节看 `docs/M2381-PLAN.md`，判词出处 =
+> 新会话必读本文；子系统细节看 `docs/README.md` 索引（移植正典 = M2381-ARMADA-PORT-20261011），判词出处 =
 > `/home/ri/work/pmos_linux/docs/meizu20/steam-armada-assessment-20261008.md`。
 > 主仓规范/硬定律 = `/home/ri/work/pmos_linux/AGENTS.md`（本文只留本项目规则与现态，
 > 与主仓冲突时以主仓硬定律为准）。
@@ -129,7 +129,7 @@
 - **★ 真掌机模式点火成功（2026-10-10 午）**：gamescope standalone（**master
   自建**）+ steam -gamepadui = 真 Deck 架构**在魅族 20 上点亮**：横屏 2400x1080、flip 零失败、
   **UBWC（QCOM_COMPRESSED）直接扫描输出**（plane49 gamescope-xwm XR30+UBWC，vsync 持续）。
-  五层洋葱全在手册出参（docs/M2381-GAMESCOPE-IGNITION.md，权威）：①msm 无 async flip →
+  五层洋葱全在手册出参（docs/archive/M2381-GAMESCOPE-IGNITION.md，权威）：①msm 无 async flip →
   GAMESCOPE_DISABLE_ASYNC_FLIPS=1；②EINVAL 根本没到内核（strace 实证零 atomic ioctl，
   drm.debug 抓不到——拒绝在用户态 liftoff）；③libliftoff BTI-safe 补丁日志看到层带
   rotation=8（ROTATE_270）；④msm plane 只支持 rotate-0/180 + gamescope 对竖屏面板自动
@@ -200,7 +200,7 @@
   publicbeta 试验段结束，上条"已切 publicbeta"作废）。⑤真掌机模式路线图：L1 配置层（FSP=0 ✓；
   嵌套 gamescope 包游戏可选，wayland 后端已证；Deck UI 自带 OSK 待验）/ L2 内核层（uinput→
   Proton 手柄（✅ 已闭环，见②）；IN_FORMATS 翻案实锤→gamescope standalone = 真 Deck 会话
-  合成器，**点火排下会话，手册 = docs/M2381-GAMESCOPE-IGNITION.md**；s2idle→
+  合成器，**点火排下会话，手册 = docs/archive/M2381-GAMESCOPE-IGNITION.md**；s2idle→
   电源键秒睡（drop-in 已平移，见⑦，解锁待拍板））/ L3 不追（steamos-manager/TDP——SM8550 无 Deck EC/TDP 硬件路径，Steam 直连
   NM/BlueZ/logind 够用）。⑥**IN_FORMATS 翻案结案（nura 判词 + drm_info 复核，上条"疑似自带
   待查证"升级为实锤）**：旧探针 grep state 无效（state dump 根本不打 IN_FORMATS 属性，恒 0
@@ -348,7 +348,7 @@
   可跑 /usr/games/gamescope；graft 已固化 backports 源+安装行）⑥性能基线：
   glmark2-wayland / vulkaninfo（freedreno a740）⑦WiFi 用户已手动连上 ✓ ⑧声音 = **不等
   r78**（2026-10-09 主项目复核：r77 已含完整音频块，「r77 钉 9-14 源码」系误读
-  APKBUILD 出处注释 `_commit`；真缺口 = 用户态编排，清单 = `docs/M2381-SOUND-REQ.md`
+  APKBUILD 出处注释 `_commit`；真缺口 = 用户态编排，清单 = `docs/archive/M2381-SOUND-REQ.md`
   §6；四问已由 nura AGENTS 带话节回信）——**编排串已平移实机出声 ✓**（深夜 v3 实机：
   amps→sndcard-bind→audio-route 三件 enable 后 card0 出卡、硬件直放出声、PipeWire
   sink「Built-in Audio Stereo」；`20-m2381-layer` ③b 段 + graft enable/自检已固化）。
@@ -382,7 +382,7 @@ armada-meizu-m2381/
 ├── system_files/     m2381 覆盖层【git 真身】：设备档案/编排单元/黑名单/UCM/NCM/RTC/polkit
 ├── kernel-m2381/     内核腿钉子：BUILD.env（apk sha256/腿配对 sha）+ fetch.sh
 ├── post_process/     finalize（收缩对齐）/ verify（21 项点验）
-├── docs/             工作文档（PORT/RECON/RELAY/PLAN...）
+├── docs/             索引 README + 刷机指南 + 现行参考；archive/=旧线归档
 ├── legacy/           冻结线归档：debian/（Frame→Debian 管线+graft）、device/（会话件）
 ├── config.sh         全局钉子
 ├── Justfile          fetch-base / fetch-kernel / adapt / verify

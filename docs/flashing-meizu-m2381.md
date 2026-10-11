@@ -1,0 +1,86 @@
+# 刷机指南 — Meizu 20 (m2381) × Armada
+
+> 面向已解锁设备的完整刷写/验收/回滚流程。工程背景与"为什么"见
+> [M2381-ARMADA-PORT-20261011.md](M2381-ARMADA-PORT-20261011.md)。
+
+## 前提（三条腿的来源）
+
+| 部件 | 来源 | 说明 |
+|---|---|---|
+| 解锁 bootloader | 自备 | 与刷任何第三方系统同要求 |
+| **boot 腿（ESP）** | nura pmOS meizu 线（如 v61） | 刷在 **recovery_a**，EFI stub 内核，cmdline 烤死 `root=/dev/sda22`；**与内核 apk 必须配对** |
+| **rootfs 镜像** | 本仓构建（见下） | 单分区裸 ext4，只进 **userdata** |
+| 内核 apk / 固件 apk | nura 线（与 pmOS 通用） | 出盘时打进 rootfs，模块与 ESP 内核逐字节配对（构建门禁强制） |
+
+boot_b / boot_a / 其它分区**全程不碰**——回滚 = 重刷 userdata，30 秒退出。
+
+## 出盘（宿主 Linux，root）
+
+```bash
+just fetch-base     # 上游 armada-sheng rootfs（自动下载/校验/合并，已有则跳过）
+just fetch-kernel   # r80 内核 apk（本地路径或 nura 公开链接，sha256 门禁）
+sudo bash build_files/build.sh    # 适配 → 收缩 → 21 项点验 → work/meizu-meizu20-armada-r80.img
+```
+
+固件 apk（firmware-meizu-meizu20）放到 `work/armada-m2381/apk/` 即可被自动识别；
+版本钉子在 `kernel-m2381/BUILD.env`，换新版料件 = 改那里 + 换配对 ESP。
+
+## 刷写（三步）
+
+```bash
+# 1) 进 fastboot（系统内 'reboot bootloader'，或关机后按住音量下插线）
+fastboot devices                      # 确认设备出现
+# 2) 刷 userdata（唯一被写的分区；14.6G ≈ 6-7 分钟）
+fastboot flash userdata work/meizu-meizu20-armada-r80.img
+# 3) 重启
+fastboot reboot
+```
+
+## 首启预期
+
+- **<1 分钟**进桌面：SDDM 自动登录 `armada`（密码 `armada`）→ gamescope → Steam。
+- Steam 客户端已预种，可离线进 UI；联网后按提示完成一次更新。
+- 磁盘自动扩容到全盘（457G）；声卡在开机 ~75s 后就位（wireplumber 会被自动踢一次）。
+- 首件事：Steam 设置里连一次 WiFi（系统级落盘，重启自动重连）。
+
+## 调试通道
+
+- 插 USB 线：`ssh root@172.16.42.1`（初始密码 **123456，登录后请改**；
+  `armada` 用户密码 `armada`）。
+- 常用检查：
+  ```bash
+  systemctl --failed                      # 应为空
+  systemctl is-active meizu-{pas,touch,amps,audio,sndcard-bind,audio-route}
+  aplay -l | grep MEIZU20                 # card0 出卡
+  ```
+- 手柄：蓝牙配对后默认伪装成 Steam Deck 手柄（deck-uhid）；换伪装目标 =
+  `sudo /usr/libexec/armada/controller-type apply`（需手柄已连接）。
+
+## 电源与睡眠
+
+- **短按电源键** = 睡眠（fake-suspend：面板熄、音频静、radio 软阻断）；
+  再短按 = 唤醒。真 s2idle 在本 SoC 上会睡死（rtc-efi 废件），勿在
+  设备档案里改回 `s2idle`。
+- **长按** = Steam 电源菜单（重启/关机）。
+- 关机也可以走 SSH：`systemctl poweroff`。
+
+## 回滚（30 秒锚）
+
+```bash
+fastboot flash userdata <任意旧 rootfs.img>   # Debian 盘 / pmOS 盘 / 本盘旧版
+fastboot reboot
+```
+
+boot / ESP / recovery 从不被触碰。注：回 Debian 旧盘后如遇内核模块不匹配，
+把 nura 配对 apk 重解进 `/usr/lib/modules/` 即可（SSH/NCM 不受影响）。
+
+## 已知限制
+
+- 真实 s2idle 睡眠不可用（SoC/内核限制，fake-suspend 全链已验证）；
+  hibernate 不支持。
+- FEX x86 腿当前跑 gzip squashfs（内核暂缺 `CONFIG_SQUASHFS_ZSTD`，
+  已向内核线提需求；落地后可换回 zstd）。
+- Decky 插件加载器默认停用（首启不稳）；需要时在设备上 unmask
+  `plugin_loader.service`。
+- m2381 无内置手柄，`armada-controller-type` 服务默认停用是正常现象
+  （接手柄后手动 apply）。

@@ -1,3 +1,5 @@
+> ⚠ 已归档（2026-10-11）：音频需求清单（已由 KERNEL-ENHANCE 接续并落地验证）。现行文档见 docs/README.md 索引。
+
 # m2381 声卡适配要求（SteamOS/Debian 线 → 主项目 pmOS/nura 内核线）
 
 > 2026-10-09 由 steamos-meizu20 线整理，供转告主项目。判词出处：

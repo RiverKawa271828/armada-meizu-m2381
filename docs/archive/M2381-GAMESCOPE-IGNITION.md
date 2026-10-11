@@ -1,3 +1,5 @@
+> ⚠ 已归档（2026-10-11）：Debian 线 gamescope 点火手册（armada 线下仅作考古）。现行文档见 docs/README.md 索引。
+
 # M2381 GAMESCOPE 点火手册（真掌机模式）
 
 > 排定 2026-10-10 晨。目标 = gamescope standalone DRM backend 当会话合成器 +
