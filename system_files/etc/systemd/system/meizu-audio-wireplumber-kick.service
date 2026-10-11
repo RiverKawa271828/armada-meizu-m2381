@@ -1,0 +1,9 @@
+[Unit]
+Description=Meizu 20: kick wireplumber after late ADSP card (boot+75s)
+After=meizu-audio-route.service
+Wants=meizu-audio-route.service
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "sleep 5; runuser -u armada -- env XDG_RUNTIME_DIR=/run/user/1000 systemctl --user try-restart pipewire wireplumber"
+[Install]
+WantedBy=multi-user.target

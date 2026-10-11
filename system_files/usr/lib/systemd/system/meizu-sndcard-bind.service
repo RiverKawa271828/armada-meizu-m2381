@@ -1,0 +1,26 @@
+[Unit]
+Description=Meizu 20 sndcard: attach pinctrl/va/machine until card0 exists
+# r48 (2026-10-07): rewrite as a verify-retry loop (meizu-sndcard-bind.sh).
+# The r47 one-shot kicks (autoprobe=1 + three drivers_probe writes) were
+# proven live but failed at EVERY real boot (r64 camera boot, flyme-return
+# boot, 10-06 23:48 boot): the 12ms kick window lands ~600ms before the
+# ADSP is up and inside the arbiter chain's autoprobe=0 windows, the
+# kernel deferred-probe auto-retry never rescues these three, and
+# meizu-audio-route's bind-retry cannot help while pinctrl/va stay
+# unbound (machine probe hard-fails). Full forensics in the script header.
+# Ordered after the whole drivers_autoprobe arbiter chain (same pattern
+# pas -> touch -> amps -> retimer -> bind-nfc-haptics already uses) so no
+# arbiter can flip the flag under us; the loop itself handles the ADSP
+# latency (budget ~6.5min; exits 0 even on give-up - meizu-audio-route
+# remains the failure canary).
+After=multi-user.target meizu-pas.service meizu-touch.service \
+	meizu-amps.service meizu-retimer.service meizu-bind-nfc-haptics.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/meizu20/meizu-sndcard-bind.sh
+RemainAfterExit=yes
+TimeoutStartSec=420
+
+[Install]
+WantedBy=multi-user.target

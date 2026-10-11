@@ -1,0 +1,10 @@
+[Unit]
+Description=m2381: USB NCM gadget 调试通道（172.16.42.1）
+After=systemd-modules-load.service sys-kernel-config.mount
+Wants=sys-kernel-config.mount
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/steamos/m2381-ncm-gadget
+[Install]
+WantedBy=multi-user.target

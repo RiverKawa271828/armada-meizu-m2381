@@ -77,7 +77,7 @@
   钉 fake（真 s2idle 入睡不 resume 与上游互证）；nura wowlan 三件真睡眠（meizu-wowlan
   + WatchdogSec=0）留作上机后实验项，档案改 s2idle 即切换。选型存档：官方
   armada-os 20260926 = 整盘 UEFI+bootc 不合 fastboot 模型，留参照备胎；Frame 恢复镜像
-  20260922 用户已手落 dl/ 收档。适配脚本 = scripts/host/40-adapt-armada-m2381.sh
+  20260922 用户已手落 dl/ 收档。适配脚本 = build_files/build.sh
   （宿主 systemd-run，可重入）。
   **★ 会话收官（2026-10-11 晨）**：armada 线全绿服役中（手柄/QAM/往返/睡眠唤醒/音频
   皆验），用户拍板"比之前任何一条线都好用"，**进入 fork 发布评估**。给 nura 的回传已
@@ -86,7 +86,7 @@
   行）**：上游 armada-sheng=GPL-2.0-or-later（已核，派生干净）；推荐轻发布=现仓公开为
   适配 overlay（40-adapt+层+档案+文档，base 件链接上游 releases 不重分发），重发布
   （Actions 全自动+挂镜像）二期；发布前清理=README 重写（现为 Frame 旧文）+AGENTS.md
-  REDACTED-SSID SSID 清除+LICENSE 补 GPL-2.0+Credits；内核 apk 分发口径等 nura 确认公开链接。
+  README 重写+LICENSE 补 GPL-2.0+Credits；内核 apk 分发口径等 nura 确认公开链接。
   ⑥冻结项备忘：Debian graft 固化/mangohud A/B 随线冻结（mangohud 透传脚本保持
   在役防秒退），armada 线若撞墙再解冻 Debian 作对照。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
@@ -274,7 +274,7 @@
   缺失，graft 已补 /etc/tmpfiles.d/x11-unix.conf）；③gamescopereaper 补链
   /usr/lib/gamescope + /usr/local/bin。快速设置（WiFi/电源/蓝牙）= Steam 客户端
   直连 NM/BlueZ/logind（Bazzite 同构；steamos-manager 只服务真 Deck EC/TDP 硬件，
-  SM8550 不需要）；**WiFi 密码未持久化**（REDACTED-SSID 档案缺 secrets，重启即断网），
+  SM8550 不需要）；**WiFi 密码未持久化**（设备档案缺 secrets，重启即断网），
   首件事 = 在 Deck UI 网络设置输一次 PSK。gamescope 翻案唯一路径 = 内核
   IN_FORMATS 补丁（pmOS 主战线；新版 mainline msm 疑似自带，值得查证）；嵌套
   gamescope（wayland 后端）不受影响照旧可用。**GPU 调频坑（同日实测）**：游戏重载
@@ -294,7 +294,7 @@
   一次性旗标 /var/lib/sm20/want-desktop，下次 autologin 进 Plasma（注销/重启自动
   回掌机）；黑屏自救（大屏窗口被最小化时 steam 活着但无窗）= `sm20-session
   handheld` 重启会话。**同日收尾**：①`-steamos3` 旗标点亮 Deck 式设置面板
-  （WiFi 分栏出现，用户已在掌机界面原生连上 REDACTED-SSID——系统级+密码落盘，重念不丢；
+  （WiFi 分栏出现，用户已在掌机界面原生连上家里 WiFi——系统级+密码落盘，重念不丢；
   Plasma 密钥环坑：applet 默认存"仅本用户+kwallet"，换会话形态=没存）；②客户端
   频道已切 steamdeck_publicbeta（原 steamdeck_stable）；③SDDM `Relogin=true`
   已固化（autologin 只在服务启动时生效一次，steam 更新退出会掉登录屏）；④
@@ -369,6 +369,28 @@
 - 设备 = 魅族 20 m2381，现役 pmOS（mu-r66/ESP v47/内核 #67/device r53/rootfs r53）。
   本项目**只动 userdata**（换 rootfs），boot_b/ESP/recovery 全不碰——回滚 = 重刷 pmOS
   rootfs，30 秒锚照旧。
+
+## 仓库结构（2026-10-11 重组；参考上游布局，主体 = 保住镜像构建流）
+
+**料件原则：内核 apk + 固件 apk = nura 线料件，pmOS rootfs 与本 armada rootfs 通用
+同一套**——用户到 nura 侧取最新版（kernel-m2381/BUILD.env 钉当前验证版+兼容门禁），
+配合刷本仓出的 armada rootfs 即可。
+
+```
+armada-meizu-m2381/
+├── build_files/      构建流：build.sh（主适配，原 40-adapt）、fetch-base.sh（上游 rootfs 取件）
+├── system_files/     m2381 覆盖层【git 真身】：设备档案/编排单元/黑名单/UCM/NCM/RTC/polkit
+├── kernel-m2381/     内核腿钉子：BUILD.env（apk sha256/腿配对 sha）+ fetch.sh
+├── post_process/     finalize（收缩对齐）/ verify（21 项点验）
+├── docs/             工作文档（PORT/RECON/RELAY/PLAN...）
+├── legacy/           冻结线归档：debian/（Frame→Debian 管线+graft）、device/（会话件）
+├── config.sh         全局钉子
+├── Justfile          fetch-base / fetch-kernel / adapt / verify
+└── AGENTS.md         本文档
+work/、dl/ = gitignore（镜像/apk/固件大件不进仓；固件回退源 = work/layer）。
+**旧路径对照**：build_files/build.sh → build_files/build.sh；
+scripts/{host,in-chroot,device}/* → legacy/{debian,device}/；work/layer → system_files/（真身）。
+```
 
 ## 底包镜像（自动获取，无需手动）
 

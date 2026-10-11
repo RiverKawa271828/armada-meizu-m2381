@@ -1,0 +1,8 @@
+[Unit]
+Description=Watch devfreq simple_ondemand blindness and re-kick governor (m2381)
+After=multi-user.target
+[Service]
+ExecStart=/usr/lib/meizu20/gpu-ondemand-watch
+Restart=always
+[Install]
+WantedBy=multi-user.target

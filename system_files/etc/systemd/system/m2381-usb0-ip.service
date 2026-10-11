@@ -1,0 +1,10 @@
+[Unit]
+Description=m2381: usb0 gadget 静态 IP（纯调试通道，上行走设备自身 WiFi）
+After=m2381-ncm-gadget.service
+Wants=m2381-ncm-gadget.service
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "ip a a 172.16.42.1/24 dev usb0 2>/dev/null; ip link set usb0 up; ip route del default via 172.16.42.2 dev usb0 2>/dev/null || true"
+RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target

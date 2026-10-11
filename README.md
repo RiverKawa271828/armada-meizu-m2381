@@ -1,48 +1,67 @@
-# steamos-sheng
+# armada-meizu-m2381
 
-以 **Steam Frame 官方恢复镜像**（SteamOS holo，aarch64）为底包的 SteamOS for sheng，产出可刷入的 `rootfs.img` + `boot.img`。
+**Armada（SteamOS-like）for 魅族 20 / Meizu 20（m2381 · SM8550）**
 
-## 参数说明
+English: An [Armada](https://github.com/armada-os/armada) adaptation for the Meizu 20
+(Snapdragon 8 Gen 2). We keep the vendor's fastboot-only model: the mainline kernel
+(pmos-meizu line) boots as EFI stub from the recovery partition, and an upstream
+Armada container rootfs is adapted into a single-partition ext4 `userdata` image —
+no bootc/OTA, reflash-to-upgrade.
 
-`.github/workflows/rootfs.yml`（workflow_dispatch）：
+> ⚠ 文档整理中（发布前会补英文全文）。以下为现状速览。
 
-| 输入 | 默认 | 说明 |
-|---|---|---|
-| `frame_image_url` | `steamdeck-images.steamos.cloud/recovery/steamframe-repair-latest.img.bz2` | 底包地址（Valve 公开直连；仓库里已发布解好的资产时优先用资产） |
-| `boot_mode` | `dual (linux)` | `dual (linux)` → fstab `PARTLABEL=linux`；`single (userdata)` → `PARTLABEL=userdata` |
-| `rootfs_size` | `14G` | 初始大小下限；脚本按底包实际用量自动放大 |
-| `shrink_image` | `true` | 收尾 `e2fsck -fy` + `resize2fs -M` + `truncate` |
-| `kernel_release` | `7.2.6` | 上游 `ianchb/sm8550-mainline` release，boot 镜像与内核包同源 |
-| `upload_artifacts` | `true` | 上传 `steamos-sheng-rootfs-<label>` / `steamos-sheng-boot-<label>`（关掉只做构建校验） |
-| `wifi_ssid` / `wifi_password` | 空 | 开机自动连接的 WiFi（凭据只作为构建输入，不写进仓库；留空则用 DHCP 但不预配 WiFi） |
-| `ssh_pubkey` | 内置调试公钥 | 写入 root 的 `authorized_keys`（公钥登录不经过 PAM 密码链，是最稳的入口） |
-| `root_password` | `123456` | root 密码（用于 SSH；留空则不设置） |
+## 实测状态（2026-10，r80 内核 + armada v1.2 底盘）
 
-刷入方式：
+| 功能 | 状态 |
+|---|---|
+| gamescope 会话 + Steam Game Mode（`-gamepadui -steamos3 -steampal -steamdeck`） | ✅ |
+| 手柄进游戏（InputPlumber → deck-uhid 虚拟 Deck 手柄 28DE:12F0） | ✅ |
+| guide 键 QAM / 菜单↔游戏往返 | ✅ |
+| 音频（WCD9385 编排三件 → PipeWire sink）/ 触摸（Goodix 定向绑定） | ✅ |
+| 电源键睡眠/唤醒（fake-suspend：面板熄→pmic_pwrkey→亮，全链） | ✅ |
+| WiFi（ath12k）/ 蓝牙手柄（BLE HOG 需 uhid，已自载） | ✅ |
+| x86 游戏（FEX，gzip squashfs 腿） | ✅ |
+| 调试通道（NCM gadget 172.16.42.1 + sshd + 自动登录） | ✅ 构建期内置 |
+| 真实 s2idle 睡眠 / hibernate | ❌ SoC 限制（fake-suspend 代替 / 无） |
 
-```sh
-fastboot flash userdata rootfs.img     # single (userdata) 模式
-fastboot flash boot_b  boot.img
+## 布局
+
+```
+build_files/    构建流：build.sh（主适配）+ fetch-base.sh（上游 rootfs 取件）
+system_files/   m2381 设备覆盖层（设备档案/编排单元/黑名单/UCM/NCM/RTC/polkit）
+kernel-m2381/   nura 线料件钉子（内核+固件 apk 的 sha/门禁；与 pmOS 线通用）
+post_process/   finalize（收缩对齐）/ verify（21 项离线点验）
+docs/           移植全程工作文档（PORT / RECON / RELAY …）
+legacy/         冻结线归档（Debian 管线 / 会话件）
 ```
 
-镜像内已固化（都是实机验证过的）：`rootwait` 写入 boot.img、SDDM 直连 Plasma（自动登录 `steamos`）、`xiaomi-sheng-thp` 触屏守护进程 + `/etc/modules-load.d/uinput.conf`、`sheng-devauth` / `adsprpcd-sensorspd` 启用；其余设备服务（iio-sensor-proxy、qteesupplicant、键盘 helper、charger / pen）由各自 udev 规则按需触发；指纹栈（自编 `libfprint` 1.94.10 + `fprintd` 1.94.5）；`fastfetch`。
+## 出盘（宿主 Linux，root）
 
-> 调试开关（`debug_console` 文本控制台模式、`patch_cmdline` cmdline 注入、boot 变体 A/B 对照）在桌面链路稳定后已全部移除；镜像里不再有任何免密 root 入口。
+```bash
+just fetch-base && just fetch-kernel   # 或手动放料
+sudo bash build_files/build.sh         # 适配 → 收缩 → 21 项点验 → work/*.img
+just verify                            # 单独复核成品
+```
 
-底包已预先解包并发成 release 资产 `frame-base-20260922`（`rootfs.partNN.zst` + `SHA256SUMS`），构建时直接下载拼回；换底包版本时跑一次 `.github/workflows/publish-base.yml` 即可。底包结构：GPT `esp(256M) / efi-A(64M) / rootfs-A(5G btrfs) / var-A(256M) / home(100M)`。
+料件（内核 apk / 固件 apk）来自 nura 的 pmOS meizu 线，**与 pmOS rootfs 通用**；
+版本与 sha256 钉在 `kernel-m2381/BUILD.env`，公开下载链接待钉版后补。
 
-产出镜像：ext4、标签 `rootfs`、固定 UUID `ee8d3593-59b1-480e-a3b6-4fefb17ee7d8`（与上游内核 cmdline 对应）；fstab 用 `PARTLABEL` + `x-systemd.growfs`，首启自动扩到分区大小；无 initramfs（内核直接挂根）。
+## 刷机（只动 userdata）
 
-## 许可与第三方组件
+前提：解锁 BL + recovery_a 已刷 nura 线配对 ESP（EFI stub，cmdline `root=/dev/sda22`）。
 
-- SteamOS / Steam Frame userspace：Valve Corporation（仅作本移植底包，镜像内组件版权归 Valve）
-- Arch Linux ARM 设备包与基础软件包：Arch Linux ARM
-- 内核 `7.2.6-sm8550` 及 `boot.img`：上游 `ianchb/sm8550-mainline`
-- 设备包构建复用 `code002-2/archlinux-sheng` 的 `_packages.yml`
-- 本项目自身脚本：见 `LICENSE`
+```bash
+fastboot flash userdata work/meizu-meizu20-armada-r80.img
+fastboot reboot
+```
 
-## 致谢
+首启自动扩容到全盘；插 USB 线 `ssh root@172.16.42.1`（初始密码 123456，登录后请改）。
+回滚 = `fastboot flash userdata <任意旧 rootfs>`，boot/ESP/recovery 永不触碰。
 
-- [ianchb/debian-sheng](https://github.com/ianchb/debian-sheng)：本仓库脚本结构与构建流程参照其实现
-- [ianchb/sm8550-mainline](https://github.com/ianchb/sm8550-mainline)：sheng 内核与 boot 镜像
-- Arch Linux ARM：aarch64 基础包与设备包构建环境
+## Credits
+
+- [armada-os/armada](https://github.com/armada-os/armada) 与
+  [code002-2/armada-sheng](https://github.com/code002-2/armada-sheng) —— 底盘（GPL-2.0-or-later）
+- pmOS meizu20 内核/设备线（nura）—— 内核腿、固件、boot 链
+- ROCKNIX / Bazzite —— 上游设备适配与镜像工具源头
+- 本仓新增内容以 GPL-2.0-or-later 提供，见 LICENSE.md

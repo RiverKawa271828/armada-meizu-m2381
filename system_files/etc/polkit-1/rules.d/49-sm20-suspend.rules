@@ -1,0 +1,9 @@
+// m2381: armada 用户 + root 显式放行 suspend/hibernate（fake-suspend 链的入口）
+polkit.addRule(function(action, subject) {
+    if (action.id.indexOf("org.freedesktop.login1.suspend") == 0 ||
+        action.id.indexOf("org.freedesktop.login1.hibernate") == 0) {
+        if (subject.isInGroup("armada") || subject.user == "root") {
+            return polkit.Result.YES;
+        }
+    }
+});

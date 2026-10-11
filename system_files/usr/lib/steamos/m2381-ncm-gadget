@@ -1,0 +1,21 @@
+#!/bin/bash
+set -u
+CFG=/sys/kernel/config/usb_gadget/m2381
+UDC="$(ls /sys/class/udc 2>/dev/null | head -1)"
+[[ -n "$UDC" ]] || exit 0
+if [[ -d "$CFG" ]]; then
+  [[ "$(cat "$CFG/UDC" 2>/dev/null)" == "$UDC" ]] && exit 0
+else
+  modprobe libcomposite 2>/dev/null || true
+  mkdir -p "$CFG" 2>/dev/null || exit 0
+  echo 0x18d1 > "$CFG/idVendor" 2>/dev/null || exit 0
+  echo 0x4ee1 > "$CFG/idProduct" 2>/dev/null
+  echo 0x0100 > "$CFG/bcdDevice" 2>/dev/null
+  mkdir -p "$CFG/strings/0x409" "$CFG/configs/c.1"
+  echo "m2381 NCM gadget" > "$CFG/strings/0x409/product" 2>/dev/null
+  mkdir -p "$CFG/functions/ncm.usb0"
+  ln -sf "$CFG/functions/ncm.usb0" "$CFG/configs/c.1/fncm" || exit 0
+fi
+echo "$UDC" > "$CFG/UDC" 2>/dev/null || exit 0
+ip link set usb0 up 2>/dev/null || true
+exit 0

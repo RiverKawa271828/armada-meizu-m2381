@@ -1,0 +1,20 @@
+#!/bin/bash
+D=/sys/class/devfreq/3d00000.gpu
+last_trans=""
+stuck=0
+while true; do
+  cur=$(cat $D/cur_freq 2>/dev/null)
+  min=$(cat $D/min_freq 2>/dev/null)
+  trans=$(awk "/^Total transition/{print \$3}" $D/trans_stat 2>/dev/null)
+  if [ "$cur" = "$min" ] && [ -n "$trans" ] && [ "$trans" = "$last_trans" ]; then
+    stuck=$((stuck+1))
+  else
+    stuck=0
+  fi
+  last_trans=$trans
+  if [ "$stuck" -ge 6 ]; then
+    echo simple_ondemand > $D/governor 2>/dev/null
+    stuck=0
+  fi
+  sleep 5
+done
