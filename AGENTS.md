@@ -168,6 +168,26 @@
   疑似相册预载/通知/商店轮询；本轮窗内 max 6.95W 阵发仍在）③长 soak 温度稳态
   验证（晾一晚看 ≤40°C）④零改动备选杠杆 upthreshold=90 未测（nura 备选，需要
   时打）⑤老三样：盘刷写待拍板 / issue 草稿待过目 / fork 推送待令。
+- **★ nura 回信到（r82 点火轮答复，2026-10-11 深夜用户转告）+ Debian 清库 + 重建出盘**：
+  ①v62 哈希彼侧实测盖章（gzip -dc|sha256sum = b41b88889cadf…，前缀 b41b8888），
+  （八十三）勘误系彼方转抄病已改回——**哈希公案两清，全量哈希=单一真值源**；
+  ②协作边界确认（79b4200 彼核保留；双向书信走用户转告、互不碰对方仓；料件照旧
+  BUILD.env + Release）；③**H3 树内精化 = XOCLK4 接线已证通（a740 ∈
+  adreno_is_a7xx）、零值 = GMU 从未进 IFPC、H2F_FEATURE_CTRL(IFPC) 消息在发而
+  FW v4.1.9 不动作**（固件不配合实锤）；④r82/v63/#83 留机确认，busy_deltas 留给
+  r83；⑤**r83 两路排队：A = clamp_to_idle 给 a740 置位**（上游建模的软件 IFPC
+  替身，一日件，预期直接拿我方验收口径）**/ B = IFPC 协商/固件血统/silime revert
+  考古（追根）——排程球 = 用户**，A 路出件后老流程带话点火。
+  **Debian 清库（用户拍板"debian bug 太多=放弃原因"）**：legacy/（管线 9 件+会话件）、
+  work/out（qcow2 缓存）、gamescope-master-stack、会话件 v5 全删，**docs/ 记录全留**
+  （git 历史可考）；宿主已无任何 Debian 资产。
+  **重建出盘（22:48，r81+damp 同构盘，发布候选）**：verify 升 22 项（新增"damp 件在
+  位"）全绿；盘内 damp/watch/qbootctl wants 三件齐；新 sha256 = `79478916…`。
+  ⚠ 教训：**work/cache/esp-recovery-v62.img 是 build.sh 的 ESP_REF 构建输入（腿配对
+  对拍基准）非回滚件**——清库时曾被误删，已自 nura gz 真值还原（b41b8888 ✓）；
+  **清理任何料件前必须 grep 管线引用**。**发布链 = 用户游戏实测 → 整盘重刷验证 →
+  推 fork + Release（轻发布案）**；重刷注意：r81 盘配 v62 腿 → #82（busy_deltas
+  出口随之消失，r83 到货再补）。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
   ①**r79/ESP v60 双腿已上机**（对拍 0ccfcf72 命中，uname #80；r78 模块树留
   /usr/lib/modules/7.3.0-rc6.r78-bak；回滚 = v59+r78）：cap 翻 1、"Immediate flips" 行消失、
@@ -462,7 +482,7 @@ armada-meizu-m2381/
 ├── kernel-m2381/     内核腿钉子：BUILD.env（apk sha256/腿配对 sha）+ fetch.sh
 ├── post_process/     finalize（收缩对齐）/ verify（21 项点验）
 ├── docs/             索引 README + 刷机指南 + 现行参考；archive/=旧线归档
-├── legacy/           冻结线归档：debian/（Frame→Debian 管线+graft）、device/（会话件）
+├── legacy/           （已清 2026-10-11：debian 管线+会话件随 Debian 线弃用全删，git 历史可考）
 ├── config.sh         全局钉子
 ├── Justfile          fetch-base / fetch-kernel / adapt / verify
 └── AGENTS.md         本文档

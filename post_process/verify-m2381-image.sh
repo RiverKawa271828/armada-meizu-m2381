@@ -34,6 +34,7 @@ chk "bootimg 重写件已摘"    "! test -e ${MNT}/etc/systemd/system/multi-user
 chk "SELinux permissive"    "grep -q '^SELINUX=permissive' ${MNT}/etc/selinux/config 2>/dev/null"
 chk "睡眠 mask 件未混入"    "! test -e ${MNT}/etc/systemd/system/sleep.target && ! test -e ${MNT}/usr/lib/tmpfiles.d/meizu-sleepmask.conf"
 chk "qbootctl 件在位"       "test -x ${MNT}/usr/local/bin/qbootctl && test -f ${MNT}/etc/systemd/system/qbootctl-meizu.service && test -L ${MNT}/etc/systemd/system/multi-user.target.wants/qbootctl-meizu.service"
+chk "gpu-idle-damp 件在位"  "test -x ${MNT}/usr/lib/meizu20/gpu-idle-damp && test -f ${MNT}/etc/systemd/system/gpu-idle-damp.service && test -L ${MNT}/etc/systemd/system/multi-user.target.wants/gpu-idle-damp.service"
 chk "RTC 用户态三件已撤"    "! test -e ${MNT}/etc/systemd/system/sm20-rtc1-restore.service && ! test -e ${MNT}/etc/systemd/system/sm20-rtc1-save.timer"
 # squashfs 超级块偏移 20 = 压缩算法 id（6=zstd）；r81+ 内核直挂，不许再回 gzip
 chk "FEX sqsh 保持 zstd"    "[ \"\$(sudo od -A n -t u2 -j 20 -N 2 ${MNT}/usr/share/fex-emu/RootFS/ArchLinux.sqsh | tr -d ' ')\" = \"6\" ]"
