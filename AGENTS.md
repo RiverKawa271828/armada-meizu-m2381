@@ -248,6 +248,31 @@
   出 → 修 build.sh 重建重刷；无差 → 转「刷 v4 后首查 qbootctl Successful/
   tries + 连续三次重启回归」实证槽位态。设备现役 = nura pmOS（彼侧基线数据
   在 ⓪b），刷写等用户令。
+  **⓪c-审计收官（2026-10-12 晨会话，全文 = docs/M2381-CARDMU-AUDIT-20261012.md）**：
+  检查单②（首启写入态审查）完成——三盘静态对拍（v1 实机坏盘真身 a7d4d1e7 /
+  v4 0c752770 / r81 79478916 参照）全等价：同一 base（dl/rootfs.img 未动，
+  mkfs 2026-09-13 上游件）、e2fsck 全净、/lib 全软链、fs 特性集保守同源，
+  **镜像 as-built 侧无罪**。首启写入清单（growfs 幂等扩容/qbootctl -m/
+  journald=volatile/无 SELinux relabel）无可单独打断 boot#3+ 的成员。
+  **②挂的「手修 tar 顶翻 /lib」嫌疑证伪**：沙箱实测 firmware apk 顶层带
+  lib/ 目录项、tar -C / 确会顶软链（固件全落平行树、/usr/lib/firmware 零落
+  ——与 build v2/v3 同构）；但模块图谱判决（modules.builtin 实锤）：msm/
+  panel-boe-meizu20/dwc3-qcom/qmp-phy/libcomposite/usb_f_ncm 全内建，顶翻只
+  死 WiFi(ath12k)/触屏(goodix)/NCM 实枚举(femto-phy)，打不死显示与会话 =
+  与「停 Mu」症状不符 → 降级排除；v1 盘 /lib 本就干净，顶翻只发生在 v2/v3
+  重建轮。**另勘误**：zz-steamos-autologin.conf 在 v1/v4/r81 三镜像均不存在
+  （属上一代热修态记忆），三虫 (a) 对 v1 盘不成立（本就不拦内核，无碍）。
+  **剩两活机制 + 一外部项**：(A) 刷后 fs 写伤（growfs 期硬复位类中断）
+  /(B) qbootctl -m 的 GPT 属性写坏（系统内唯一 GPT 写者，上轮「重启落
+  fastboot」同域前科）/(C) 电池（05:20:51 拔线后）——设备态已不可考，皆只能
+  刷后实证。**刷写协议已备（等用户令）**：flash-meizu.sh 刷 v4 全程插线 →
+  首启 90s 内 `post_process/post-flash-health.sh` 只读采样（qbootctl -h 槽位
+  四元组//lib 形态/ath12k modprobe/EXT4-fs error/tune2fs 计数/failed/供电；
+  任一 FAIL 停手取证勿重刷）→ 连续三次重启回归（successful 恒 1 + tries 不
+  倒）→ 全绿 = A/B 排除、事故结案；复现停 Mu = fastboot set_active b 复活即
+  B 实锤，现场留 nura 会诊。检查单①对拍脚本 `post_process/compare-pmos-
+  rootfs.sh` 已预制并以 v1 替身自测跑通（定位从「找病灶」降为「补档确认」），
+  nura 料件到手即跑。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
