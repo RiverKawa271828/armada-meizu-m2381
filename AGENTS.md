@@ -144,10 +144,15 @@
   旗标；watch 见旗标让路）入 system_files/build.sh enable，已上机在役。实测：
   idle→220(86s)→标记→680(8s)→回 220(10s) 全链 ✓，post-fix 均值 3.08W（静默段
   1.7-1.9W 达标；爆发段 4.5-6.8W = webhelper CPU 项未收）。已证伪 fps_limit 60
-  对爆发无效；屏保相册轮播 = idle 动画负载（GPU 侧已钳压住）；用户侧杠杆 =
-  IdleBacklightDimACSeconds（现 0=AC 永不暗背光）+ 屏保/熄屏 timer。**下轮待办
-  = webhelper 爆发触发源长观察窗（DevTools 8080 + 占空比日志）**。根因层 =
-  msm devfreq busy 会计/GMU 病（nura 候补件③同源，落地撤 watch、damp 保留）。
+  对爆发无效；屏保相册轮播 = idle 动画负载（GPU 侧已钳压住；**用户已 UI 关屏保**，
+  键 = config.vdf `IdleScreensaverACSeconds`；`IdleBacklightDimACSeconds=0` =
+  AC 永不暗背光，用户侧杠杆）。**候补件③转正申请已发 nura（用户拍板"让 nura
+  做内核根治"）**：验收口径 = idle 静态下 trans_stat 低档驻留占主导 + ≤2W 档；
+  我方 damp 保留、watch 等 governor 诚实后撤。**下会话执行单**：①处理 nura
+  回信（③接单=等 apk+ESP 配对点火回归老流程；拒/缓=维持 damp 现态）②webhelper
+  爆发触发源长观察窗（DevTools 8080 + 占空比日志；瞬时 205%+92% 阵发已抓，
+  疑似相册预载/通知/商店轮询）③长 soak 温度稳态验证（晾一晚看 ≤40°C）
+  ④老三样：盘刷写待拍板 / issue 草稿待过目 / fork 推送待令。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
   ①**r79/ESP v60 双腿已上机**（对拍 0ccfcf72 命中，uname #80；r78 模块树留
   /usr/lib/modules/7.3.0-rc6.r78-bak；回滚 = v59+r78）：cap 翻 1、"Immediate flips" 行消失、
