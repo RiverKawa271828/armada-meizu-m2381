@@ -1,0 +1,68 @@
+#!/bin/bash
+# GPU idle 频率管控（治待机温热：simple_ondemand 被 120Hz 合成喂着，idle 钉
+# 475MHz ≈4.4W；220MHz ≈1.7-2.2W）。三态机：
+#   game    /proc 有游戏容器标记（pressure-vessel / SteamLinuxRuntime / steamapps/common）
+#           → max 680，看护照常
+#   active  90s 内有输入 → max 680
+#   idle    其余 → max 220 + /run 旗标
+# 输入探测 = 并行只读全部 evdev 节点（evdev 支持多读者，不抢 gamescope 的 fd）；
+# 不用 /proc/interrupts：BT uart 背景 ~228/s 恒跳、NCM 走 xhci——都不是输入。
+# /run/sm20-gpu-idle/clamped = gpu-ondemand-watch 的门控（idle 冻结是本意，勿重绑）。
+# webhelper 周期爆发无游戏标记 → 不误弹回（GPU 侧被钳住；爆发根因另案）。
+D=/sys/class/devfreq/3d00000.gpu
+FLAG=/run/sm20-gpu-idle/clamped
+IDLE_AFTER=90
+MAXFULL=680000000
+MAXIDLE=220000000
+mkdir -p "$(dirname "$FLAG")"
+
+input_feed() {
+    local n
+    for n in /dev/input/event*; do cat "$n" 2>/dev/null & done
+    wait
+}
+exec 3< <(input_feed)
+
+last_input=$(date +%s)
+state=""
+
+set_state() {
+    [ "$state" = "$1" ] && return 0
+    state="$1"
+    case "$1" in
+        game)   echo "$MAXFULL" > "$D/max_freq" 2>/dev/null; rm -f "$FLAG"; echo "gpu-idle-damp: game -> max 680" ;;
+        active) echo "$MAXFULL" > "$D/max_freq" 2>/dev/null; rm -f "$FLAG"; echo "gpu-idle-damp: active -> max 680" ;;
+        idle)   echo "$MAXIDLE" > "$D/max_freq" 2>/dev/null; touch "$FLAG"; echo "gpu-idle-damp: idle -> max 220" ;;
+    esac
+}
+
+while :; do
+    # 括号防自匹配：grep 自己的 cmdline 带模式串，不防会恒判 game
+    game=$(grep -lsE 'pressure-[v]essel|SteamLinux[R]untime|steamapps/[c]ommon' \
+        /proc/[0-9]*/cmdline 2>/dev/null | head -1 | wc -l)
+    # 吃输入：read 成功=有事件（逐字节即可，事件稀疏；爆发期每字节一次循环，
+    # 代价可忽略）。>128=5s 无输入 → 出窗评估状态。EOF=喂管全退 → 重开。
+    # ⚠ 勿用 dd "大口吞"——管道空时 dd read() 无限阻塞，状态机会停摆数分钟。
+    while :; do
+        read -t 5 -rn 1 x <&3
+        rc=$?
+        if [ "$rc" -eq 0 ]; then
+            last_input=$(date +%s)
+            continue
+        fi
+        if [ "$rc" -gt 128 ]; then
+            break
+        fi
+        exec 3<&-
+        exec 3< <(input_feed)
+        sleep 1
+    done
+    now=$(date +%s)
+    if [ "$game" -ge 1 ]; then
+        set_state game
+    elif [ $((now - last_input)) -lt "$IDLE_AFTER" ]; then
+        set_state active
+    else
+        set_state idle
+    fi
+done

@@ -1,0 +1,12 @@
+[Unit]
+Description=Clamp GPU max_freq to 220MHz when idle (no game + no input 90s)
+# 治待机温热（idle 钉 475MHz ≈4.4W → 220MHz ≈1.7-2.2W）。与 gpu-ondemand-watch
+# 协同：本服务钳 220 时立 /run/sm20-gpu-idle/clamped 旗标，看护见旗标让路
+# （idle 冻结是本意）。游戏在跑或近期有输入 → 放开 680，不伤游戏/交互性能。
+[Service]
+Type=simple
+ExecStart=/usr/lib/meizu20/gpu-idle-damp
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

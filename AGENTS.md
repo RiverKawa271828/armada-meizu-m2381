@@ -134,7 +134,20 @@
   ③**issue 问询 = 草稿就绪未发**：三症状已破改为报捷+两问（A/B 槽位标记/FEX
   zstd 依赖），docs/ISSUE-DRAFT-armada-sheng.md，等用户过目后发。
   ④**RTC 持久化实证 ✅**：见①。
-  ⑤**推 fork**：仍等用户指令一条 push（RiverKawa271828/armada-meizu-m2381）。
+  ⑤**推 fork**：**用户已定调"要发，但以后完善了再说"（2026-10-11 午）**——轻发布
+  方案（仓公开 + tag/Release notes 零镜像）已认可，镜像分发（gzip -9 实测 4.01GB
+  切 2 卷可过 GitHub 2GiB 资产上限）留二期；推送动作等用户完善后再发令
+  （RiverKawa271828/armada-meizu-m2381）。
+- **★ 待机功耗轮（2026-10-11 午，gpu-idle-damp 落地，全文 = PORT 正典 §8）**：
+  现象 = idle 44-47°C（GPU 驻留 475/680 档 80%，webhelper 阵发 3 核爆发 ~37%
+  占空比）。修复 = gpu-idle-damp 三态机（无游戏+无输入 90s → 钳 max 220 + /run
+  旗标；watch 见旗标让路）入 system_files/build.sh enable，已上机在役。实测：
+  idle→220(86s)→标记→680(8s)→回 220(10s) 全链 ✓，post-fix 均值 3.08W（静默段
+  1.7-1.9W 达标；爆发段 4.5-6.8W = webhelper CPU 项未收）。已证伪 fps_limit 60
+  对爆发无效；屏保相册轮播 = idle 动画负载（GPU 侧已钳压住）；用户侧杠杆 =
+  IdleBacklightDimACSeconds（现 0=AC 永不暗背光）+ 屏保/熄屏 timer。**下轮待办
+  = webhelper 爆发触发源长观察窗（DevTools 8080 + 占空比日志）**。根因层 =
+  msm devfreq busy 会计/GMU 病（nura 候补件③同源，落地撤 watch、damp 保留）。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
   ①**r79/ESP v60 双腿已上机**（对拍 0ccfcf72 命中，uname #80；r78 模块树留
   /usr/lib/modules/7.3.0-rc6.r78-bak；回滚 = v59+r78）：cap 翻 1、"Immediate flips" 行消失、

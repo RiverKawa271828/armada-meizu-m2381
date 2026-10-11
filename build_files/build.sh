@@ -161,7 +161,7 @@ fi
 
 # ---------------------------------------------------------------- 4) enable 集 + 调试件
 log "4) enable：meizu 编排链 + 调试件（软链进 multi-user.target.wants，按落点选目标）"
-for u in m2381-ncm-gadget m2381-usb0-ip gpu-ondemand-watch meizu-audio-wireplumber-kick \
+for u in m2381-ncm-gadget m2381-usb0-ip gpu-ondemand-watch gpu-idle-damp meizu-audio-wireplumber-kick \
          meizu-pas meizu-touch meizu-amps meizu-audio meizu-sndcard-bind \
          meizu-audio-route meizu-bind-nfc-haptics meizu-memsleep qbootctl-meizu; do
     TGT=""

@@ -5,6 +5,8 @@
 
 - etc/modprobe.d/       PAS/geni 黑名单（硬定律：remoteproc/geni 冷插拔致死）
 - usr/lib/meizu20/      音频编排三件+触屏+PAS 定向绑定脚本、GPU devfreq 看护
+                        （gpu-ondemand-watch）+ GPU idle 频率管控（gpu-idle-damp：
+                        无游戏+无输入 90s → 钳 max 220MHz 治待机温热，见下）
 - usr/lib/systemd/      meizu 编排单元、看门狗放宽 drop-in、journald sync
 - usr/share/alsa/ucm2/  MEIZU20 UCM2
 - usr/lib/armada/devices/meizu-meizu20.conf   设备档案（竖屏 right + fake suspend）
@@ -14,6 +16,13 @@
                         linux-msm v0.2.2 aarch64 现编，musl 版不可用于 Fedora 底）
 - etc/systemd/system/   NCM gadget / usb0-ip / GPU 看护 / wireplumber 踢卡
 - etc/polkit-1/rules.d/ suspend 放行（fake-suspend 链入口）
+
+**GPU idle 管控双件协同（2026-10-11 起）**：gpu-idle-damp 三态机（game/active/idle，
+evdev 直读输入，/proc 容器标记判游戏）在 idle 时钳 `max_freq=220` 并立
+/run/sm20-gpu-idle/clamped 旗标；gpu-ondemand-watch 见旗标让路（idle 冻结是本意，
+勿当"钉死 220 病"重绑 governor）。两坑备忘：①grep 游戏标记必须括号防自匹配
+（pressure-[v]essel），否则恒判 game；②输入管道禁用 dd 大口吞（空管 read() 无限
+阻塞，状态机停摆）。
 
 **RTC 用户态三件（sm20-rtc1-restore/save/time-wait cap）已撤（r81 起）**——
 内核 HCTOSYS/SYSTOHC 已钉 rtc1（pm8xxx），r80 及以前的老腿才需要；勿回加。
