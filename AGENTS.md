@@ -66,7 +66,13 @@
   解 r80 apk 修配对）。**RTC 持久化已装**（治无 RTC 电池首启时钟=盘内烤死旧时间→
   steam TLS 全挂弹"无法下载更新"）：rtc0=efi 废件、rtc1=pm8xxx PMIC 走电正主——
   sm20-rtc1-restore（sysinit hctosys+废值门禁）+ save.timer 每小时写回 +
-  time-wait-sync 25s 兜底，持久性待下次重启实证。
+  time-wait-sync 25s 兜底，持久性待下次重启实证。**睡眠假死已破（同日，最大
+  抓虫根因在自己）**：层里 Debian 时代 sleepmask tmpfiles usr 侧漏排除 → 首启
+  把 sleep/suspend 等 4 target 全 mask → logind Suspend 永远 Access denied →
+  steam "Issuing Suspend Command" 石沉大海停在自己黑屏渲染态；清掩码+删源头
+  tmpfiles+**usr rsync basename 排除回写脚本**后，fake-suspend 全链实测通
+  （display off→wake pmic_pwrkey→display on），steam 走 PrepareForSleep 正常
+  生命周期，电源键睡眠/唤醒=原版 Deck 体验。
   睡眠腿备注：现
   钉 fake（真 s2idle 入睡不 resume 与上游互证）；nura wowlan 三件真睡眠（meizu-wowlan
   + WatchdogSec=0）留作上机后实验项，档案改 s2idle 即切换。选型存档：官方

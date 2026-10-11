@@ -117,12 +117,16 @@ sudo depmod -b "${MNT}" "${KVER}"
 # ---------------------------------------------------------------- 3) meizu 层注入
 log "3) meizu 层注入（睡眠 mask 件除外）"
 # 硬定律随层走：PAS/geni 黑名单 + 编排三件 + 触屏 + UCM + 看门狗放宽。
-# 排除件 = sm20-nosleep.conf（AllowSuspend=no 会砍掉 fake-suspend 的 logind 入口）
-#          + 两份 sleepmask tmpfiles + 层内旧模块树（apk 现解的为准）。
-sudo rsync -aHA --exclude='systemd/sleep.conf.d/sm20-nosleep.conf' \
-    --exclude='tmpfiles.d/sm20-sleepmask.conf' --exclude='tmpfiles.d/meizu-sleepmask.conf' \
+# 排除件 = Debian 时代防睡死三兄弟（★ 实机事故：usr 侧两份 sleepmask tmpfiles
+# 一旦落地，首启 systemd-tmpfiles 会把 sleep/suspend.target 软链成 /dev/null →
+# logind Suspend 永远 Access denied → steam "Issuing Suspend Command" 石沉大海，
+# steam 停在自己黑屏里=电源键睡眠假死。fake-suspend 接管睡眠，这些必须绝育）。
+# basename 无斜杠模式 = 任意深度同名文件全排除，防再犯。
+sudo rsync -aHA --exclude='sm20-nosleep.conf' \
+    --exclude='sm20-sleepmask.conf' --exclude='meizu-sleepmask.conf' \
     "${LAYER}/etc/" "${MNT}/etc/"
 sudo rsync -aHA --exclude='modules' \
+    --exclude='sm20-sleepmask.conf' --exclude='meizu-sleepmask.conf' \
     "${LAYER}/usr/" "${MNT}/usr/"
 
 # ---------------------------------------------------------------- 4) 设备档案 + device-env
@@ -361,7 +365,8 @@ log "6) 手术：boot_b 重写件 / bootupd / sheng 专件（按实测 wants 摘
 # sheng-thp / update-reserve；esp-rename/boot-hotkeys 该容器导出盘无（rm -f 兜底）。
 # bootloader-update = bootupd —— m2381 ESP 权威在我方 recovery_a，绝不许它碰。
 for u in armada-bootimg-sync armada-esp-rename armada-boot-hotkeys \
-         armada-usbgadget xiaomi-sheng-thp armada-update-reserve bootloader-update; do
+         armada-usbgadget xiaomi-sheng-thp armada-update-reserve bootloader-update \
+         bootc-generic-growpart; do
     sudo rm -f "${MNT}/etc/systemd/system/multi-user.target.wants/${u}.service" 2>/dev/null || true
 done
 # mask（防路径拉起：上游 RNDIS + sheng THP + 残余 ostree/bootc 件）
@@ -450,6 +455,21 @@ sudo ln -sfn /etc/systemd/system/sm20-rtc1-restore.service \
     "${MNT}/etc/systemd/system/sysinit.target.wants/sm20-rtc1-restore.service"
 sudo ln -sfn /etc/systemd/system/sm20-rtc1-save.timer \
     "${MNT}/etc/systemd/system/timers.target.wants/sm20-rtc1-save.timer"
+
+# polkit：armada/root 显式放行 suspend（fake-suspend 链入口；SSH 调试路径也需要
+# ——inactive 会话默认 auth_admin，实机排障时 logind 拒绝过 root）
+sudo mkdir -p "${MNT}/etc/polkit-1/rules.d"
+sudo tee "${MNT}/etc/polkit-1/rules.d/49-sm20-suspend.rules" >/dev/null <<'EOF'
+// m2381: armada 用户 + root 显式放行 suspend/hibernate（fake-suspend 链的入口）
+polkit.addRule(function(action, subject) {
+    if (action.id.indexOf("org.freedesktop.login1.suspend") == 0 ||
+        action.id.indexOf("org.freedesktop.login1.hibernate") == 0) {
+        if (subject.isInGroup("armada") || subject.user == "root") {
+            return polkit.Result.YES;
+        }
+    }
+});
+EOF
 # sshd / sddm / inputplumber 上游已 enable，复核
 for u in sshd sddm inputplumber; do
     if [ -e "${MNT}/etc/systemd/system/multi-user.target.wants/${u}.service" ] || \
