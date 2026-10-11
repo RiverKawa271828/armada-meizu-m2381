@@ -133,30 +133,28 @@ sudo rsync -aHA --exclude='sm20-nosleep.conf' \
     "${SF}/etc/" "${MNT}/etc/"
 sudo rsync -aHA --exclude='modules' --exclude='firmware' \
     "${SF}/usr/" "${MNT}/usr/"
-# 固件（不在 git，193MB）：解析序 = ① nura 固件 apk（与 pmOS 线通用料件）
-# → ② work/layer 回退（本机开发便利）。源头 pmOS firmware-meizu-meizu20 apk。
-if [ ! -d "${MNT}/usr/lib/firmware/ath12k" ]; then
-    FAPK="$(ls -1t "${APK_DIR}"/firmware-meizu-meizu20-*.apk 2>/dev/null | head -1 || true)"
-    # 本地缺/失配且钉了 URL → 直接从 nura Release 拉（下载件 sha 门禁兜底）
-    if { [ -z "${FAPK}" ] || [ "$(sha256sum "${FAPK}" | cut -d' ' -f1)" != "${FIRMWARE_APK_SHA256}" ]; } \
-       && [ -n "${FIRMWARE_APK_URL}" ]; then
-        log "  固件 apk 本地缺/失配 → FIRMWARE_APK_URL 拉取"
-        curl -fsSL --retry 3 -o "${APK_DIR}/firmware-meizu-meizu20-${FIRMWARE_APK_VERSION}.apk" \
-            "${FIRMWARE_APK_URL}"
-        FAPK="${APK_DIR}/firmware-meizu-meizu20-${FIRMWARE_APK_VERSION}.apk"
-    fi
-    if [ -n "${FAPK}" ] && [ "$(sha256sum "${FAPK}" | cut -d' ' -f1)" = "${FIRMWARE_APK_SHA256}" ]; then
-        sudo tar -xf "${FAPK}" -C "${MNT}/"
-        log "  固件取自 nura apk（$(basename "${FAPK}")）"
-    elif [ -d "${FW_FALLBACK}" ]; then
-        sudo rsync -aHA "${FW_FALLBACK}/" "${MNT}/usr/lib/firmware/"
-        log "  固件回退自 work/layer（$(du -sh "${FW_FALLBACK}" | cut -f1)）"
-    else
-        echo "ERROR: 无固件可用——到 nura 线拿 firmware-meizu-meizu20 apk 放 ${APK_DIR}/（sha 见 kernel-m2381/BUILD.env）" >&2
-        exit 1
-    fi
+# 固件：底盘自带 Fedora linux-firmware（ath12k 等通用件）+ **无条件叠加** nura
+# 固件 apk（meizu 专属：qcom/sm8550 a740_zap/ADSP/meizu 编排件——底盘不含；
+# r84 首启实锤：「有 ath12k 就跳过」= zap/ADSP 全缺 → GPU init 重试风暴）。
+# tar 覆盖语义，不删底盘件。回退 = work/layer（pmOS 时代 193M 树，本机便利）。
+FAPK="$(ls -1t "${APK_DIR}"/firmware-meizu-meizu20-*.apk 2>/dev/null | head -1 || true)"
+# 本地缺/失配且钉了 URL → 直接从 nura Release 拉（下载件 sha 门禁兜底）
+if { [ -z "${FAPK}" ] || [ "$(sha256sum "${FAPK}" | cut -d' ' -f1)" != "${FIRMWARE_APK_SHA256}" ]; } \
+   && [ -n "${FIRMWARE_APK_URL}" ]; then
+    log "  固件 apk 本地缺/失配 → FIRMWARE_APK_URL 拉取"
+    curl -fsSL --retry 3 -o "${APK_DIR}/firmware-meizu-meizu20-${FIRMWARE_APK_VERSION}.apk" \
+        "${FIRMWARE_APK_URL}"
+    FAPK="${APK_DIR}/firmware-meizu-meizu20-${FIRMWARE_APK_VERSION}.apk"
+fi
+if [ -n "${FAPK}" ] && [ "$(sha256sum "${FAPK}" | cut -d' ' -f1)" = "${FIRMWARE_APK_SHA256}" ]; then
+    sudo tar -xzf "${FAPK}" -C "${MNT}/"
+    log "  固件叠加 nura apk（$(basename "${FAPK}")）：qcom/sm8550 zap/ADSP/meizu 件"
+elif [ -d "${FW_FALLBACK}/qcom/sm8550" ]; then
+    sudo rsync -aHA "${FW_FALLBACK}/" "${MNT}/usr/lib/firmware/"
+    log "  固件回退自 work/layer（$(du -sh "${FW_FALLBACK}" | cut -f1)）"
 else
-    log "  固件取自 system_files"
+    echo "ERROR: 无固件可用——到 nura 线拿 firmware-meizu-meizu20 apk 放 ${APK_DIR}/（sha 见 kernel-m2381/BUILD.env）" >&2
+    exit 1
 fi
 
 # ---------------------------------------------------------------- 4) enable 集 + 调试件
@@ -216,6 +214,14 @@ for u in armada-usbgadget ostree-remount ostree-finalize-staged \
     sudo ln -sf /dev/null "${MNT}/etc/systemd/system/${u}.service" 2>/dev/null || true
     sudo ln -sf /dev/null "${MNT}/etc/systemd/system/${u}.timer" 2>/dev/null || true
 done
+# bootc-generic-growpart：static unit 被非 wants 路径拉起（10-armada-bare-metal
+# drop-in），摘 wants 不够——真 mask（r84 首启 --failed=1 实锤；growfs 由 fstab
+# x-systemd.growfs 负责）。
+sudo ln -sf /dev/null "${MNT}/etc/systemd/system/bootc-generic-growpart.service"
+# sddm 会话归位：底盘 zz-steamos-autologin 钉 armada-plasma（zz- 字母序压过
+# armada.conf 的 gamescope 会话）→ 首启进 Plasma llvmpipe crash 黑屏（r84 首启
+# 实锤）。删 zz 件 = gamescope-session-steam 接管（armada.conf 自带 Relogin）。
+sudo rm -f "${MNT}/etc/sddm.conf.d/zz-steamos-autologin.conf"
 # armada-controller-type：走 InputPlumber CompositeDevice D-Bus——m2381 无内置手柄
 # ⇒ 开机必无 CompositeDevice，apply 必炸（首启实锤）。默认目标本来就是
 # deck-uhid（defaults.conf 首位），接手柄后手动 `controller-type apply` 即可。

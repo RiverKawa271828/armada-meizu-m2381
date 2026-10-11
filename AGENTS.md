@@ -201,23 +201,30 @@
   我方 P2 传感器链现成参照、用户态栈大版本更新）——**等 sheng 出新
   flashable 再升级底盘，不抢跑**。参考克隆 work/ref/{armada-os-upstream,
   armada-sheng-upstream}（blob:none）。
-- **▶▶ 下会话执行单（新会话从这里接，2026-10-12 凌晨四更收口 = GPU 线全收官）**：
-  ①**GPU devfreq/IFPC 内核线收官完成（nura 判过，正典 §11b）**：r84/v65/#85 =
-  收官现役（双侧更钉：我方 BUILD.env r84/01ddbb77 + ESP_REF v65 + 产物名 r84；
-  彼侧 config.sh/MANIFEST 同步）。**过渡态清理已执行**：gpu-ondemand-watch 撤除
-  （病因根治；设备 disable + system_files 两件删 + build.sh enable 列表撤）/
-  gpu-idle-damp 保留（webhelper 阵发防护 + Deck 同构 idle）。ifpc 恒零残线归档
-  lead（ack SUCCESS 但 GX 不塌缩，追加轮弃权；复燃 = 用户点名 rebase 拼车）。
-  nura 下程 = 只候 7.3 stable（~10-18）→ rebase 专项（拼车 = 花屏 0xC4 旋钮 +
-  Waydroid 探针）。
-  ②**发布链（下一步主活）**：重建 r84 盘（build.sh 新钉全流程：ESP_REF v65 +
-  r84 apk dl/ 在位 + watch 已撤，产物 meizu-meizu20-armada-r84.img）→ 整盘重刷
-  （现役 #85 腿同款，busy_deltas 出口在役）→ 验证 → 推 fork
-  RiverKawa271828/armada-meizu-m2381 + Release（轻发布案；issue 草稿待用户过目）。
-  ③**sheng 下一轮同步观望**：upstream-sync 37 commits 合入出新 flashable 时
-  评估底盘升级（hexagonrpc/libssc/栈更新全进来），等出件不抢跑。
-  ④观察项（不挡发布）：webhelper 爆发长观察窗（现役 damp 防护中）/ 长 soak 温度
-  （r84 后静息 39-41°C 已达标）/ upthreshold=90 只留实验档。
+- **▶▶ 下会话执行单（新会话从这里接，2026-10-12 凌晨五更 = 发布链首轮中断收口）**：
+  ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
+  （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
+  验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
+  已真 mask / nura 固件 apk 已补入 /usr/lib/firmware）。**下会话序**：设备重启
+  → 冒烟（gamescope 会话/DRM 干净/音频 card/--failed=0/WiFi/触摸/steampal 四
+  旗标）→ 全绿 = 三虫修法实证 → **重建镜像**（build.sh 三修复已回写 d6332c2
+  后新提交：固件无条件叠加 nura apk + growpart 真 mask + 删 zz-autologin）→
+  **重刷** → 终验 → **推 fork + Release**（force 接管公开仓 main = unrelated
+  histories；issue 草稿 docs/ISSUE-DRAFT-armada-sheng.md 一并交用户过目）。
+  ②**首启三虫（r84 盘 vs 在役机的差异 = 在役机全是热修态，新盘 = 底盘原生态）**：
+  (a) **黑屏根因 = 底盘 zz-steamos-autologin.conf 钉 armada-plasma**（zz- 字母
+  序压过 armada.conf 的 gamescope 会话）→ Plasma llvmpipe crash；删 = gamescope
+  接管（armada.conf 自带 Relogin=true）。(b) **bootc-generic-growpart failed**
+  = static unit 走 10-armada-bare-metal drop-in 拉起、摘 wants 不够，真 mask
+  修复。(c) **a740_zap.mbn/ADSP 缺** = 底盘自带 Fedora linux-firmware 有
+  ath12k → 固件注入段短路跳过 → meizu 专属件（qcom/sm8550 zap/ADSP）全缺
+  （在役机固件 = r80 时代 work/layer 覆盖态）→ GPU init 重试风暴（42 连发后
+  fallback 成功、GPU 可用但路径缺）+ 音频隐患；修 = 固件段改无条件叠加 nura
+  apk（tar 覆盖语义，sha 门禁 + URL 拉取分支保留）。
+  ③**GPU 线已收官（§11b）**：r84/v65/#85 收官现役（双侧更钉）；watch 撤/damp
+  留；ifpc 残线 lead。nura 下程 = 只候 7.3 stable（~10-18）→ rebase 拼车。
+  ④观察项不挡发布：webhelper 长观察窗（damp 防护中）/ 长 soak / upth=90 实验
+  档。用户重心转向内核线（nura/armada 都是受益产品），armada 线"有时间再弄"。
   ②**发布链（用户已定序）**：游戏实测（~~DS DC DX12 案~~已结：非硬件墙，turnip
   Vulkan 1.4.354 实测，FEX/Proton-ARM64 组合问题，用户拍板不追）→ **整盘重刷**
   r81damp 盘（sha `79478916`，配 v62 腿 → #82）→ 验证 → **推 fork
