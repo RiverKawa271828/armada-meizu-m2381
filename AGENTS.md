@@ -187,11 +187,16 @@
   回归卡 + `IFPC feature-ctrl enable sent, ret 0` 日志行），B 路候选到货老流程
   照点火。设备现态已复原（clamp=N、damp/watch active）。
 - **▶▶ 下会话执行单（新会话从这里接，2026-10-12 凌晨更新）**：
-  ①**R83 回执信转交（球在用户）**：docs/M2381-NURA-RELAY-20261012-R83.md
-  （Phase-0 FAIL 回执 + v63 gz 回传件交接 work/esp-recovery-v63.img.gz）由用户
-  转告 nura（勿碰彼仓）；后续等彼侧对 FAIL 的重判——B 路（busy 会计/GMU 根因）
-  候选到货则老流程点火（七条回归卡 + `IFPC feature-ctrl enable sent, ret 0`
-  日志行照抓）。
+  ①**分辨探针回执转交（球在用户）**：探针②（upthreshold=90）= **X 分支解锁
+  实锤**（220 驻留 100.0%、475 归零、2.40W、纯净窗）；探针①（真空闲）=
+  **分支①命中**（gamescope 全灭后 busy 恒 6433µs/50ms=12.9%，90 读一字不差
+  = 会计病实锤 + 计数器冻结语义新线索；半死态 11639 恒）。回执数据见正典
+  §10b，等用户整理转告 nura 定 B 路内核轮范围 + upthreshold=90 杠杆是否先行
+  转正在役（我方可即刻固化）。
+  ②**Phase-0/R83 线（已收口待彼重判）**：回执信 docs/M2381-NURA-RELAY-20261012-R83.md
+  （Phase-0 FAIL + v63 gz 回传 work/esp-recovery-v63.img.gz）已交用户转告；
+  B 路候选到货则老流程点火（七条回归卡 + `IFPC feature-ctrl enable sent,
+  ret 0` 日志行照抓）。
   ②**发布链（用户已定序）**：游戏实测（~~DS DC DX12 案~~已结：非硬件墙，turnip
   Vulkan 1.4.354 实测，FEX/Proton-ARM64 组合问题，用户拍板不追）→ **整盘重刷**
   r81damp 盘（sha `79478916`，配 v62 腿 → #82）→ 验证 → **推 fork
