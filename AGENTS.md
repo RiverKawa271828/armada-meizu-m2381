@@ -79,6 +79,14 @@
   armada-os 20260926 = 整盘 UEFI+bootc 不合 fastboot 模型，留参照备胎；Frame 恢复镜像
   20260922 用户已手落 dl/ 收档。适配脚本 = scripts/host/40-adapt-armada-m2381.sh
   （宿主 systemd-run，可重入）。
+  **★ 会话收官（2026-10-11 晨）**：armada 线全绿服役中（手柄/QAM/往返/睡眠唤醒/音频
+  皆验），用户拍板"比之前任何一条线都好用"，**进入 fork 发布评估**。给 nura 的回传已
+  定稿（docs/M2381-NURA-RELAY-20261011.md，提交 815aa8c），等回信中：①钉 r80/device
+  r59/v61+Release ②SQUASHFS_ZSTD=y 诉求 ③GMU IRQ/rtc1 情报。**发布计划（下会话可执
+  行）**：上游 armada-sheng=GPL-2.0-or-later（已核，派生干净）；推荐轻发布=现仓公开为
+  适配 overlay（40-adapt+层+档案+文档，base 件链接上游 releases 不重分发），重发布
+  （Actions 全自动+挂镜像）二期；发布前清理=README 重写（现为 Frame 旧文）+AGENTS.md
+  REDACTED-SSID SSID 清除+LICENSE 补 GPL-2.0+Credits；内核 apk 分发口径等 nura 确认公开链接。
   ⑥冻结项备忘：Debian graft 固化/mangohud A/B 随线冻结（mangohud 透传脚本保持
   在役防秒退），armada 线若撞墙再解冻 Debian 作对照。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
