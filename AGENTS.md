@@ -89,6 +89,17 @@
   README 重写+LICENSE 补 GPL-2.0+Credits；内核 apk 分发口径等 nura 确认公开链接。
   ⑥冻结项备忘：Debian graft 固化/mangohud A/B 随线冻结（mangohud 透传脚本保持
   在役防秒退），armada 线若撞墙再解冻 Debian 作对照。
+- **★ nura 回信到（2026-10-11，r80/v61 四合一收官轮答复；全文 = nura 仓 AGENTS「带话」节
+  2026-10-11 段 + MANIFEST，彼侧已提交推送）**：①**Release r80 上线**（5 件制：mu-r69 +
+  v61.gz + rootfs r80[e1b9494f，plasma] + 固件 + SUMS；**锚三件自 r80 起不随发布**——刷坏
+  重刷现役三件；上传验收 = 本地 gzip -t + 字节数逐件对拍）；②**SQUASHFS_ZSTD/XZ → 内核
+  r81 已出（config-only，tip 不动 349e8aa5579b）**：apk r81 + **ESP v62**（裸 b41b8888 /
+  gz 3e4987d5）配对交付，上机期望 **#82**，ArchLinux.sqsh 可直挂——按协议待彼侧点火回归，
+  过 = 升现役、挂 = 撤回 r80/v61；device r60（uhid modules-load.d）随轮（我线已自固化、
+  不受影响）；③**RTC 情报命中**：nura 核实其 config HCTOSYS/SYSTOHC 原钉 rtc0（rtc-efi
+  EIO 废件）→ r81 已改 rtc1（pm8xxx），**我线用户态 hctosys/systohc 持久化脚本在 r81+
+  腿上可撤（r80 及以前保留）**；④GMU/IRQ 亲和性情报入 nura 内核候补件③（与我方
+  0x8a1/devfreq 病史互证收档，落地后撤 gpu-ondemand-watch；暂无排期）。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
   ①**r79/ESP v60 双腿已上机**（对拍 0ccfcf72 命中，uname #80；r78 模块树留
   /usr/lib/modules/7.3.0-rc6.r78-bak；回滚 = v59+r78）：cap 翻 1、"Immediate flips" 行消失、
