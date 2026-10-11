@@ -186,6 +186,21 @@
   nura 交付件哪怕无管线引用也留一份**。r83 预告收悉（apk+ESP v64、#84、七条
   回归卡 + `IFPC feature-ctrl enable sent, ret 0` 日志行），B 路候选到货老流程
   照点火。设备现态已复原（clamp=N、damp/watch active）。
+- **★ 上游评估轮（2026-10-12 凌晨，nura 忙其他事我方独立推进；全文 =
+  docs/M2381-UPSTREAM-REVIEW-20261012.md）**：**fork 上游维持 armada-sheng**
+  （形态兼容 = sheng-flashable 单分区 ext4；我方 fork 点 = sheng main 7cf8163
+  未动），**新增内容观察源 armada-os**（官方 20261010 仍是整盘 OTA 格式不合
+  fastboot 模型）。remotes 已整理：`upstream`=armada-sheng / `armada-os`=官方 /
+  `frame-upstream`=老 Frame 仓留档（原 upstream 改名）。**核心情报 =
+  GMU wedge fix 三件套**（armada-os #662，源自 kettlelinux——另一 SM8550 A740
+  发行版）：0620 HFI IRQ 清掉轮询中的 MSGQ/OOB ack 位 / 0621 devcoredump 等待
+  2s 上限 / 0622 GMU boot 前 mask HFI 中断（SM8550 resume 期幽灵中断）——
+  **与 nura IFPC「ack 不执行」同域不同症，短笺 docs/M2381-NURA-RELAY-20261012-GMUHOT.md
+  待转告**；附带 ARMADA_IRQ_CORES=0-2（IRQ 亲和性机制，nura 候补件③佐证）。
+  sheng upstream-sync 分支领先 main 37 commits 未合（hexagonrpc+libssc 包 =
+  我方 P2 传感器链现成参照、用户态栈大版本更新）——**等 sheng 出新
+  flashable 再升级底盘，不抢跑**。参考克隆 work/ref/{armada-os-upstream,
+  armada-sheng-upstream}（blob:none）。
 - **▶▶ 下会话执行单（新会话从这里接，2026-10-12 凌晨三更收口）**：
   ①**R84 回执信转交（球在用户）**：docs/M2381-NURA-RELAY-20261012-R84.md
   （r84/v65 点火全量回执：钳零 PASS/governor 自愈 94.8%/判据② 2.26W 差
@@ -195,6 +210,11 @@
   work/ 在手）；BUILD.env 钉不动（nura 判过才更钉）；damp/watch active。
   ③**老三样不动**：发布链（游戏实测→整盘重刷→推 fork+Release）/ issue 草稿
   待过目 / fork 推送待令。
+  ④**GMU 情报短笺转交（球在用户）**：docs/M2381-NURA-RELAY-20261012-GMUHOT.md
+  （armada-os/kettlelinux GMU wedge fix 三件套，IFPC 案同域对照）可与 R84 回执
+  一并或稍后转告 nura。
+  ⑤**sheng 下一轮同步观望**：upstream-sync 37 commits 合入出新 flashable 时
+  评估底盘升级（hexagonrpc/libssc/栈更新全进来），等出件不抢跑。
   ②**发布链（用户已定序）**：游戏实测（~~DS DC DX12 案~~已结：非硬件墙，turnip
   Vulkan 1.4.354 实测，FEX/Proton-ARM64 组合问题，用户拍板不追）→ **整盘重刷**
   r81damp 盘（sha `79478916`，配 v62 腿 → #82）→ 验证 → **推 fork
