@@ -79,6 +79,24 @@ fastboot set_active b && fastboot reboot
 **修后闭环判据**：起机后 `qbootctl` 应显示当前槽 `Successful: 1`；或下次
 fastboot 里 `slot-successful:b = yes` 且 retry 回满。
 
+## 双线互斥律（2026-10-12 事故新律，nura 侧实证）
+
+**fastboot 单通道独占设备**：本线与 nura 线并行对同一设备下发 fastboot 会
+互相污染分区且**无任何报错**——2026-10-12「卡 Mu 引导」事故根因即此（彼侧
+全量三件重刷一次点亮 = boot 链 mu-r69/ESP v65/内核 r84 无罪的对照组）。
+
+- 本线刷写一律走守门脚本（flock 互斥 + 排查他线 fastboot 进程 + 串行下发 +
+  全程留痕 /tmp/zcode/flash-meizu.log）：
+
+  ```bash
+  post_process/flash-meizu.sh [--set-active] [--reboot] 分区=镜像 [分区=镜像 ...]
+  ```
+
+- 跨线协调：**窗口互斥或串行**，刷前互相知会；裸 fastboot 直发 = 违律。
+- boot 链件共享且由 nura 维护锚（boot_b = mu-r69、recovery_a = 现役 v65）：
+  本线边界照旧**只刷 userdata**；仅在互踩存疑时补刷 recovery_a（v65 =
+  work/esp-recovery-v65.img，sha 463efc45）重锚，不碰 boot_b。
+
 ## 电源与睡眠
 
 - **短按电源键** = 睡眠（fake-suspend：面板熄、音频静、radio 软阻断）；

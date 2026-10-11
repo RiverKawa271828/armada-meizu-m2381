@@ -217,6 +217,20 @@
   userdata r84v4 → flash recovery_a v65（work/esp-recovery-v65.img，料件已三重
   对拍 463efc45）→ set_active b → reboot → NCM 90s 内枚举 = 成 → 冒烟全绿即
   重建收官、推 fork + Release。
+  ⓪b**事故结案补录（同日晨，nura 转达 ①-④，用户令「先不刷、先修」）**：根因 =
+  **双线并行 fastboot 互踩污染分区**（彼侧全量三件重刷 boot_b mu-r69 +
+  recovery_a v65 + userdata 一次点亮 → **boot 链 mu-r69/v65/r84 无罪**；设备
+  现役 = nura pmOS phosh rootfs，回归基线 = boot ~50s/failed 0/音频 T4c 全自动钉/
+  真空闲 busy_delta 恒 0/rtcwake 51s→resume 0.240s/wowlan 武装/看门狗全生效；
+  ifpc 恒 0 = 彼侧（八十六）已知 FW 行为态勿当异常追）。**新操作律② = fastboot
+  单通道独占，跨线刷写必须窗口互斥/串行**——已落地 post_process/flash-meizu.sh
+  （flock + pgrep 排他 + 串行下发 + /tmp/zcode/flash-meizu.log 留痕）+
+  docs/flashing-meizu-m2381.md 新节「双线互斥律」。**我方 userdata 镜像嫌疑
+  排除**：r84v4（0c752770）e2fsck -fn 五遍零错（179731 文件/余 1.2G）+ 28 项
+  verify 全绿 = 镜像侧无可查病灶，事故特征与互踩归因吻合。下轮刷写序（**等
+  用户令**）：`post_process/flash-meizu.sh userdata=work/meizu-meizu20-armada-r84.img
+  [存疑再补 recovery_a=work/esp-recovery-v65.img] --set-active --reboot`；
+  boot_b 已由 nura 重锚 mu-r69，我方照旧不碰；内核零变化（④），BUILD.env 不动。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
