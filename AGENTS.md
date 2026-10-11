@@ -105,16 +105,18 @@
   侧本仓**——两条线完全不同，只共享同一份内核 apk + 启动链（ESP）；料件交接走
   kernel-m2381/BUILD.env 钉子 + nura 自己的 Release，不做目录级操作。
   ⑥**下会话执行单（处理 nura 回信）——★ 2026-10-11 晚会话已收口（除推 fork/发 issue 待用户令）**：
-  ①**r81/v62 升级判定 = 过，已升现役 ✅**：双腿上机（v62 dd recovery_a readback
-  b41b8889 全等 + r81 模块换装，旧树 .r80-bak），uname = **#82** ✓，zstd 原件
+  ①**r81/v62 升级判定 = 过，已升现役 ✅**：双腿上机（v62 dd recovery_a + r81 模块
+  换装，旧树 .r80-bak），uname = **#82** ✓，zstd 原件
   loop 直挂 ✓（/proc/config.gz 证 ZSTD/XZ=y），RTC 用户态三件撤除后重启时钟正确
   ✓（内核 rtc1 接管，timedatectl 首次能读出 RTC），WiFi/uhid/--failed=0 全绿。
   BUILD.env 已换钉（apk sha 1c31babe / 配对 5cb94ebd）。**FEX gzip 重压已撤**
   （build.sh 删重压段，sqsh 保持 zstd 原件）+ **RTC 三件已从 system_files/build.sh
   撤除**。**r81 镜像已重建** = work/meizu-meizu20-armada-r81.img 14.6G（点验全绿
   含 3 新项：qbootctl 在位/RTC 已撤/sqsh zstd；MANIFEST 生成已变量化）；**盘刷写
-  待用户拍板**（在役实机已是 r81 腿 #82，不急）。⚠ 勘误：v62 裸镜像真值 sha256 =
-  b41b8889…（nura 手记 b41b8888 有误；gz 3e4987d5 全等无恙）——已入回信请复核。
+  待用户拍板**（在役实机已是 r81 腿 #82，不急）。⚠ **哈希定谳（r82 轮复核，
+  取代原「勘误」）**：v62 裸镜像真值全量 sha256 = `b41b88889cadf6060e35…`，
+  8 位前缀 = **b41b8888（nura 原手记无误）**；双方手记里的「真值 b41b8889cadf…」
+  = 同一转抄病（连排四个 8 丢一个），本节原「勘误」作废（详 PORT 正典 §7/§9）。
   ②**Release URL 回填 = ✅ 已办结（2026-10-11 深夜 nura 加信）**：Release r80
   增补两 apk 资产，双侧下载对拍全等（内核 1c31babe ≡ 本地同件；固件 6e6dac0a
   = Release 重打包，与 nura 本地原始 f0018f56 同版本不同打包，**BUILD.env 固件
@@ -148,11 +150,20 @@
   键 = config.vdf `IdleScreensaverACSeconds`；`IdleBacklightDimACSeconds=0` =
   AC 永不暗背光，用户侧杠杆）。**候补件③转正申请已发 nura（用户拍板"让 nura
   做内核根治"）**：验收口径 = idle 静态下 trans_stat 低档驻留占主导 + ≤2W 档；
-  我方 damp 保留、watch 等 governor 诚实后撤。**下会话执行单**：①处理 nura
-  回信（③接单=等 apk+ESP 配对点火回归老流程；拒/缓=维持 damp 现态）②webhelper
+  我方 damp 保留、watch 等 governor 诚实后撤。
+  **▶ r82/v63 候选点火轮已收官 = FAIL（2026-10-11 深夜，全文 = PORT 正典 §9）**：
+  nura 交付 busy−IFPC 折叠补丁（fork 95284ff2c806， apk r82+ESP v63 配对
+  c68f84aa），#83 一次点亮、回归全绿，但 **ifpc_delta_us ≡ 0（100 窗精确零）+
+  折叠无物可减 → 分型 H3（IFPC 未协商上/XOCLK4 没在计，GMU FW v4.1.9）**；
+  摘 damp 10min：475 档 60.6% 主导（220-295 仅 ~19%）+ 均值 2.20W —— 双判据
+  不达。r82/v63/#83 留机在役（debugfs busy_deltas 有用），回滚 = r81+v62+#82
+  （.r81-bak 在位）；BUILD.env/nura config.sh 钉均不动。damp/watch 已还原。
+  **下会话执行单**：①等 nura r83 候选（H3 分支：HFI 特性位 + silime 血统
+  enable→revert 考古）→ 老流程点火；②webhelper
   爆发触发源长观察窗（DevTools 8080 + 占空比日志；瞬时 205%+92% 阵发已抓，
-  疑似相册预载/通知/商店轮询）③长 soak 温度稳态验证（晾一晚看 ≤40°C）
-  ④老三样：盘刷写待拍板 / issue 草稿待过目 / fork 推送待令。
+  疑似相册预载/通知/商店轮询；本轮窗内 max 6.95W 阵发仍在）③长 soak 温度稳态
+  验证（晾一晚看 ≤40°C）④零改动备选杠杆 upthreshold=90 未测（nura 备选，需要
+  时打）⑤老三样：盘刷写待拍板 / issue 草稿待过目 / fork 推送待令。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
   ①**r79/ESP v60 双腿已上机**（对拍 0ccfcf72 命中，uname #80；r78 模块树留
   /usr/lib/modules/7.3.0-rc6.r78-bak；回滚 = v59+r78）：cap 翻 1、"Immediate flips" 行消失、
