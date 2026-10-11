@@ -231,6 +231,23 @@
   用户令**）：`post_process/flash-meizu.sh userdata=work/meizu-meizu20-armada-r84.img
   [存疑再补 recovery_a=work/esp-recovery-v65.img] --set-active --reboot`；
   boot_b 已由 nura 重锚 mu-r69，我方照旧不碰；内核零变化（④），BUILD.env 不动。
+  ⓪c**归因重排 + 下会话检查单（2026-10-12 晨，用户时间线修正，转达①的互踩说
+  对本事故不成立）**：真实时序 = 我方 r84 盘先刷（05:00-05:07）→ 重启内核起不
+  来（用户目击「只到 Mu」）→ **之后**才转 nura 测启动链（彼时 nura 尚未构建完
+  成，无并行刷写窗口）→ 彼侧 phosh rootfs 三件全刷一遍过全绿。同一启动链下
+  变量收敛 = **我方 userdata**。⚠ 已核：今晨实刷件未公开发布（GitHub Release
+  仅 r80 Plasma/r66），料件需用户照 r84 apk 模式从 nura 处交接。**下会话检查
+  序**：①料件到手 → 双盘 loop RO 静态对拍：dumpe2fs -h 头部（mkfs 特性集/块
+  大小/inode 大小，host e2fsprogs 1.47.4 vs pmOS 侧默认）+ 启动关键路径 diff
+  （/usr/lib/modules/7.3.0-rc6 树完整性+vermagic、fstab、qbootctl 链、SELinux）
+  + **「nura 有我方无」清单**（缺件角度正式核查——⚠ 已知固件缺件属 GPU/ADSP
+  探测期、不拦内核启动，但需排除其他启动期缺件）；②动态角度并重：本盘
+  boot#1/#2 通（05:07/05:19 NCM+SSH 在案）而后续起不来 = **首启写入态审查**
+  （growfs/journald/qbootctl -m 的 GPT 属性写；hand-fix 在设备上的 tar 同款
+  顶翻 /lib 软链——设备盘实体态已不可考，被 nura 全量覆盖）；③决策树：实差
+  出 → 修 build.sh 重建重刷；无差 → 转「刷 v4 后首查 qbootctl Successful/
+  tries + 连续三次重启回归」实证槽位态。设备现役 = nura pmOS（彼侧基线数据
+  在 ⓪b），刷写等用户令。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
