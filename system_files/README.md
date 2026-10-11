@@ -8,10 +8,15 @@
 - usr/lib/systemd/      meizu 编排单元、看门狗放宽 drop-in、journald sync
 - usr/share/alsa/ucm2/  MEIZU20 UCM2
 - usr/lib/armada/devices/meizu-meizu20.conf   设备档案（竖屏 right + fake suspend）
-- usr/libexec/armada/device-env 的 meizu 行 + sm20-rtc1-restore.sh
-- etc/systemd/system/   NCM gadget / usb0-ip / GPU 看护 / wireplumber 踢卡 /
-                        RTC restore+save / time-wait 限时
+- usr/libexec/armada/device-env 的 meizu 行
+- usr/local/bin/qbootctl + etc/systemd/system/qbootctl-meizu.service
+                        A/B 槽位开机标 successful（治 ABL 重试耗尽落 fastboot；
+                        linux-msm v0.2.2 aarch64 现编，musl 版不可用于 Fedora 底）
+- etc/systemd/system/   NCM gadget / usb0-ip / GPU 看护 / wireplumber 踢卡
 - etc/polkit-1/rules.d/ suspend 放行（fake-suspend 链入口）
+
+**RTC 用户态三件（sm20-rtc1-restore/save/time-wait cap）已撤（r81 起）**——
+内核 HCTOSYS/SYSTOHC 已钉 rtc1（pm8xxx），r80 及以前的老腿才需要；勿回加。
 
 **不在 git 的两样**（构建时从 nura apk 取，与 pmOS 线通用）：
 - usr/lib/firmware/     （193MB，nura 固件 apk，kernel-m2381/BUILD.env 钉版；
