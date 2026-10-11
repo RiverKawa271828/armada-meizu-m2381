@@ -1,7 +1,0 @@
-[Unit]
-Description=m2381: hourly RTC save
-[Timer]
-OnBootSec=10min
-OnUnitActiveSec=1h
-[Install]
-WantedBy=timers.target

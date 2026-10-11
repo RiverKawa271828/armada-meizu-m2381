@@ -1,0 +1,16 @@
+[Unit]
+Description=Mark current boot as successful in the A/B GPT slot attributes
+# 根治 ABL 重试计数耗尽落 fastboot：计数在 boot_x GPT entry 属性位（successful/
+# tries/active），不在 misc。qbootctl -m 走 GPT 属性位；本设备 cmdline 无
+# androidboot.slot_suffix，回退读 GPT active 位（bootctrl_impl.c
+# get_current_or_active_slot），set_active b 已置位，无需改内核 cmdline。
+# 二进制 = linux-msm/qbootctl v0.2.2（GPL-2.0，源 github.com/linux-msm/qbootctl），
+# aarch64 gcc 设备端现编后入库（pmOS musl 动态版不可用于 Fedora 底）。
+# 单元同款 nura pmaports device/downstream/device-meizu-meizu20/qbootctl-meizu.service。
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/qbootctl -m
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

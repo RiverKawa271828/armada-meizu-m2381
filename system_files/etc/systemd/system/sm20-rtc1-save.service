@@ -1,5 +1,0 @@
-[Unit]
-Description=m2381: write system clock to PMIC RTC rtc1
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/hwclock --systohc --rtc /dev/rtc1

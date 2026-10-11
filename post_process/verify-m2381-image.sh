@@ -1,5 +1,5 @@
 #!/bin/bash
-# 点验：挂载成品镜像跑 21 项检查（任一败项退出非零）。参数 = 成品镜像路径。
+# 点验：挂载成品镜像跑全项检查（任一败项退出非零）。参数 = 成品镜像路径。
 set -uo pipefail
 IMG="${1:?usage: verify-m2381-image.sh <img>}"
 MNT=$(mktemp -d /mnt/armada-verify.XXXX)
@@ -14,7 +14,7 @@ chk() { if sudo bash -c "$2"; then echo "  ✓ $1"; else echo "  ✗ $1"; FAIL=1
 
 chk "设备档案在位"          "test -f ${MNT}/usr/lib/armada/devices/meizu-meizu20.conf"
 chk "device-env 匹配行"     "grep -q 'meizu-meizu20' ${MNT}/usr/libexec/armada/device-env"
-chk "r80 模块树"            "test -d ${MNT}/usr/lib/modules/7.3.0-rc6/kernel && ls ${MNT}/usr/lib/modules/7.3.0-rc6/modules.dep"
+chk "rc6 模块树"            "test -d ${MNT}/usr/lib/modules/7.3.0-rc6/kernel && ls ${MNT}/usr/lib/modules/7.3.0-rc6/modules.dep"
 chk "ianchb 旧树已清"       "! ls -d ${MNT}/usr/lib/modules/* 2>/dev/null | grep -v '7.3.0-rc6' | grep -q ."
 chk "modules-load uinput"   "grep -qh uinput ${MNT}/usr/lib/modules-load.d/*.conf ${MNT}/etc/modules-load.d/*.conf 2>/dev/null"
 chk "modules-load uhid"     "grep -qh uhid ${MNT}/etc/modules-load.d/*.conf ${MNT}/usr/lib/modules-load.d/*.conf 2>/dev/null"
@@ -33,6 +33,10 @@ chk "SDDM autologin armada" "grep -q 'User=armada' ${MNT}/etc/sddm.conf.d/armada
 chk "bootimg 重写件已摘"    "! test -e ${MNT}/etc/systemd/system/multi-user.target.wants/armada-bootimg-sync.service"
 chk "SELinux permissive"    "grep -q '^SELINUX=permissive' ${MNT}/etc/selinux/config 2>/dev/null"
 chk "睡眠 mask 件未混入"    "! test -e ${MNT}/etc/systemd/system/sleep.target && ! test -e ${MNT}/usr/lib/tmpfiles.d/meizu-sleepmask.conf"
+chk "qbootctl 件在位"       "test -x ${MNT}/usr/local/bin/qbootctl && test -f ${MNT}/etc/systemd/system/qbootctl-meizu.service && test -L ${MNT}/etc/systemd/system/multi-user.target.wants/qbootctl-meizu.service"
+chk "RTC 用户态三件已撤"    "! test -e ${MNT}/etc/systemd/system/sm20-rtc1-restore.service && ! test -e ${MNT}/etc/systemd/system/sm20-rtc1-save.timer"
+# squashfs 超级块偏移 20 = 压缩算法 id（6=zstd）；r81+ 内核直挂，不许再回 gzip
+chk "FEX sqsh 保持 zstd"    "[ \"\$(sudo od -A n -t u2 -j 20 -N 2 ${MNT}/usr/share/fex-emu/RootFS/ArchLinux.sqsh | tr -d ' ')\" = \"6\" ]"
 
 # steam 客户端落点以上游包布局为准（缺位只记警告，不算败项）
 if sudo bash -c "test -d ${MNT}/usr/lib/steam/arm-client || test -d ${MNT}/var/home/armada/.steam || test -d ${MNT}/opt/steam"; then
@@ -41,5 +45,5 @@ else
     echo "  WARN: steam 客户端预种落点未识别（首启由 steam-bootstrap 自拉，不拦盘）"
 fi
 sudo umount "${MNT}"
-[ "${FAIL}" -eq 0 ] && echo "VERIFY: 21/21 全绿" || echo "VERIFY: 有败项"
+[ "${FAIL}" -eq 0 ] && echo "VERIFY: 全绿" || echo "VERIFY: 有败项"
 exit "${FAIL}"

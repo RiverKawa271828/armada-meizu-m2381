@@ -32,7 +32,7 @@
    recovery_a 启动,cmdline 烤死 `root=/dev/sda22`;**boot_a/boot_b 全程不碰**,
    回滚 = 重刷 userdata。上游的 ABL/boot.img 链与本仓的容器构建链
    (Containerfile/packages/kernel-sheng 等)**停用仅存档**。
-2. **设备内核来自 pmOS meizu20 线(nura)**,`7.3.0-rc6`(r80,#81),async flip 已启用;
+2. **设备内核来自 pmOS meizu20 线(nura)**,`7.3.0-rc6`(r81,#82,zstd sqsh 直挂+rtc1 HCTOSYS),async flip 已启用;
    模块与 ESP 内核逐字节配对(构建门禁强制)。上游 ianchb/sheng-7.2.2 内核弃用。
 3. **设备覆盖层 = system_files/**:触屏(Goodix GENI 定向绑定)、音频编排
    (WCD9385 三件套)、NCM gadget 调试通道、PMIC RTC(rtc1)时间持久化、
@@ -64,8 +64,8 @@ Waydroid,以及 Armada 设备服务(InputPlumber、powerbuttond、steamos-manage
 
 ```bash
 just fetch-base     # 上游 armada-sheng 成品 rootfs(下载/校验/合并,已有则跳过)
-just fetch-kernel   # nura r80 内核 apk(sha256 门禁;见 kernel-m2381/BUILD.env)
-sudo bash build_files/build.sh   # 适配 → 收缩 → 21 项点验 → work/*.img
+just fetch-kernel   # nura r81 内核 apk(sha256 门禁;见 kernel-m2381/BUILD.env)
+sudo bash build_files/build.sh   # 适配 → 收缩 → 点验 → work/*.img
 ```
 
 - `system_files/` = m2381 设备覆盖层(git 真身);固件(193MB)不入 git,构建时从
@@ -79,7 +79,7 @@ sudo bash build_files/build.sh   # 适配 → 收缩 → 21 项点验 → work/*
 只写 **userdata** 一个分区,boot/ESP/recovery 永不触碰:
 
 ```bash
-fastboot flash userdata work/meizu-meizu20-armada-r80.img
+fastboot flash userdata work/meizu-meizu20-armada-r81.img
 fastboot reboot
 ```
 

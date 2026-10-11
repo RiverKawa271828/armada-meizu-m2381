@@ -8,7 +8,7 @@
 | 部件 | 来源 | 说明 |
 |---|---|---|
 | 解锁 bootloader | 自备 | 与刷任何第三方系统同要求 |
-| **boot 腿（ESP）** | nura pmOS meizu 线（如 v61） | 刷在 **recovery_a**，EFI stub 内核，cmdline 烤死 `root=/dev/sda22`；**与内核 apk 必须配对** |
+| **boot 腿（ESP）** | nura pmOS meizu 线（现役 v62） | 刷在 **recovery_a**，EFI stub 内核，cmdline 烤死 `root=/dev/sda22`；**与内核 apk 必须配对** |
 | **rootfs 镜像** | 本仓构建（见下） | 单分区裸 ext4，只进 **userdata** |
 | 内核 apk / 固件 apk | nura 线（与 pmOS 通用） | 出盘时打进 rootfs，模块与 ESP 内核逐字节配对（构建门禁强制） |
 
@@ -18,8 +18,8 @@ boot_b / boot_a / 其它分区**全程不碰**——回滚 = 重刷 userdata，3
 
 ```bash
 just fetch-base     # 上游 armada-sheng rootfs（自动下载/校验/合并，已有则跳过）
-just fetch-kernel   # r80 内核 apk（本地路径或 nura 公开链接，sha256 门禁）
-sudo bash build_files/build.sh    # 适配 → 收缩 → 21 项点验 → work/meizu-meizu20-armada-r80.img
+just fetch-kernel   # r81 内核 apk（本地路径或 nura 公开链接，sha256 门禁）
+sudo bash build_files/build.sh    # 适配 → 收缩 → 点验 → work/meizu-meizu20-armada-r81.img
 ```
 
 固件 apk（firmware-meizu-meizu20）放到 `work/armada-m2381/apk/` 即可被自动识别；
@@ -31,7 +31,7 @@ sudo bash build_files/build.sh    # 适配 → 收缩 → 21 项点验 → work/
 # 1) 进 fastboot（系统内 'reboot bootloader'，或关机后按住音量下插线）
 fastboot devices                      # 确认设备出现
 # 2) 刷 userdata（唯一被写的分区；14.6G ≈ 6-7 分钟）
-fastboot flash userdata work/meizu-meizu20-armada-r80.img
+fastboot flash userdata work/meizu-meizu20-armada-r81.img
 # 3) 重启
 fastboot reboot
 ```
@@ -55,6 +55,29 @@ fastboot reboot
   ```
 - 手柄：蓝牙配对后默认伪装成 Steam Deck 手柄（deck-uhid）；换伪装目标 =
   `sudo /usr/libexec/armada/controller-type apply`（需手柄已连接）。
+- A/B 槽位健康（防 fastboot 停车，见下节）：`qbootctl` 看当前槽
+  `Successful: 1`；开机由 `qbootctl-meizu.service` 自动标记。
+
+## 重启落 fastboot（ABL 槽位重试耗尽）— 救机与根修
+
+**现象**：重启若干次后设备停在 fastboot，`fastboot getvar slot-retry-count:b`
+= 0、`slot-successful:b = no`。
+
+**原理**：ABL 的启动重试计数记在 boot_x 的 GPT 属性位（不在 misc）。每次开机
+由 OS 侧把当前槽标记 successful；缺标记时每次重启烧一次尝试，累计 ~7 次耗尽
+即落 fastboot 兜底。本盘自带 `qbootctl-meizu.service`（qbootctl `-m`，开机
+oneshot）自动标记，正常不会复发；只刷了旧盘或手动停了该 unit 才会遇到。
+
+**救机**（设备已在 fastboot）：
+```bash
+fastboot getvar current-slot      # 确认槽位（现役 b）
+fastboot set_active b && fastboot reboot
+```
+`set_active` 把重试预算重置回满，正常起系统。**misc 勿动**——仅当
+`set_active` 后仍循环落 fastboot 才按 nura FLASHING §6 阶梯清 misc。
+
+**修后闭环判据**：起机后 `qbootctl` 应显示当前槽 `Successful: 1`；或下次
+fastboot 里 `slot-successful:b = yes` 且 retry 回满。
 
 ## 电源与睡眠
 
@@ -78,8 +101,6 @@ boot / ESP / recovery 从不被触碰。注：回 Debian 旧盘后如遇内核�
 
 - 真实 s2idle 睡眠不可用（SoC/内核限制，fake-suspend 全链已验证）；
   hibernate 不支持。
-- FEX x86 腿当前跑 gzip squashfs（内核暂缺 `CONFIG_SQUASHFS_ZSTD`，
-  已向内核线提需求；落地后可换回 zstd）。
 - Decky 插件加载器默认停用（首启不稳）；需要时在设备上 unmask
   `plugin_loader.service`。
 - m2381 无内置手柄，`armada-controller-type` 服务默认停用是正常现象

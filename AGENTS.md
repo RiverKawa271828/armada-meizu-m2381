@@ -104,19 +104,31 @@
   armada-sheng clone，已完整恢复、零净损失）。已与 nura 约定：**他不再动 steamos
   侧本仓**——两条线完全不同，只共享同一份内核 apk + 启动链（ESP）；料件交接走
   kernel-m2381/BUILD.env 钉子 + nura 自己的 Release，不做目录级操作。
-  ⑥**下会话执行单（处理 nura 回信）**：
-  ①**r81/v62 升级判定**：等 nura 侧点火回归结论——过 = 升现役：双腿刷 r81 apk +
-  ESP v62（裸 b41b8888/gz 3e4987d5，期望 #82），kernel-m2381/BUILD.env 换钉子
-  （apk sha256 + ESP_PAIR + ESP_REF 指 v62），**撤 FEX gzip 重压**（build_files/build.sh
-  删 FEX 段，ArchLinux.sqsh 直挂 zstd）+ **撤 RTC 用户态持久化**（sm20-rtc1-restore/
-  save 三件 + time-wait cap，内核 HCTOSYS 已钉 rtc1）→ 重建出盘 → 刷机回归；
-  挂 = 维持 r80/v61 现役不动。
-  ②**Release 公开链接**：nura Release r80/r81 的 apk/固件 URL 填进 BUILD.env 的
-  KERNEL_APK_URL/FIRMWARE_APK_URL 两个留位。
-  ③**推送 fork**：RiverKawa271828/armada-meizu-m2381（=上游 7cf8163 基点，SSH 已通），
-  内容已齐（README 试验声明/文档/构建流），等用户指令一条 push。
-  ④**issue 区问询**（armada-sheng 三症状）仍未发，零成本情报随手发。
-  ⑤**下次自然重启**：实证 RTC 持久化（rtc1 已写入当前时）。
+  ⑥**下会话执行单（处理 nura 回信）——★ 2026-10-11 晚会话已收口（除推 fork/发 issue 待用户令）**：
+  ①**r81/v62 升级判定 = 过，已升现役 ✅**：双腿上机（v62 dd recovery_a readback
+  b41b8889 全等 + r81 模块换装，旧树 .r80-bak），uname = **#82** ✓，zstd 原件
+  loop 直挂 ✓（/proc/config.gz 证 ZSTD/XZ=y），RTC 用户态三件撤除后重启时钟正确
+  ✓（内核 rtc1 接管，timedatectl 首次能读出 RTC），WiFi/uhid/--failed=0 全绿。
+  BUILD.env 已换钉（apk sha 1c31babe / 配对 5cb94ebd）。**FEX gzip 重压已撤**
+  （build.sh 删重压段，sqsh 保持 zstd 原件）+ **RTC 三件已从 system_files/build.sh
+  撤除**。**r81 镜像已重建** = work/meizu-meizu20-armada-r81.img 14.6G（点验全绿
+  含 3 新项：qbootctl 在位/RTC 已撤/sqsh zstd；MANIFEST 生成已变量化）；**盘刷写
+  待用户拍板**（在役实机已是 r81 腿 #82，不急）。⚠ 勘误：v62 裸镜像真值 sha256 =
+  b41b8889…（nura 手记 b41b8888 有误；gz 3e4987d5 全等无恙）——已入回信请复核。
+  ②**Release URL 回填 = 无法回填（缺口已记录）**：Release r80 五件制无裸内核 apk
+  （mu+ESP gz+rootfs gz+固件 tarball+SUMS），KERNEL_APK_URL/FIRMWARE_APK_URL 维持
+  留空，请求已写入回信（docs/M2381-NURA-RELAY-20261011-R81.md 第四节）。
+  ②b**fastboot 停车根修 ✅（nura 诊断信当日闭环）**：实测复现 slot-successful:b=no
+  → qbootctl（linux-msm v0.2.2 tag 0d11f87e，设备端 gcc 现编——pmOS musl 动态版
+  不可用于 Fedora 底）+ qbootctl-meizu.service（逐字同款 nura downstream 单元，-m，
+  无 androidboot.slot 回退读 GPT active 位验证有效——本机 cmdline 无 slot 参数）；
+  mark 后 Successful=1，重启后 unit 自动重标 ✓，ABL 预算不再烧。binary+unit 入
+  system_files + build.sh enable，r81 镜像起全带；救机配方（fastboot set_active b）
+  + 闭环判据入 docs/flashing-meizu-m2381.md 新节「重启落 fastboot」。
+  ③**issue 问询 = 草稿就绪未发**：三症状已破改为报捷+两问（A/B 槽位标记/FEX
+  zstd 依赖），docs/ISSUE-DRAFT-armada-sheng.md，等用户过目后发。
+  ④**RTC 持久化实证 ✅**：见①。
+  ⑤**推 fork**：仍等用户指令一条 push（RiverKawa271828/armada-meizu-m2381）。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
   ①**r79/ESP v60 双腿已上机**（对拍 0ccfcf72 命中，uname #80；r78 模块树留
   /usr/lib/modules/7.3.0-rc6.r78-bak；回滚 = v59+r78）：cap 翻 1、"Immediate flips" 行消失、

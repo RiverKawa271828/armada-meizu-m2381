@@ -1,5 +1,5 @@
 #!/bin/bash
-# 取 r80 内核腿 apk：优先本地已知路径，缺失时尝试 KERNEL_APK_URL（待 nura 钉版）。
+# 取内核腿 apk：优先本地已知路径，缺失时尝试 KERNEL_APK_URL（待 nura 钉版）。
 set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=/dev/null

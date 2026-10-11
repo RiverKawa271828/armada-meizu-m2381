@@ -5,19 +5,19 @@
 #
 # 输入（相对仓根）:
 #   work/armada-m2381/dl/rootfs.img        上游 rootfs（fetch-base.sh 产物，裸 ext4）
-#   work/armada-m2381/apk/linux-meizu-meizu20-*-r*.apk  r80 内核腿（fetch-kernel.sh）
+#   work/armada-m2381/apk/linux-meizu-meizu20-*-r*.apk  内核腿 apk（fetch.sh，版本钉 BUILD.env）
 #   system_files/                          m2381 覆盖层（git 真身；固件缺省回退 work/layer）
-#   work/cache/esp-recovery-v61.img        现役 boot 腿（腿配对对拍基准，只读）
+#   work/cache/esp-recovery-v62.img        现役 boot 腿（腿配对对拍基准，只读）
 # 输出:
-#   work/meizu-meizu20-armada-r80.img (+ .sha256 / .MANIFEST.txt)
+#   work/meizu-meizu20-armada-r81.img (+ .sha256 / .MANIFEST.txt)
 #
 # 阶段:
 #   A. 容器根验收（v1.2 = container-export 裸 ext4，无 ostree；清残迹）
-#   B. 内核腿（弃 ianchb 树，解 r80 apk；vermagic + 腿配对 sha256 门禁）
+#   B. 内核腿（弃 ianchb 树，解 apk；vermagic + 腿配对 sha256 门禁）
 #   C. meizu 层注入（system_files/ rsync；固件回退 work/layer）
 #   D. 调试件 enable + 手术（boot_b 重写件/bootupd/RNDIS/sheng THP/Decky 全关）
-#   E. FEX gzip 重压 + os-release 归位
-#   F. post_process: 收缩 + 21 项点验
+#   E. FEX Mesa xattr 守护 + os-release 归位（r81+ 内核 zstd sqsh 直挂，无重压）
+#   F. post_process: 收缩 + 点验
 # =============================================================================
 set -euxo pipefail
 
@@ -28,10 +28,10 @@ source "${REPO}/kernel-m2381/BUILD.env"
 SRC_DIR="${REPO}/work/armada-m2381/dl"
 APK_DIR="${REPO}/work/armada-m2381/apk"
 SRC_IMG="${SRC_DIR}/rootfs.img"
-ESP_REF="${REPO}/work/cache/esp-recovery-v61.img"
+ESP_REF="${REPO}/work/cache/esp-recovery-v62.img"
 SF="${REPO}/system_files"
 FW_FALLBACK="${REPO}/work/layer/usr/lib/firmware"
-OUT_IMG="${REPO}/work/meizu-meizu20-armada-r80.img"
+OUT_IMG="${REPO}/work/meizu-meizu20-armada-r81.img"
 ROOT_PW="${ROOT_PW:-123456}"
 PUBKEY="${PUBKEY:-/home/ri/ubuntu/.ssh/id_ed25519.pub}"
 
@@ -59,8 +59,8 @@ done
 for t in losetup blkid rsync depmod modinfo openssl ssh-keygen e2fsck resize2fs dumpe2fs; do
     command -v "$t" >/dev/null || { echo "ERROR: 宿主缺 $t" >&2; exit 1; }
 done
-for t in unsquashfs mksquashfs setfattr; do
-    command -v "$t" >/dev/null || { echo "WARN: 宿主缺 $t（FEX 重压/os-release 步骤将跳）" >&2; }
+for t in setfattr; do
+    command -v "$t" >/dev/null || { echo "WARN: 宿主缺 $t（FEX xattr/os-release 步骤将跳）" >&2; }
 done
 [ -f "${PUBKEY}" ] || { echo "ERROR: 缺 ${PUBKEY}" >&2; exit 1; }
 ACTUAL_SHA=$(sha256sum "${APK}" | cut -d' ' -f1)
@@ -155,7 +155,7 @@ fi
 log "4) enable：meizu 编排链 + 调试件（软链进 multi-user.target.wants，按落点选目标）"
 for u in m2381-ncm-gadget m2381-usb0-ip gpu-ondemand-watch meizu-audio-wireplumber-kick \
          meizu-pas meizu-touch meizu-amps meizu-audio meizu-sndcard-bind \
-         meizu-audio-route meizu-bind-nfc-haptics meizu-memsleep; do
+         meizu-audio-route meizu-bind-nfc-haptics meizu-memsleep qbootctl-meizu; do
     TGT=""
     for base in /etc/systemd/system /usr/lib/systemd/system /lib/systemd/system; do
         [ -f "${MNT}${base}/${u}.service" ] && { TGT="${base}/${u}.service"; break; }
@@ -167,14 +167,9 @@ for u in m2381-ncm-gadget m2381-usb0-ip gpu-ondemand-watch meizu-audio-wireplumb
         log "  WARN: unit 缺失 ${u}"
     fi
 done
-# RTC 件 enable（restore 挂 sysinit、save.timer 挂 timers）
-sudo ln -sfn /etc/systemd/system/sm20-rtc1-restore.service \
-    "${MNT}/etc/systemd/system/sysinit.target.wants/sm20-rtc1-restore.service"
-sudo ln -sfn /etc/systemd/system/sm20-rtc1-save.timer \
-    "${MNT}/etc/systemd/system/timers.target.wants/sm20-rtc1-save.timer"
-# time-wait 开启（graphical 不默认等它，rtc1 是主力；这是离线误时第二道保险）
-sudo ln -sfn /usr/lib/systemd/system/systemd-time-wait-sync.service \
-    "${MNT}/etc/systemd/system/sysinit.target.wants/systemd-time-wait-sync.service"
+# RTC：r81+ 内核 HCTOSYS/SYSTOHC 已钉 rtc1（pm8xxx 走电正主），用户态持久化三件
+# （sm20-rtc1-restore/save.timer/time-wait cap）自 r81 起撤出——勿再回加，r80 及
+# 以前的老腿才需要（nura 2026-10-11 回信第三节）。
 # sshd / sddm / inputplumber 上游已 enable，复核
 for u in sshd sddm inputplumber; do
     if [ -e "${MNT}/etc/systemd/system/multi-user.target.wants/${u}.service" ] || \
@@ -244,29 +239,20 @@ EOF
     log "  os-release → Armada ${ARMADA_VER}（/etc 软链同源）"
 fi
 
-# FEX x86 腿压缩改型：r80 内核 CONFIG_SQUASHFS_ZSTD 未开（只有 zlib），上游两个
-# zstd sqsh 内核挂载必败（首启实锤）。宿主侧解包 → gzip 重压 → 原位替换。
-# Mesa 件本体 user.component=fex-mesa xattr 必须保留（FEX 用它分类组件）。
+# FEX x86 腿：上游两个 zstd sqsh **保持原样直挂**——r81 内核已带
+# CONFIG_SQUASHFS_ZSTD/XZ=y（2026-10-11 点火 PASS：#82 实机 loop 挂 zstd 原件成功）。
+# 旧 r80 及以前腿无 zstd 支持，需要 gzip 重压——那种组合已废弃，勿回退。
+# 唯一要守护的是 Mesa 件本体的 user.component=fex-mesa xattr（FEX 分类组件用）。
 FEX_ROOT="${MNT}/usr/share/fex-emu/RootFS"
-if command -v unsquashfs >/dev/null && command -v mksquashfs >/dev/null; then
-    WORKFEX=$(mktemp -d /mnt/armada-fex.XXXX)
-    for name in ArchLinux ArmadaMesa; do
-        src="${FEX_ROOT}/${name}.sqsh"
-        [ -f "${src}" ] || { log "  WARN: 缺 ${src}，FEX 跳过"; continue; }
-        sudo unsquashfs -d "${WORKFEX}/${name}" -no-progress "${src}" >/dev/null
-        sudo mksquashfs "${WORKFEX}/${name}" "${WORKFEX}/${name}.gzip.sqsh" \
-            -comp gzip -noappend -all-root -no-progress >/dev/null
-        sudo mv "${src}" "${src}.zstd.bak"
-        sudo mv "${WORKFEX}/${name}.gzip.sqsh" "${src}"
-        sudo rm -rf "${WORKFEX}/${name}"
-        log "  FEX ${name}.sqsh → gzip（zstd 原件留 .zstd.bak）"
-    done
+if command -v setfattr >/dev/null; then
     sudo setfattr -n user.component -v fex-mesa "${FEX_ROOT}/ArmadaMesa.sqsh" 2>/dev/null \
         && log "  FEX Mesa user.component xattr 已复打" || log "  WARN: Mesa xattr 复打失败"
-    sudo rm -rf "${WORKFEX}"
 else
-    log "  WARN: 宿主无 squashfs-tools，FEX sqsh 保持 zstd（x86 游戏腿在 r80 内核上不可用）"
+    log "  WARN: 宿主无 setfattr，FEX Mesa xattr 未复核"
 fi
+for name in ArchLinux ArmadaMesa; do
+    [ -f "${FEX_ROOT}/${name}.sqsh" ] && log "  FEX ${name}.sqsh 保持 zstd 原件（r81 直挂）"
+done
 
 # ---------------------------------------------------------------- 6) fstab 复核
 log "6) fstab 复核"
@@ -289,11 +275,11 @@ sudo mv "${OUT_IMG}.tmp" "${OUT_IMG}"
 
 ( cd "$(dirname "${OUT_IMG}")" && sha256sum "$(basename "${OUT_IMG}")" > "$(basename "${OUT_IMG}").sha256" )
 {
-    echo "meizu-meizu20 armada-sheng 镜像（上游 v1.2 sheng-flashable + r80 腿 + meizu 层）"
+    echo "meizu-meizu20 armada-sheng 镜像（上游 v1.2 sheng-flashable + ${KERNEL_APK_VERSION} 腿 + meizu 层）"
     echo "built: $(date -u '+%Y-%m-%d %H:%M:%SZ')"
     echo "base:  code002-2/armada-sheng sheng-flashable (2026-09-05)"
-    echo "kernel: ${KERNEL_APK_VERSION} (${KERNEL_RELEASE}, apk sha8 b0c865b7, ESP v61 配对)"
-    echo "boot:  recovery_a ESP v61（不刷，本图只进 userdata /dev/sda22）"
+    echo "kernel: ${KERNEL_APK_VERSION} (${KERNEL_RELEASE}, apk sha8 ${KERNEL_APK_SHA256:0:8}, ESP 配对 ${ESP_PAIR_SHA8})"
+    echo "boot:  recovery_a ESP 配对腿 ${ESP_PAIR_SHA8}（镜像不内嵌，盘只进 userdata /dev/sda22）"
     echo "debug: NCM 172.16.42.1 + sshd(root/${ROOT_PW}) + autologin armada(armada)"
     echo "sleep: fake-suspend（ARMADA_SUSPEND_MODE=fake）"
 } > "${OUT_IMG}.MANIFEST.txt"
