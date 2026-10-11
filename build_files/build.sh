@@ -147,8 +147,15 @@ if { [ -z "${FAPK}" ] || [ "$(sha256sum "${FAPK}" | cut -d' ' -f1)" != "${FIRMWA
     FAPK="${APK_DIR}/firmware-meizu-meizu20-${FIRMWARE_APK_VERSION}.apk"
 fi
 if [ -n "${FAPK}" ] && [ "$(sha256sum "${FAPK}" | cut -d' ' -f1)" = "${FIRMWARE_APK_SHA256}" ]; then
-    sudo tar -xzf "${FAPK}" -C "${MNT}/"
-    log "  固件叠加 nura apk（$(basename "${FAPK}")）：qcom/sm8550 zap/ADSP/meizu 件"
+    # ⚠ 本 rootfs /lib 是真目录（非 usr-merge 软链，r84 首建实锤）：apk 内
+    # lib/firmware/ 路径若直接 -C ${MNT}/ 解包会落进平行 /lib/firmware 树，
+    # /usr/lib/firmware 反而拿不到 meizu 件（内核靠兜底查找路径碰运气）。
+    # 先解暂存再 rsync 进 /usr/lib/firmware，覆盖语义同源（不删底盘件）。
+    FWSTAGE=$(mktemp -d /mnt/fwstage.XXXX)
+    sudo tar -xzf "${FAPK}" -C "${FWSTAGE}"
+    sudo rsync -aHA "${FWSTAGE}/lib/firmware/" "${MNT}/usr/lib/firmware/"
+    sudo rm -rf "${FWSTAGE}"
+    log "  固件叠加 nura apk（$(basename "${FAPK}")）→ /usr/lib/firmware：qcom/sm8550 zap/ADSP/meizu 件"
 elif [ -d "${FW_FALLBACK}/qcom/sm8550" ]; then
     sudo rsync -aHA "${FW_FALLBACK}/" "${MNT}/usr/lib/firmware/"
     log "  固件回退自 work/layer（$(du -sh "${FW_FALLBACK}" | cut -f1)）"

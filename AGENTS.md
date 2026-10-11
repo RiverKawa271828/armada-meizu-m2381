@@ -201,7 +201,22 @@
   我方 P2 传感器链现成参照、用户态栈大版本更新）——**等 sheng 出新
   flashable 再升级底盘，不抢跑**。参考克隆 work/ref/{armada-os-upstream,
   armada-sheng-upstream}（blob:none）。
-- **▶▶ 下会话执行单（新会话从这里接，2026-10-12 凌晨五更 = 发布链首轮中断收口）**：
+- **▶▶ 下会话执行单（新会话从这里接，2026-10-12 清晨 = 卡 Mu 事故轮 + 重建收官）**：
+  ⓪**设备卡 Mu 事故（05:20 起）+ 重建 v4 收官**：r84 盘（a7d4d1e7）+ 手修三件后
+  05:07 起内核正常（05:19 NCM 再枚举在案），05:20:51 USB 断开后用户侧每次重启全停
+  在 Mu 引导（内核不起，USB/WiFi 全无）。嫌疑收缩：rootfs 内容拦不住内核（qbootctl
+  二进制+单元两代盘都在 /usr/local/bin ✓，我方曾误查 /usr/bin 虚惊）→ 剩 fs 写伤/
+  电池/槽位态三条，救法同一。**重建两轮根修收官**：(a) build.sh 固件段根修——
+  **tar 解包 nura apk 会把 /lib usr-merge 软链顶成真目录**（平行树 dir mtime = apk
+  构建时间实锤），meizu 件全落平行 /lib/firmware 树、/usr/lib/firmware 拿不到 →
+  改暂存目录解包 + rsync 进 /usr/lib/firmware；(b) verify 增 6 项：meizu ADSP/
+  a740_zap 裸名//lib 软链守门（⚠ usr-merge 下 /lib/firmware 恒"存在"，查 [ -L
+  /lib ] 不是 test -d）/zz-autologin 已删/growpart 真 mask。**r84 盘 v4 =
+  0c752770 全绿待刷**（28 项 verify；a7d4d1e7 保 .a7d4d1e7-bak.img；v3 产物
+  .img.reject 内容=v4 可清）。**救机序（用户进 fastboot 后一条龙）**：flash
+  userdata r84v4 → flash recovery_a v65（work/esp-recovery-v65.img，料件已三重
+  对拍 463efc45）→ set_active b → reboot → NCM 90s 内枚举 = 成 → 冒烟全绿即
+  重建收官、推 fork + Release。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
