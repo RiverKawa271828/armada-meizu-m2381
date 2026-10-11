@@ -186,18 +186,15 @@
   nura 交付件哪怕无管线引用也留一份**。r83 预告收悉（apk+ESP v64、#84、七条
   回归卡 + `IFPC feature-ctrl enable sent, ret 0` 日志行），B 路候选到货老流程
   照点火。设备现态已复原（clamp=N、damp/watch active）。
-- **▶▶ 下会话执行单（新会话从这里接，2026-10-12 凌晨二更收口）**：
-  ①**等 nura B 路候选出件**：彼侧先固件血统对拍（stock kgsl GMU FW vs
-  gmu_gen70200.bin）+ 候选件带 busy 钳零防御（active_submits==0 → busy 报 0，
-  正交件）；统一假说已定型 = 地板即 IFPC 未生效症状（GX 域常开恒速走表），修
-  IFPC 根因冻结会计自然消失（正典 §10c）。**候选到货 = 老流程点火**：apk+ESP
-  配对 → 双腿上机 → 七条回归卡 + `IFPC feature-ctrl enable sent, ret 0` 日志
-  行 + busy_deltas/ifpc_delta 判读照抓；验收口径不变（220-295 主导 + ≤2W）。
-  ②**upthreshold=90 终判 = 不转正**（nura 拍板：GRIS 重载 busy 86-94% 擦 90
-  线有掉帧风险，damp 在役已兜底；90 只作实验档且需 busy<90% 游戏帧率回归先行）
-  ——我方零动作，upth=50 复原彼侧已确认。
-  ③**老三样不动**：发布链（游戏实测→整盘重刷 r81damp 盘配 v62 腿→推 fork+
-  Release）/ issue 草稿待过目 / fork 推送待令。
+- **▶▶ 下会话执行单（新会话从这里接，2026-10-12 凌晨三更收口）**：
+  ①**R84 回执信转交（球在用户）**：docs/M2381-NURA-RELAY-20261012-R84.md
+  （r84/v65 点火全量回执：钳零 PASS/governor 自愈 94.8%/判据② 2.26W 差
+  0.26W 责任在 webhelper/ifpc「ack 不执行」实锤）由用户转告 nura 定整体收官
+  与否；等 B 路续追方向（「FW ack 后 GX collapse 为何不发生」）。
+  ②**r84/v65/#85 在役现态**：回滚 = r82/v63/#83（`.r82-bak` 在位 + v63 裸镜像
+  work/ 在手）；BUILD.env 钉不动（nura 判过才更钉）；damp/watch active。
+  ③**老三样不动**：发布链（游戏实测→整盘重刷→推 fork+Release）/ issue 草稿
+  待过目 / fork 推送待令。
   ②**发布链（用户已定序）**：游戏实测（~~DS DC DX12 案~~已结：非硬件墙，turnip
   Vulkan 1.4.354 实测，FEX/Proton-ARM64 组合问题，用户拍板不追）→ **整盘重刷**
   r81damp 盘（sha `79478916`，配 v62 腿 → #82）→ 验证 → **推 fork
