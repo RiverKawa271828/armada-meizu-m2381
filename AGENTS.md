@@ -100,6 +100,10 @@
   EIO 废件）→ r81 已改 rtc1（pm8xxx），**我线用户态 hctosys/systohc 持久化脚本在 r81+
   腿上可撤（r80 及以前保留）**；④GMU/IRQ 亲和性情报入 nura 内核候补件③（与我方
   0x8a1/devfreq 病史互证收档，落地后撤 gpu-ondemand-watch；暂无排期）。
+  ⑤**协作边界（2026-10-11 定）**：本次目录事故=nura 误操作（本仓一度被换成
+  armada-sheng clone，已完整恢复、零净损失）。已与 nura 约定：**他不再动 steamos
+  侧本仓**——两条线完全不同，只共享同一份内核 apk + 启动链（ESP）；料件交接走
+  kernel-m2381/BUILD.env 钉子 + nura 自己的 Release，不做目录级操作。
 - **★ async flip 点火 PASS + 游戏启动修复 + wayland 接线实验（2026-10-10 晚）**：
   ①**r79/ESP v60 双腿已上机**（对拍 0ccfcf72 命中，uname #80；r78 模块树留
   /usr/lib/modules/7.3.0-rc6.r78-bak；回滚 = v59+r78）：cap 翻 1、"Immediate flips" 行消失、
