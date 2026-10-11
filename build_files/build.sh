@@ -137,6 +137,14 @@ sudo rsync -aHA --exclude='modules' --exclude='firmware' \
 # → ② work/layer 回退（本机开发便利）。源头 pmOS firmware-meizu-meizu20 apk。
 if [ ! -d "${MNT}/usr/lib/firmware/ath12k" ]; then
     FAPK="$(ls -1t "${APK_DIR}"/firmware-meizu-meizu20-*.apk 2>/dev/null | head -1 || true)"
+    # 本地缺/失配且钉了 URL → 直接从 nura Release 拉（下载件 sha 门禁兜底）
+    if { [ -z "${FAPK}" ] || [ "$(sha256sum "${FAPK}" | cut -d' ' -f1)" != "${FIRMWARE_APK_SHA256}" ]; } \
+       && [ -n "${FIRMWARE_APK_URL}" ]; then
+        log "  固件 apk 本地缺/失配 → FIRMWARE_APK_URL 拉取"
+        curl -fsSL --retry 3 -o "${APK_DIR}/firmware-meizu-meizu20-${FIRMWARE_APK_VERSION}.apk" \
+            "${FIRMWARE_APK_URL}"
+        FAPK="${APK_DIR}/firmware-meizu-meizu20-${FIRMWARE_APK_VERSION}.apk"
+    fi
     if [ -n "${FAPK}" ] && [ "$(sha256sum "${FAPK}" | cut -d' ' -f1)" = "${FIRMWARE_APK_SHA256}" ]; then
         sudo tar -xf "${FAPK}" -C "${MNT}/"
         log "  固件取自 nura apk（$(basename "${FAPK}")）"

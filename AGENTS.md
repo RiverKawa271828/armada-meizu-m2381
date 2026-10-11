@@ -115,9 +115,15 @@
   含 3 新项：qbootctl 在位/RTC 已撤/sqsh zstd；MANIFEST 生成已变量化）；**盘刷写
   待用户拍板**（在役实机已是 r81 腿 #82，不急）。⚠ 勘误：v62 裸镜像真值 sha256 =
   b41b8889…（nura 手记 b41b8888 有误；gz 3e4987d5 全等无恙）——已入回信请复核。
-  ②**Release URL 回填 = 无法回填（缺口已记录）**：Release r80 五件制无裸内核 apk
-  （mu+ESP gz+rootfs gz+固件 tarball+SUMS），KERNEL_APK_URL/FIRMWARE_APK_URL 维持
-  留空，请求已写入回信（docs/M2381-NURA-RELAY-20261011-R81.md 第四节）。
+  ②**Release URL 回填 = ✅ 已办结（2026-10-11 深夜 nura 加信）**：Release r80
+  增补两 apk 资产，双侧下载对拍全等（内核 1c31babe ≡ 本地同件；固件 6e6dac0a
+  = Release 重打包，与 nura 本地原始 f0018f56 同版本不同打包，**BUILD.env 固件
+  钉已换 6e6dac0a**）；KERNEL_APK_URL/FIRMWARE_APK_URL 已填；build.sh 固件段
+  补 URL 拉取分支（本地缺/失配才走，sha 门禁兜底）；固件 apk 已落 APK_DIR。
+  口径：以后每轮随件 apk（同 URL 换 rN）；SHA256SUMS 不含 apk。⚠ apk r81 比
+  Release rootfs（内烤 r80）新——外人直刷要 ZSTD/RTC 修复 = apk add + ESP v62
+  两腿同轮（已注 BUILD.env）。下轮重建起固件走 apk 件（本轮 r81 盘固件仍来自
+  work/layer 回退，内容同源）。
   ②b**fastboot 停车根修 ✅（nura 诊断信当日闭环）**：实测复现 slot-successful:b=no
   → qbootctl（linux-msm v0.2.2 tag 0d11f87e，设备端 gcc 现编——pmOS musl 动态版
   不可用于 Fedora 底）+ qbootctl-meizu.service（逐字同款 nura downstream 单元，-m，
