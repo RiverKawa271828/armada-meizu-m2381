@@ -201,20 +201,23 @@
   我方 P2 传感器链现成参照、用户态栈大版本更新）——**等 sheng 出新
   flashable 再升级底盘，不抢跑**。参考克隆 work/ref/{armada-os-upstream,
   armada-sheng-upstream}（blob:none）。
-- **▶▶ 下会话执行单（新会话从这里接，2026-10-12 凌晨三更收口）**：
-  ①**R84 回执信转交（球在用户）**：docs/M2381-NURA-RELAY-20261012-R84.md
-  （r84/v65 点火全量回执：钳零 PASS/governor 自愈 94.8%/判据② 2.26W 差
-  0.26W 责任在 webhelper/ifpc「ack 不执行」实锤）由用户转告 nura 定整体收官
-  与否；等 B 路续追方向（「FW ack 后 GX collapse 为何不发生」）。
-  ②**r84/v65/#85 在役现态**：回滚 = r82/v63/#83（`.r82-bak` 在位 + v63 裸镜像
-  work/ 在手）；BUILD.env 钉不动（nura 判过才更钉）；damp/watch active。
-  ③**老三样不动**：发布链（游戏实测→整盘重刷→推 fork+Release）/ issue 草稿
-  待过目 / fork 推送待令。
-  ④**GMU 情报短笺转交（球在用户）**：docs/M2381-NURA-RELAY-20261012-GMUHOT.md
-  （armada-os/kettlelinux GMU wedge fix 三件套，IFPC 案同域对照）可与 R84 回执
-  一并或稍后转告 nura。
-  ⑤**sheng 下一轮同步观望**：upstream-sync 37 commits 合入出新 flashable 时
+- **▶▶ 下会话执行单（新会话从这里接，2026-10-12 凌晨四更收口 = GPU 线全收官）**：
+  ①**GPU devfreq/IFPC 内核线收官完成（nura 判过，正典 §11b）**：r84/v65/#85 =
+  收官现役（双侧更钉：我方 BUILD.env r84/01ddbb77 + ESP_REF v65 + 产物名 r84；
+  彼侧 config.sh/MANIFEST 同步）。**过渡态清理已执行**：gpu-ondemand-watch 撤除
+  （病因根治；设备 disable + system_files 两件删 + build.sh enable 列表撤）/
+  gpu-idle-damp 保留（webhelper 阵发防护 + Deck 同构 idle）。ifpc 恒零残线归档
+  lead（ack SUCCESS 但 GX 不塌缩，追加轮弃权；复燃 = 用户点名 rebase 拼车）。
+  nura 下程 = 只候 7.3 stable（~10-18）→ rebase 专项（拼车 = 花屏 0xC4 旋钮 +
+  Waydroid 探针）。
+  ②**发布链（下一步主活）**：重建 r84 盘（build.sh 新钉全流程：ESP_REF v65 +
+  r84 apk dl/ 在位 + watch 已撤，产物 meizu-meizu20-armada-r84.img）→ 整盘重刷
+  （现役 #85 腿同款，busy_deltas 出口在役）→ 验证 → 推 fork
+  RiverKawa271828/armada-meizu-m2381 + Release（轻发布案；issue 草稿待用户过目）。
+  ③**sheng 下一轮同步观望**：upstream-sync 37 commits 合入出新 flashable 时
   评估底盘升级（hexagonrpc/libssc/栈更新全进来），等出件不抢跑。
+  ④观察项（不挡发布）：webhelper 爆发长观察窗（现役 damp 防护中）/ 长 soak 温度
+  （r84 后静息 39-41°C 已达标）/ upthreshold=90 只留实验档。
   ②**发布链（用户已定序）**：游戏实测（~~DS DC DX12 案~~已结：非硬件墙，turnip
   Vulkan 1.4.354 实测，FEX/Proton-ARM64 组合问题，用户拍板不追）→ **整盘重刷**
   r81damp 盘（sha `79478916`，配 v62 腿 → #82）→ 验证 → **推 fork
