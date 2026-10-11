@@ -168,6 +168,20 @@
   疑似相册预载/通知/商店轮询；本轮窗内 max 6.95W 阵发仍在）③长 soak 温度稳态
   验证（晾一晚看 ≤40°C）④零改动备选杠杆 upthreshold=90 未测（nura 备选，需要
   时打）⑤老三样：盘刷写待拍板 / issue 草稿待过目 / fork 推送待令。
+- **▶▶ 下会话执行单（新会话从这里接，2026-10-11 深夜收官定稿）**：
+  ①**处理 nura 回信 = r83 排程拍板（球在用户）**：A = clamp_to_idle 给 a740
+  置位（上游建模软件 IFPC 替身，一日件，直接冲我方验收口径 220-295 主导+≤2W）/
+  B = IFPC 协商/固件血统/silime revert 考古（追根）。用户拍板 → 我方起草转告信
+  （用户转交，勿碰彼仓）→ A 路出件 apk+ESP 配对 → **老流程点火**（先读
+  busy_deltas：若 A 路生效应见 busy 折叠后低档驻留主导；若 XOCLK4 仍恒零则
+  clamp_to_idle 自身的计数语义看 r83 说明，再按矩阵分型）。
+  ②**发布链（用户已定序）**：游戏实测（~~DS DC DX12 案~~已结：非硬件墙，turnip
+  Vulkan 1.4.354 实测，FEX/Proton-ARM64 组合问题，用户拍板不追）→ **整盘重刷**
+  r81damp 盘（sha `79478916`，配 v62 腿 → #82）→ 验证 → **推 fork
+  RiverKawa271828/armada-meizu-m2381 + Release**（轻发布案：仓公开+tag/notes
+  零镜像分发；issue 草稿 docs/ISSUE-DRAFT-armada-sheng.md 待用户过目后发）。
+  ③观察项（不挡发布）：webhelper 爆发长观察窗 / 长 soak 温度 / upthreshold=90
+  备选未测。
 - **★ nura 回信到（r82 点火轮答复，2026-10-11 深夜用户转告）+ Debian 清库 + 重建出盘**：
   ①v62 哈希彼侧实测盖章（gzip -dc|sha256sum = b41b88889cadf…，前缀 b41b8888），
   （八十三）勘误系彼方转抄病已改回——**哈希公案两清，全量哈希=单一真值源**；
