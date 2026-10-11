@@ -467,6 +467,11 @@ armada-meizu-m2381/
 ├── Justfile          fetch-base / fetch-kernel / adapt / verify
 └── AGENTS.md         本文档
 work/、dl/ = gitignore（镜像/apk/固件大件不进仓；固件回退源 = work/layer）。
+**旧镜像清库（2026-10-11 用户拍板「不留回滚，现在的比任意旧版本都好」）**：宿主仅存
+armada-r81.img（现役可刷锚）+ 钉子 apk 件（r81/固件 1-r3）+ steam 播种/gamescope 栈缓存；
+debian-r77/r78、pmOS r66 分卷、ESP 旧腿、Frame 收档件全清——ESP 全梯（v43→v63 gz）与
+pmOS rootfs 现役件都在 nura artifacts，Frame 官方源长期可下。设备侧 .r81-bak/.r80-bak
+模块树暂留（r82 实验腿的在机保险，r83 轮收官后撤）。
 **旧路径对照**：build_files/build.sh → build_files/build.sh；
 scripts/{host,in-chroot,device}/* → legacy/{debian,device}/；work/layer → system_files/（真身）。
 ```
