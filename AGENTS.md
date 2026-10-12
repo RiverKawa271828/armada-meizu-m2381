@@ -322,8 +322,29 @@
   publish-fork/publish-main 分支已删（bundle 留档），tag frame-base-20260922
   重写后留本地不推。**公开仓 main = e2c78c2（清洗后全历史 82 提交）已推**；
   ⚠ 全部历史哈希失效已接受（AGENTS/文档/记忆里的旧哈希只具考古价值，对拍走
-  bundle）。**剩待用户令**：Release（tag+notes）/ issue 发送（docs/ISSUE-DRAFT-
-  armada-sheng.md）/ ABL bug 整理给 nura。设备在役 4d9b179b 全绿不受影响。
+  bundle）。**剩待用户令**：issue 发送（docs/ISSUE-DRAFT-armada-sheng.md）/
+  ABL bug 整理给 nura。设备在役 4d9b179b 全绿不受影响。
+  **★ Release r84 发布轮（2026-10-12 午后；镜像切片就绪，上传因流量暂停）**：
+  ①**发布盘重辨**：work/ 现存 r84.img（4d9b179b）实为 **CST 自用盘**（debugfs
+  验 /etc/localtime = Asia/Shanghai 软链）——按 e85451d 口径（发布盘不预设中国
+  时区）留档为 `.cst-4d9b179b-bak.img`，build.sh 默认参数重建 **UTC 盘
+  baa6d3f6**（无 /etc/localtime，VERIFY 全绿）；②**压缩定版（用户拍板 xz）**：
+  gzip -9 = 6.54GB 弃用 → **xz -T16 -9 = 5.09GB（4.74GiB，省 22%，12 分钟）**
+  → split 1900MiB ×3 卷（重组 cmp 校验过）→ SHA256SUMS；③**分发形态（用户定
+  调：与 nura 教程同法只换 userdata，ESP/apk 指 nura 侧，不重分发 ESP）**：
+  notes 简化版 + repo About + topics 已设；④**上传战记（三次失败换来的教训）**：
+  gh release create 大资产 = h2 流被掐（PROTOCOL_ERROR→龟速 100KB/s→挂死无
+  TCP），失败时 gh 会**连带删 draft**；双会话并行 upload 同资产 --clobber
+  互踩一次。终版方案 = **curl --http1.1 直传 assets API + --speed-limit 哨兵
+  （2 分钟均值 <10KB/s 断线重试，gh 无停滞检测会死等）**，实测 26MB/s；
+  GitHub 资产无断点续传，脚本按片隔离（失败只重传当前片，已传片跳过）。
+  ⑤**暂停态（用户令「流量受不了了」）**：远端 draft 已删干净；**本地一切就绪
+  = work/r84-release/{xz.00..02, SHA256SUMS} + upload-release.sh（curl 版，
+  路径已指项目内）+ release-notes-r84.md——重传一条命令 = 脚本 create draft
+  + 逐片传 + publish**，建议网络/流量宽裕时跑。**剩待用户令**：Release 上传
+  / issue 发送（docs/ISSUE-DRAFT-armada-sheng.md）/ ABL bug 整理给 nura。
+  ⚠ 教训：发布中间产物一律放项目内 work/（gitignore 区），work 根目录不落
+  件（用户令）；宿主 gh = /home/ri/bin/gh（unit PATH 不含，需全路径）。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
