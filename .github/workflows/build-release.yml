@@ -28,17 +28,18 @@ jobs:
         run: bash build_files/fetch-base.sh
 
       - name: Fetch materials from nura latest (sha256 gated)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           source kernel-m2381/BUILD.env
-          API=https://api.github.com/repos/${NURA_REPO}
-          TAG=$(curl -fsSL ${API}/releases/latest | jq -r .tag_name)
+          TAG=$(gh api repos/${NURA_REPO}/releases/latest --jq .tag_name)
           echo "nura latest tag = ${TAG}（BUILD.env 钉子 = ${KERNEL_APK_VERSION}）"
           if [ "${TAG}" != "${KERNEL_APK_VERSION}" ]; then
             echo "WARN: nura latest ≠ 钉子——sha 门禁兜底；若为未验证新料件，实机验证后更新 BUILD.env 再跑"
           fi
           mkdir -p work/armada-m2381/apk work/cache
-          ASSETS=$(curl -fsSL ${API}/releases/tags/${TAG} | jq -r '.assets[].name')
+          ASSETS=$(gh api repos/${NURA_REPO}/releases/tags/${TAG} --jq '.assets[].name')
           APK_ASSET=$(echo "${ASSETS}" | grep -E '^linux-meizu-meizu20-.*\.apk$')
           FW_ASSET=$(echo "${ASSETS}"   | grep -E '^firmware-meizu-meizu20-.*\.apk$' | head -1)
           ESP_ASSET=$(echo "${ASSETS}"  | grep -E '^esp-recovery-v[0-9]+\.img\.gz$')
