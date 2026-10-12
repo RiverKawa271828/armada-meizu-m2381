@@ -377,6 +377,23 @@
   work/r84-release/ 备查。**发新版 SOP = 改 BUILD.env（OUR_VER + sha 钉子）→
   gh workflow run build-release.yml**。剩待用户令：issue 发送/ABL bug 整理
   给 nura。设备在役 4d9b179b 全绿不受影响。
+  **▶▶ 下会话执行单（2026-10-12 晚用户排定）——云端盘首发实机验证（用户手动刷，我方检测）**：
+  背景 = 用户下载 Release r84 资产后**手动从头刷**（手动刷+正常重启 = 零撕已证路径），
+  在役 4d9b179b 将被覆盖——**回滚 = 重刷 4d9b179b（work/.cst-bak.img 在）+ 30 秒退出惯例**。
+  云端盘与本机在役盘唯一设计差异 = 无 authorized_keys（SSH 密码登录）。**检测序**：
+  ①插线等待 NCM 90s 内枚举（不通 = post-flash-health.sh 只读采样取证，**FAIL 停手勿重刷**）；
+  ②SSH root@172.16.42.1（**密码 123456 登录 = authorized_keys 缺席的预期形态**）；
+  ③`post_process/post-flash-health.sh` 只读采样（槽位四元组 successful=1/EXT4 error/
+  /lib 软链/ath12k/供电）；
+  ④**三连重启回归**（successful 恒 1 + tries 不倒 + 每次 SSH 回来）；
+  ⑤冒烟清单：--failed=0 / gamescope 会话+steampal 四旗标 / DRM 干净 / **音频 card0
+  （★ 重点：tplg 新落位路径 = system_files 显式 install，音频起不来 = 云端管线回归项）**
+  / 触摸 Goodix / WiFi / BLE+手柄进游戏受控 / QAM / fake-suspend 电源键一循环 / 时区
+  = UTC（云端盘无 localtime，预期形态）；
+  ⑥实测差异记录（云端盘 vs 4d9b179b 有无行为差异）。
+  **全绿 = 云端构建管线正式转正**（发布态成立，发新版 SOP 生效）；音频或会话挂 = 按
+  卡Mu审计流程取证（EXT4 error / journal），Fail 分叉回 build.sh 找云端特异差异。
+  用户功能测试（手柄/游戏/日用）与检测并行，判词以用户为准。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
