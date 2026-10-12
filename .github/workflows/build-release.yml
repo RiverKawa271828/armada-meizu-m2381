@@ -24,6 +24,9 @@ jobs:
       - name: Deps (attr for FEX xattr)
         run: sudo apt-get update -qq && sudo apt-get install -y attr jq
 
+      - name: Fetch upstream rootfs (armada-sheng flashable)
+        run: bash build_files/fetch-base.sh
+
       - name: Fetch materials from nura latest (sha256 gated)
         run: |
           set -euo pipefail
