@@ -292,6 +292,21 @@
   **现态：在役实机 = v4+热修（与 v5 内容等价）、v5 盘固化版待刷（下个窗口刷后
   复采一次即完全闭环）；boot#1 早期死亡第一因待持久 journal 下轮取证（growfs
   卡死/会话拉起竞争候选）。**发布链恢复：v5 刷写验证 → 冒烟 → 推 fork+Release。
+  ⓪e 对照实验定谳 + 发布完成（2026-10-12 中午，2d14f3b + ada4d2d + 推送）**：
+  **归因闭环**：同镜像三次刷写对照——脚本刷+ABL 僵死+强启两轮必撕（同一 13 JSON
+  清单），用户手动刷+正常重启全绿零撕 → 镜像/刷写无罪，病根 = Mu ABL 大体积
+  userdata 刷写后 fastboot 命令环僵死（假应答）→ 强启丢 UFS 缓存 → 撕裂写。
+  规避 SOP 入 README + 刷机指南（reboot 重发 → continue → 末选强启；强启后必跑
+  post-flash-health.sh，Vulkan Invalid JSON = 数据块健康代理）；ABL bug 待整理
+  给 nura。**在役 = 4d9b179b 固化盘全绿**（gamescope/音频/Vulkan/槽位/EXT4 零错，
+  用户普通用户测试中）。**发布前清理（ada4d2d）**：删 config.sh（死钉子）+
+  .github/workflows 旧管线两件；README/Justfile/flashing 全部 r81→r84 现态修正；
+  docs/README 索引重整。**推送完成（2026-10-12 午，用户发令）**：orphan 单提交
+  publish-main（9e56d66，76 文件）force 接管公开仓
+  RiverKawa271828/armada-meizu-m2381 main；**不推 = AGENTS.md + docs/M2381-NURA-
+  RELAY-*（6 信）+ ISSUE-DRAFT**（本地 main 继续跟踪；历史含 REDACTED-SSID SSID → 永远
+  不推全历史）；publish-main 分支保留供下次发布（流程 = main 收官 → 重建 orphan
+  覆盖 publish-main → force 推）。Release notes/tag 与 issue 发送待用户令。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
