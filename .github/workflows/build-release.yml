@@ -31,7 +31,7 @@ jobs:
         run: |
           mkdir -p work/cache
           curl -fsSL --retry 3 -o work/cache/esp-recovery-v65.img.gz \
-            "https://github.com/${{ github.repository }}/releases/download/r84/esp-recovery-v65.img.gz"
+            "https://github.com/RiverKawa271828/nura-meizu-m2381/releases/download/r84/esp-recovery-v65.img.gz"
           echo "463efc45b666da5284172d7ab328f75836fe6fb552509af0a8994b5af3b4b144  esp-recovery-v65.img" > /tmp/esp.sha256
           gunzip -kc work/cache/esp-recovery-v65.img.gz > work/cache/esp-recovery-v65.img
           (cd work/cache && sha256sum -c /tmp/esp.sha256)

@@ -4,7 +4,7 @@
 
 **刷机方法与 [nura 项目](https://github.com/RiverKawa271828/nura-meizu-m2381) 的教程完全相同，只是把 userdata 换成本 Release 的镜像。**
 
-- boot / recovery 腿（ESP 内核）与 r84 内核 apk 也在本 Release Assets（`esp-recovery-v65.img.gz` / `linux-meizu-meizu20-*-r84.apk`，上游 nura 线构建）；固件 apk 从 [nura 项目 Release](https://github.com/RiverKawa271828/nura-meizu-m2381) 获取。
+- boot / recovery 腿（ESP 内核）、内核 apk、固件 apk → 全部从 [nura 项目 Release r84](https://github.com/RiverKawa271828/nura-meizu-m2381/releases/tag/r84) 获取（**内核 apk r84 + ESP v65 与本镜像逐字节配对**）。
 - 镜像 = 上游 [armada-sheng](https://github.com/code002-2/armada-sheng) v1.2 底盘 + r84 内核腿（7.3.0-rc6 #85）+ meizu 设备层；steam 客户端已预种，首启可离线进会话。
 
 ## 使用
