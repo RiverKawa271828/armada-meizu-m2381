@@ -87,6 +87,10 @@ fastboot reboot
 回滚 = `fastboot flash userdata <任意旧 rootfs>`。完整流程(前提/首启预期/调试/
 睡眠/已知限制)见 [刷写指南](docs/flashing-meizu-m2381.md)。
 
+**首启已知现象**:Steam 可能弹「无法下载所需更新」——首启早期时钟尚未经 NTP
+拨正,弹窗后不会自动重试;**重启一次即正常**(时钟已同步、网络可达时必然能过)。
+时区默认 UTC,按需 `timedatectl set-timezone <你的时区>`。
+
 ## 开发
 
 - [docs/README.md](docs/README.md) — 文档索引(移植正典/上游考据/内核协作/决策史)

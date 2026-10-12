@@ -177,9 +177,9 @@ fi
 # 蒸发；journald Storage=auto 见目录即持久）。目录属 root 0755，tmpfiles 惯例。
 sudo mkdir -p "${MNT}/var/log/journal"
 sudo chmod 0755 "${MNT}/var/log/journal"
-# 时区：底盘默认 UTC（用户屏上时间差 8 小时）；China Standard 为本机默认，
-# 其他人构建时改此行。等效 timedatectl set-timezone（容器无 systemd，直写软链）。
-sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai "${MNT}/etc/localtime"
+# 时区：默认不动（保持上游 UTC）。需要本地时区者构建时传 ROOT_TZ=Asia/Shanghai，
+# 或刷后在系统里 timedatectl set-timezone <tz>——发布镜像不预设任何时区。
+[ -n "${ROOT_TZ:-}" ] && sudo ln -sf "/usr/share/zoneinfo/${ROOT_TZ}" "${MNT}/etc/localtime" && log "  时区 → ${ROOT_TZ}"
 
 log "4) enable：meizu 编排链 + 调试件（软链进 multi-user.target.wants，按落点选目标）"
 for u in m2381-ncm-gadget m2381-usb0-ip gpu-idle-damp meizu-audio-wireplumber-kick \
