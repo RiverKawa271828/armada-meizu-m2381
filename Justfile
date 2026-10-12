@@ -18,10 +18,10 @@ fetch-base:
 fetch-kernel:
     bash "{{REPO}}/kernel-m2381/fetch.sh"
 
-# 全流程出盘：适配 → 收缩 → 31 项点验（宿主 root）
+# 全流程出盘：适配 → 收缩 → 31 项点验（宿主 root；本机口径注入调试 pubkey）
 [group('build')]
 adapt:
-    sudo bash "{{REPO}}/build_files/build.sh"
+    sudo env PUBKEY="{{env_var_or('PUBKEY', '/home/ri/ubuntu/.ssh/id_ed25519.pub')}}" bash "{{REPO}}/build_files/build.sh"
 
 # 只跑成品点验（不重建）
 [group('build')]

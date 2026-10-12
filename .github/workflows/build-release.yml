@@ -1,0 +1,63 @@
+name: build-release
+
+# 云端构建发布镜像：runner 拉料件（上游 rootfs + 本仓 Release apk/ESP + nura 固件 apk）
+# → build.sh 适配 → xz 压缩切 500M → 挂 Release。镜像本体零本地上行。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # 发布口径：不注入调试 pubkey（root 密码 123456 = README 文档口径）
+      PUBKEY: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deps (attr for FEX xattr)
+        run: sudo apt-get update -qq && sudo apt-get install -y attr
+
+      - name: Fetch upstream rootfs
+        run: bash build_files/fetch-base.sh
+
+      - name: Fetch kernel apk (pinned, sha256 gated)
+        run: bash kernel-m2381/fetch.sh
+
+      - name: Fetch ESP v65 leg (pinned, sha256 gated)
+        run: |
+          mkdir -p work/cache
+          curl -fsSL --retry 3 -o work/cache/esp-recovery-v65.img.gz \
+            "https://github.com/${{ github.repository }}/releases/download/r84/esp-recovery-v65.img.gz"
+          echo "463efc45b666da5284172d7ab328f75836fe6fb552509af0a8994b5af3b4b144  esp-recovery-v65.img" > /tmp/esp.sha256
+          gunzip -kc work/cache/esp-recovery-v65.img.gz > work/cache/esp-recovery-v65.img
+          (cd work/cache && sha256sum -c /tmp/esp.sha256)
+
+      - name: Build image (adapt → shrink → verify)
+        run: sudo bash build_files/build.sh
+
+      - name: Compress and split (xz -9, 500M parts)
+        run: |
+          cd work
+          xz -T0 -9 -k meizu-meizu20-armada-r84.img
+          split -b 500M -d -a 2 meizu-meizu20-armada-r84.img.xz meizu-meizu20-armada-r84.img.xz.
+          cat meizu-meizu20-armada-r84.img.xz.?? | cmp - meizu-meizu20-armada-r84.img.xz
+          sha256sum meizu-meizu20-armada-r84.img.xz.?? > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Upload assets to release r84
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd work
+          gh release view r84 -R "${{ github.repository }}" >/dev/null 2>&1 || \
+            gh release create r84 -R "${{ github.repository }}" \
+              --title "m2381 armada r84" \
+              --notes-file ../docs/RELEASE-NOTES-r84.md
+          gh release upload r84 -R "${{ github.repository }}" \
+            --clobber meizu-meizu20-armada-r84.img.xz.?? SHA256SUMS
+          gh release view r84 -R "${{ github.repository }}" \
+            --json assets --jq '.assets[] | "\(.name) \(.size)"'

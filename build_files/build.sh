@@ -33,7 +33,9 @@ SF="${REPO}/system_files"
 FW_FALLBACK="${REPO}/work/layer/usr/lib/firmware"
 OUT_IMG="${REPO}/work/meizu-meizu20-armada-r84.img"
 ROOT_PW="${ROOT_PW:-123456}"
-PUBKEY="${PUBKEY:-/home/ri/ubuntu/.ssh/id_ed25519.pub}"
+# PUBKEY 可选：发布/云端构建不注入 authorized_keys（root 密码 123456 = 文档口径）；
+# 本机调试口径由 Justfile 显式传。
+PUBKEY="${PUBKEY:-}"
 
 APK="$(ls -1t "${APK_DIR}"/linux-meizu-meizu20-*-${KERNEL_APK_VERSION}.apk 2>/dev/null | head -1 || true)"
 [ -n "${APK}" ] || { echo "ERROR: 缺内核 apk（kernel-m2381/fetch.sh），期望 ${KERNEL_APK_VERSION}" >&2; exit 1; }
@@ -62,7 +64,7 @@ done
 for t in setfattr; do
     command -v "$t" >/dev/null || { echo "WARN: 宿主缺 $t（FEX xattr/os-release 步骤将跳）" >&2; }
 done
-[ -f "${PUBKEY}" ] || { echo "ERROR: 缺 ${PUBKEY}" >&2; exit 1; }
+[ -z "${PUBKEY}" ] || [ -f "${PUBKEY}" ] || { echo "ERROR: 缺 ${PUBKEY}" >&2; exit 1; }
 ACTUAL_SHA=$(sha256sum "${APK}" | cut -d' ' -f1)
 [ "${ACTUAL_SHA}" = "${KERNEL_APK_SHA256}" ] || { echo "ERROR: apk sha256 失配 ${ACTUAL_SHA}" >&2; exit 1; }
 
@@ -221,8 +223,10 @@ if ! ls "${MNT}"/etc/ssh/ssh_host_*_key >/dev/null 2>&1; then
 fi
 PW_HASH=$(openssl passwd -6 "${ROOT_PW}")
 sudo sed -i "s|^root:[^:]*:|root:${PW_HASH//|/\\|}:|" "${MNT}/etc/shadow"
-sudo install -d -m0700 "${MNT}/root/.ssh"
-sudo install -m0600 "${PUBKEY}" "${MNT}/root/.ssh/authorized_keys"
+if [ -n "${PUBKEY}" ]; then
+    sudo install -d -m0700 "${MNT}/root/.ssh"
+    sudo install -m0600 "${PUBKEY}" "${MNT}/root/.ssh/authorized_keys"
+fi
 echo meizu20 | sudo tee "${MNT}/etc/hostname" >/dev/null
 
 # ---------------------------------------------------------------- 5) 手术
