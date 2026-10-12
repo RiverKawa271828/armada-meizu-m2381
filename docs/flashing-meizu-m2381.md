@@ -18,8 +18,8 @@ boot_b / boot_a / 其它分区**全程不碰**——回滚 = 重刷 userdata，3
 
 ```bash
 just fetch-base     # 上游 armada-sheng rootfs（自动下载/校验/合并，已有则跳过）
-just fetch-kernel   # r81 内核 apk（本地路径或 nura 公开链接，sha256 门禁）
-sudo bash build_files/build.sh    # 适配 → 收缩 → 点验 → work/meizu-meizu20-armada-r81.img
+just fetch-kernel   # 钉子版内核 apk（本地件或 nura 公开链接，sha256 门禁）
+sudo bash build_files/build.sh    # 适配 → 收缩 → 点验 → work/meizu-meizu20-armada-r84.img
 ```
 
 固件 apk（firmware-meizu-meizu20）放到 `work/armada-m2381/apk/` 即可被自动识别；
@@ -31,7 +31,7 @@ sudo bash build_files/build.sh    # 适配 → 收缩 → 点验 → work/meizu-
 # 1) 进 fastboot（系统内 'reboot bootloader'，或关机后按住音量下插线）
 fastboot devices                      # 确认设备出现
 # 2) 刷 userdata（唯一被写的分区；14.6G ≈ 6-7 分钟）
-fastboot flash userdata work/meizu-meizu20-armada-r81.img
+fastboot flash userdata work/meizu-meizu20-armada-r84.img
 # 3) 重启
 fastboot reboot
 ```

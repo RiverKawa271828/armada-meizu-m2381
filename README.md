@@ -32,13 +32,13 @@
    recovery_a 启动,cmdline 烤死 `root=/dev/sda22`;**boot_a/boot_b 全程不碰**,
    回滚 = 重刷 userdata。上游的 ABL/boot.img 链与本仓的容器构建链
    (Containerfile/packages/kernel-sheng 等)**停用仅存档**。
-2. **设备内核来自 pmOS meizu20 线(nura)**,`7.3.0-rc6`(r81,#82,zstd sqsh 直挂+rtc1 HCTOSYS),async flip 已启用;
+2. **设备内核来自 pmOS meizu20 线(nura)**,`7.3.0-rc6`(r84,#85,zstd sqsh 直挂+rtc1 HCTOSYS+busy 钳零防御),async flip 已启用;
    模块与 ESP 内核逐字节配对(构建门禁强制)。上游 ianchb/sheng-7.2.2 内核弃用。
 3. **设备覆盖层 = system_files/**:触屏(Goodix GENI 定向绑定)、音频编排
-   (WCD9385 三件套)、NCM gadget 调试通道、PMIC RTC(rtc1)时间持久化、
-   fake-suspend、GPU devfreq 看护、polkit 放行——全部构建期内置,不留裸态。
-4. **上游 zstd squashfs → gzip**:当前内核缺 `CONFIG_SQUASHFS_ZSTD`,FEX x86 腿的
-   两个 sqsh 在构建时重压为 gzip(已向内核线提需求,落地后换回)。
+   (WCD9385 三件套)、NCM gadget 调试通道、RTC(rtc1/PMIC,内核侧 HCTOSYS)、
+   fake-suspend、GPU idle-damp、polkit 放行——全部构建期内置,不留裸态。
+4. **FEX x86 腿保持上游 zstd squashfs 原件直挂**(r81+ 内核已带
+   `CONFIG_SQUASHFS_ZSTD/XZ`;旧内核时代的 gzip 重压已撤)。
 
 其余均与 Armada 相同:ARM64 Steam(FEX + Proton)、Game Mode、KDE Plasma 桌面、
 Waydroid,以及 Armada 设备服务(InputPlumber、powerbuttond、steamos-manager 等)。
@@ -54,7 +54,7 @@ Waydroid,以及 Armada 设备服务(InputPlumber、powerbuttond、steamos-manage
 | 音频(WCD9385 编排三件,PipeWire sink) | ✅ |
 | 电源键睡眠/唤醒(fake-suspend:面板熄→pmic_pwrkey→亮) | ✅ |
 | WiFi(ath12k)/ 蓝牙(BLE HOG,uhid 自载) | ✅ |
-| x86 游戏(FEX,gzip squashfs 腿) | ✅ |
+| x86 游戏(FEX,zstd squashfs 直挂) | ✅ |
 | 调试通道(NCM gadget `172.16.42.1` + sshd + 自动登录) | ✅ 构建期内置 |
 | 真实 s2idle 睡眠 / hibernate | ❌ SoC 限制(fake-suspend 代替 / 无) |
 

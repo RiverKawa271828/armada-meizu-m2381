@@ -13,24 +13,24 @@ default:
 fetch-base:
     sudo bash "{{REPO}}/build_files/fetch-base.sh"
 
-# 取 r81 内核腿 apk（本地已知路径或 KERNEL_APK_URL，sha256 门禁）
+# 取钉子版内核腿 apk（本地已知路径或 KERNEL_APK_URL，sha256 门禁）
 [group('build')]
 fetch-kernel:
     bash "{{REPO}}/kernel-m2381/fetch.sh"
 
-# 全流程出盘：适配 → 收缩 → 21 项点验（宿主 root）
+# 全流程出盘：适配 → 收缩 → 31 项点验（宿主 root）
 [group('build')]
 adapt:
     sudo bash "{{REPO}}/build_files/build.sh"
 
 # 只跑成品点验（不重建）
 [group('build')]
-verify image="work/meizu-meizu20-armada-r81.img":
+verify image="work/meizu-meizu20-armada-r84.img":
     sudo bash "{{REPO}}/post_process/verify-m2381-image.sh" "{{image}}"
 
 # 刷机提示（fastboot 动作永远人工执行）
 [group('flash')]
 flash-hint:
     @echo "1) 设备: reboot bootloader（SSH: reboot bootloader / 或 按键组合）"
-    @echo "2) fastboot flash userdata {{REPO}}/work/meizu-meizu20-armada-r81.img"
+    @echo "2) fastboot flash userdata {{REPO}}/work/meizu-meizu20-armada-r84.img"
     @echo "3) fastboot reboot   # 首启 growfs 自长满；插线 ssh root@172.16.42.1"
