@@ -411,6 +411,22 @@
   **全绿 = 云端构建管线正式转正**（发布态成立，发新版 SOP 生效）；音频或会话挂 = 按
   卡Mu审计流程取证（EXT4 error / journal），Fail 分叉回 build.sh 找云端特异差异。
   用户功能测试（手柄/游戏/日用）与检测并行，判词以用户为准。
+  **★ 检测序收官 = 全绿，云端构建管线正式转正（2026-10-12 深夜；设备现役 = 云端盘
+  0a631c2e，回滚锚 4d9b179b 不变）**：①NCM 枚举 ✓；②**密码 SSH ✓（本轮修复重点项
+  实锤，root/123456）**；③health 全绿：uname **#85-meizu-meizu20** / qbootctl boot_b
+  Active=1+Successful=1（每 boot 自动标）//lib 软链 / ath12k ✓ / EXT4 零错+fs clean /
+  failed=0 / Vulkan Turnip 740 零坏块；④**三连重启回归 3/3 全绿**（down→SSH 回 43-62s，
+  Successful 恒 1、failed 恒 0、EXT4 恒零错）；⑤冒烟：**音频 card0 MEIZU20 + tplg 新
+  路径在位 + wireplumber/pipewire/pulse 三活 + sink 出（★ 重点项过）** / 四旗标
+  `-gamepadui -steamos3 -steampal -steamdeck` / 触摸 Goodix / WiFi 连 LZ-5G / uhid+
+  InputPlumber+bluetooth / SUSPEND_MODE=fake（meizu 档案覆盖，defaults=s2idle/sheng=mem
+  不生效）+ 睡眠 target 未 mask / 出厂 UTC（用户已自改 Asia/Shanghai）/ growfs 457G /
+  journal 持久 / 电池节点 qcom-battmgr-bat=100%；⑥差异记录：authorized_keys 空槽（发布
+  口径）vs 本机盘带 key、时区出厂 UTC、其余行为与 4d9b179b 一致；drm 每 boot 1 条 =
+  adreno_gmu 0x8a1 已知底噪非新伤（0x8a1 病史在档）。**用户侧验收剩项（判词以用户为
+  准）**：扬声器出声/手柄进游戏受控/QAM/电源键睡眠唤醒一循环。**坑（本轮 zsh）：Bash
+  工具 shell = zsh 不分词，`$VAR cmd` 形态整串当命令名本地 127——远程命令函数包装或
+  字面全写；`reboot` 裸命令非交互 PATH 不含 sbin，用 `systemctl reboot -i`。**
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
