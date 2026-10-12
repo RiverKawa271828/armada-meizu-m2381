@@ -345,6 +345,38 @@
   / issue 发送（docs/ISSUE-DRAFT-armada-sheng.md）/ ABL bug 整理给 nura。
   ⚠ 教训：发布中间产物一律放项目内 work/（gitignore 区），work 根目录不落
   件（用户令）；宿主 gh = /home/ri/bin/gh（unit PATH 不含，需全路径）。
+  **★ 云端构建上线（2026-10-12 午后，用户拍板「我要用云端构建」+「自适应」）**：
+  **.github/workflows/build-release.yml**（workflow_dispatch 手动触发）= runner
+  拉料（fetch-base + 动态解析 nura latest 三件料 apk/ESP/固件）→ build.sh →
+  xz -T0 -9 切 500M → 挂 Release——**镜像本体零本地上行**。六轮迭代到绿：
+  ①料件三步全过但 verify 败 2 项（authorized_keys 发布口径不注入 + tplg 仅存
+  本地 layer）→ ②tplg 17K 收编 system_files 仍败（**层注入 rsync
+  --exclude='firmware' 排除整树误伤**）→ ③改固件段后显式 install 单件（三分支
+  统一）→ authorized_keys verify 条件化（未注入=发布口径 PASS）→ Build 全绿；
+  ④料件自适应（用户拍板：URL 不钉死 nura tag，latest 动态解析 + **sha 门禁为
+  唯一安全底线**，失配=拦停验新料再更钉）；⑤**OUR_VER 独立版号**（我方镜像
+  版号与 nura 轮次解耦，产物名/Release tag 随动，发新版只改 BUILD.env 一处 =
+  OUR_VER + 各 sha 钉子）；⑥踩坑集：sha256sum -c 清单与数据流抢 stdin（改落
+  盘验）、workflow 重写时 fetch-base 步误删、ESP 整盘 sha 实测
+  463efc45b666…（列 workflow 前）,**编造必错实测救一命**。**nura r84 Release
+  已公开全料件**（apk/ESP/固件，用户提示「应该在 nura 那边有」命中）——料件
+  URL 切 nura 正主直链，我方不重分发（曾短暂挂本仓后删）。**build.sh 口径变
+  更**：PUBKEY 可选（空=不注入 authorized_keys，本机口径走 Justfile 显式传）；
+  OUT_IMG 版号化（meizu-meizu20-armada-${OUR_VER}.img）。**★ 发布完成（同日
+  傍晚，第十轮 workflow 全绿）**：后续踩坑补录——⑥ sha256sum -c 清单与数据
+  流抢 stdin（改落盘验）；⑦ workflow 重写时 fetch-base 步误删（缺 rootfs.img
+  预检拦停）；⑧ **runner 共享出口 IP 匿名 API 限流 60/h 间歇 403**（gh api +
+  GITHUB_TOKEN 认证 1000/h 解）；⑨ **sudo 产物属 root → runner 用户 xz 保留
+  属组 EPERM**（chown 归还；顺带 xz -9 被 runner 内存上限砍到 3 线程 57 分钟
+  → 降 -6 全核跑损失 ~5% 压缩率）；⑩ **glob 引号坑：cat/sha/upload 的
+  .xz.?? 被双引号抑制通配**（字面量文件名 No such file——去引号）。⑪ 本地
+  网络到 GitHub 曾全断（443/SSH 出口层，间歇自愈，期间 gh/git 全挂不误
+  GitHub 侧构建）。**Release r84 终态 = 已公开非草稿：切片 ×11（10×500MB +
+  74.9MB 尾，xz -6 ≈5.3GB）+ SHA256SUMS，notes = docs/RELEASE-NOTES-r84.md，
+  About/topics 已设**；本机 Plan B 弹药（本地 500M 切片 + curl 哨兵脚本）留
+  work/r84-release/ 备查。**发新版 SOP = 改 BUILD.env（OUR_VER + sha 钉子）→
+  gh workflow run build-release.yml**。剩待用户令：issue 发送/ABL bug 整理
+  给 nura。设备在役 4d9b179b 全绿不受影响。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
