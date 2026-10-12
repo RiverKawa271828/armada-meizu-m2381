@@ -67,8 +67,9 @@ jobs:
           # -6 内存充裕全核跑，压缩率损失 ~5%
           xz -T0 -6 -k "meizu-meizu20-armada-${OUR_VER}.img"
           split -b 500M -d -a 2 "meizu-meizu20-armada-${OUR_VER}.img.xz" "meizu-meizu20-armada-${OUR_VER}.img.xz."
-          cat "meizu-meizu20-armada-${OUR_VER}.img.xz.??" | cmp - "meizu-meizu20-armada-${OUR_VER}.img.xz"
-          sha256sum "meizu-meizu20-armada-${OUR_VER}.img.xz.??"> SHA256SUMS
+          # 注意：glob 不能带引号（引号会抑制 ?? 通配，cat 收到字面量文件名）
+          cat meizu-meizu20-armada-${OUR_VER}.img.xz.?? | cmp - meizu-meizu20-armada-${OUR_VER}.img.xz
+          sha256sum meizu-meizu20-armada-${OUR_VER}.img.xz.?? > SHA256SUMS
           cat SHA256SUMS
 
       - name: Upload assets to release
@@ -89,6 +90,6 @@ jobs:
             fi
           }
           gh release upload "${OUR_VER}" -R "${{ github.repository }}" \
-            --clobber "meizu-meizu20-armada-${OUR_VER}.img.xz.??" SHA256SUMS
+            --clobber meizu-meizu20-armada-${OUR_VER}.img.xz.?? SHA256SUMS
           gh release view "${OUR_VER}" -R "${{ github.repository }}" \
             --json assets --jq '.assets[] | "\(.name) \(.size)"'
