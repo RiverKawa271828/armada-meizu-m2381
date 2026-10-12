@@ -30,6 +30,7 @@ chk "固件 meizu ADSP（apk 落位）" "test -f ${MNT}/usr/lib/firmware/qcom/sm
 chk "固件 a740_zap 裸名（apk 件）" "test -f ${MNT}/usr/lib/firmware/qcom/sm8550/a740_zap.mbn"
 chk "固件 MEIZU20-tplg（layer 叠加，音频拓扑）" "test -f ${MNT}/usr/lib/firmware/qcom/sm8550/MEIZU20-tplg.bin"
 chk "持久 journal 目录（v4 取证教训）" "test -d ${MNT}/var/log/journal"
+chk "时区 Asia/Shanghai" "[ \"\$(readlink ${MNT}/etc/localtime)\" = \"/usr/share/zoneinfo/Asia/Shanghai\" ]"
 chk "/lib 保持 usr-merge 软链" "[ -L ${MNT}/lib ]"
 chk "UCM2 MEIZU20"          "test -f ${MNT}/usr/share/alsa/ucm2/Qualcomm/sm8550/MEIZU20.conf"
 chk "inputplumber 在位"     "test -f ${MNT}/usr/lib/systemd/system/inputplumber.service"
