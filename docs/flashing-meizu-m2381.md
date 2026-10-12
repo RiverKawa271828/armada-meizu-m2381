@@ -8,9 +8,9 @@
 | 部件 | 来源 | 说明 |
 |---|---|---|
 | 解锁 bootloader | 自备 | 与刷任何第三方系统同要求 |
-| **boot 腿（ESP）** | nura pmOS meizu 线（现役 v62） | 刷在 **recovery_a**，EFI stub 内核，cmdline 烤死 `root=/dev/sda22`；**与内核 apk 必须配对** |
+| **boot 腿（ESP）** | [nura 项目](https://github.com/RiverKawa271828/nura-meizu-m2381)（现役 v65） | 刷在 **recovery_a**，EFI stub 内核，cmdline 烤死 `root=/dev/sda22`；**与内核 apk 必须配对** |
 | **rootfs 镜像** | 本仓构建（见下） | 单分区裸 ext4，只进 **userdata** |
-| 内核 apk / 固件 apk | nura 线（与 pmOS 通用） | 出盘时打进 rootfs，模块与 ESP 内核逐字节配对（构建门禁强制） |
+| 内核 apk / 固件 apk | [nura 项目 Release](https://github.com/RiverKawa271828/nura-meizu-m2381)（与 pmOS 通用） | 出盘时打进 rootfs，模块与 ESP 内核逐字节配对（构建门禁强制） |
 
 boot_b / boot_a / 其它分区**全程不碰**——回滚 = 重刷 userdata，30 秒退出。
 
@@ -35,6 +35,31 @@ fastboot flash userdata work/meizu-meizu20-armada-r81.img
 # 3) 重启
 fastboot reboot
 ```
+
+## ⚠ 刷写后偶发：ABL fastboot 僵死与「强启撕裂写」（2026-10-12 三轮对照实证）
+
+**现象**：14G 级 userdata 刷写完成后，Mu ABL 的 fastboot 命令环偶发僵死——
+`set_active b` 挂住数分钟无应答（正常 <1s），此后 `getvar`/`reboot` 全部
+假应答（显示 OKAY 但设备不动）。三次脚本刷写两轮中招，手动刷写一轮正常
+（脚本 = 宿主 systemd-run 直跑 fastboot，非容器转发；是否与下发侧时序有关
+样本不足未定论，僵态本体在设备侧 ABL）。
+
+**危害**：此时若长按电源强制重启，UFS 写缓存中未持久化的尾巴丢失 →
+**撕裂写**，且必定砸坏 `/usr/share/vulkan` 的 ICD JSON 群（base 构建期同批
+写入、物理相邻，一撕一串；两次事故撕裂清单完全一致）→ 首启 gamescope
+`vkCreateInstance -9` SIGABRT → 回落 KDE「黑屏」。
+
+**规避（按序尝试，强启是最后手段）**：
+1. `fastboot reboot` 重发一次（假应答后设备有概率已离队，先看 NCM 是否枚举）；
+2. `fastboot continue`（若 Mu 支持 = 优雅继续启动，不走电源循环）；
+3. 实在不行才长按电源强启——**强启后首启必查**：SSH 跑
+   `post_process/post-flash-health.sh`，重点看 `Filesystem state`（出现
+   "clean with errors" = 有撕裂）与 `vulkaninfo` 的 Invalid JSON 计数。
+   有伤的修法 = kexec fsck + 从原版 rootfs 回填撕伤文件（见
+   M2381-CARDMU-AUDIT-20261012.md §9.3），或直接重刷一遍 userdata。
+
+**待办**：ABL 僵态 bug 待整理给 nura / 上游会诊（复现步骤 = 大体积 sparse
+刷写 → set_active 假应答 → 命令环死）。
 
 ## 首启预期
 

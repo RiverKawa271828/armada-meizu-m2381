@@ -76,16 +76,27 @@ sudo bash build_files/build.sh   # 适配 → 收缩 → 点验 → work/*.img
 
 ## 刷写
 
-只写 **userdata** 一个分区,boot/ESP/recovery 永不触碰:
+**料件来源**:内核 apk、固件 apk、ESP 启动腿全部来自 nura 项目
+[RiverKawa271828/nura-meizu-m2381](https://github.com/RiverKawa271828/nura-meizu-m2381)
+(Release 下载;版本钉子与 sha256 门禁见 `kernel-m2381/BUILD.env`)。
+**刷写方式与 nura 教程完全相同——本镜像只替换 userdata 一个分区**,
+boot/ESP/recovery 永不触碰(ESP 启动腿按 nura 教程刷在 recovery_a):
 
 ```bash
-fastboot flash userdata work/meizu-meizu20-armada-r81.img
+fastboot flash userdata work/meizu-meizu20-armada-r84.img
 fastboot reboot
 ```
 
 首启自动扩容到全盘;插 USB 线 `ssh root@172.16.42.1`(初始密码 123456,登录后请改)。
 回滚 = `fastboot flash userdata <任意旧 rootfs>`。完整流程(前提/首启预期/调试/
 睡眠/已知限制)见 [刷写指南](docs/flashing-meizu-m2381.md)。
+
+**⚠ 刷写后偶发异常(重要)**:大体积 userdata 刷写完成后,bootloader(fastboot)
+偶发命令环僵死——`set_active`/`reboot` 发出后无应答。此时**切勿长按电源强制
+重启**:强启会丢 UFS 写缓存,撕裂文件系统(实测必撕坏 Vulkan 驱动配置,首启
+gamescope 黑屏回落 KDE)。正确做法:重发一次 `fastboot reboot`,无效再试
+`fastboot continue`;强启是最后手段,用了它就在首启后检查一次文件系统
+(SSH 跑 `post_process/post-flash-health.sh`,关注 EXT4 error 与 Vulkan)。
 
 **首启已知现象**:Steam 可能弹「无法下载所需更新」——首启早期时钟尚未经 NTP
 拨正,弹窗后不会自动重试;**重启一次即正常**(时钟已同步、网络可达时必然能过)。
