@@ -173,6 +173,13 @@ else
     echo "ERROR: 无固件可用——到 nura 线拿 firmware-meizu-meizu20 apk 放 ${APK_DIR}/（sha 见 kernel-m2381/BUILD.env）" >&2
     exit 1
 fi
+# tplg 真身收编 system_files（17KB；云端构建无 work/layer 的兜底。注意层注入的
+# rsync --exclude='firmware' 会排除 SF/usr/lib/firmware 整树，这里显式 install）
+TPLG_SRC="${SF}/usr/lib/firmware/qcom/sm8550/MEIZU20-tplg.bin"
+if [ -f "${TPLG_SRC}" ]; then
+    sudo install -D -m0644 "${TPLG_SRC}" "${MNT}/usr/lib/firmware/qcom/sm8550/MEIZU20-tplg.bin"
+    log "  tplg 音频拓扑落位（system_files 真身）"
+fi
 
 # ---------------------------------------------------------------- 4) enable 集 + 调试件
 # 持久 journal（v4 热修实锤：boot#1 早期死亡无从取证——volatile journal 随断电
