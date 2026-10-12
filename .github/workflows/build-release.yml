@@ -1,63 +1,85 @@
 name: build-release
 
-# 云端构建发布镜像：runner 拉料件（上游 rootfs + 本仓 Release apk/ESP + nura 固件 apk）
-# → build.sh 适配 → xz 压缩切 500M → 挂 Release。镜像本体零本地上行。
+# 云端构建发布镜像：runner 动态解析 nura latest 料件（apk/ESP/固件，sha 门禁兜底）
+# → build.sh 适配 → xz 压缩切 500M → 挂本仓 Release。镜像本体零本地上行。
+# 发新版：改 kernel-m2381/BUILD.env（OUR_VER + 各 sha 钉子）→ 手动触发本 workflow。
 on:
   workflow_dispatch:
 
 permissions:
   contents: write
 
+env:
+  # 发布口径：不注入调试 pubkey（root 密码 123456 = README 文档口径）
+  PUBKEY: ""
+  NURA_REPO: RiverKawa271828/nura-meizu-m2381
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      # 发布口径：不注入调试 pubkey（root 密码 123456 = README 文档口径）
-      PUBKEY: ""
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Deps (attr for FEX xattr)
-        run: sudo apt-get update -qq && sudo apt-get install -y attr
+        run: sudo apt-get update -qq && sudo apt-get install -y attr jq
 
-      - name: Fetch upstream rootfs
-        run: bash build_files/fetch-base.sh
-
-      - name: Fetch kernel apk (pinned, sha256 gated)
-        run: bash kernel-m2381/fetch.sh
-
-      - name: Fetch ESP v65 leg (pinned, sha256 gated)
+      - name: Fetch materials from nura latest (sha256 gated)
         run: |
-          mkdir -p work/cache
-          curl -fsSL --retry 3 -o work/cache/esp-recovery-v65.img.gz \
-            "https://github.com/RiverKawa271828/nura-meizu-m2381/releases/download/r84/esp-recovery-v65.img.gz"
-          echo "463efc45b666da5284172d7ab328f75836fe6fb552509af0a8994b5af3b4b144  esp-recovery-v65.img" > /tmp/esp.sha256
-          gunzip -kc work/cache/esp-recovery-v65.img.gz > work/cache/esp-recovery-v65.img
-          (cd work/cache && sha256sum -c /tmp/esp.sha256)
+          set -euo pipefail
+          source kernel-m2381/BUILD.env
+          API=https://api.github.com/repos/${NURA_REPO}
+          TAG=$(curl -fsSL ${API}/releases/latest | jq -r .tag_name)
+          echo "nura latest tag = ${TAG}（BUILD.env 钉子 = ${KERNEL_APK_VERSION}）"
+          if [ "${TAG}" != "${KERNEL_APK_VERSION}" ]; then
+            echo "WARN: nura latest ≠ 钉子——sha 门禁兜底；若为未验证新料件，实机验证后更新 BUILD.env 再跑"
+          fi
+          mkdir -p work/armada-m2381/apk work/cache
+          ASSETS=$(curl -fsSL ${API}/releases/tags/${TAG} | jq -r '.assets[].name')
+          APK_ASSET=$(echo "${ASSETS}" | grep -E '^linux-meizu-meizu20-.*\.apk$')
+          FW_ASSET=$(echo "${ASSETS}"   | grep -E '^firmware-meizu-meizu20-.*\.apk$' | head -1)
+          ESP_ASSET=$(echo "${ASSETS}"  | grep -E '^esp-recovery-v[0-9]+\.img\.gz$')
+          echo "料件：${APK_ASSET} / ${FW_ASSET} / ${ESP_ASSET}"
+          DL=https://github.com/${NURA_REPO}/releases/download/${TAG}
+          curl -fsSL --retry 3 -o "work/armada-m2381/apk/${APK_ASSET}" "${DL}/${APK_ASSET}"
+          curl -fsSL --retry 3 -o "work/armada-m2381/apk/${FW_ASSET}" "${DL}/${FW_ASSET}"
+          curl -fsSL --retry 3 -o "work/cache/${ESP_ASSET}" "${DL}/${ESP_ASSET}"
+          echo "${KERNEL_APK_SHA256}  work/armada-m2381/apk/${APK_ASSET}" | sha256sum -c -
+          echo "${FIRMWARE_APK_SHA256}  work/armada-m2381/apk/${FW_ASSET}" | sha256sum -c -
+          gunzip -kc "work/cache/${ESP_ASSET}" | sha256sum -c <<< "${ESP_IMG_SHA256}  -"
 
       - name: Build image (adapt → shrink → verify)
         run: sudo bash build_files/build.sh
 
       - name: Compress and split (xz -9, 500M parts)
         run: |
+          set -euo pipefail
+          source kernel-m2381/BUILD.env
           cd work
-          xz -T0 -9 -k meizu-meizu20-armada-r84.img
-          split -b 500M -d -a 2 meizu-meizu20-armada-r84.img.xz meizu-meizu20-armada-r84.img.xz.
-          cat meizu-meizu20-armada-r84.img.xz.?? | cmp - meizu-meizu20-armada-r84.img.xz
-          sha256sum meizu-meizu20-armada-r84.img.xz.?? > SHA256SUMS
+          xz -T0 -9 -k "meizu-meizu20-armada-${OUR_VER}.img"
+          split -b 500M -d -a 2 "meizu-meizu20-armada-${OUR_VER}.img.xz" "meizu-meizu20-armada-${OUR_VER}.img.xz."
+          cat "meizu-meizu20-armada-${OUR_VER}.img.xz.??" | cmp - "meizu-meizu20-armada-${OUR_VER}.img.xz"
+          sha256sum "meizu-meizu20-armada-${OUR_VER}.img.xz.??"> SHA256SUMS
           cat SHA256SUMS
 
-      - name: Upload assets to release r84
+      - name: Upload assets to release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
+          source kernel-m2381/BUILD.env
           cd work
-          gh release view r84 -R "${{ github.repository }}" >/dev/null 2>&1 || \
-            gh release create r84 -R "${{ github.repository }}" \
-              --title "m2381 armada r84" \
-              --notes-file ../docs/RELEASE-NOTES-r84.md
-          gh release upload r84 -R "${{ github.repository }}" \
-            --clobber meizu-meizu20-armada-r84.img.xz.?? SHA256SUMS
-          gh release view r84 -R "${{ github.repository }}" \
+          NOTES=../docs/RELEASE-NOTES-${OUR_VER}.md
+          gh release view "${OUR_VER}" -R "${{ github.repository }}" >/dev/null 2>&1 || {
+            if [ -f "${NOTES}" ]; then
+              gh release create "${OUR_VER}" -R "${{ github.repository }}" \
+                --title "m2381 armada ${OUR_VER}" --notes-file "${NOTES}"
+            else
+              gh release create "${OUR_VER}" -R "${{ github.repository }}" \
+                --title "m2381 armada ${OUR_VER}" --notes "m2381 armada ${OUR_VER} userdata 镜像（CI 构建）"
+            fi
+          }
+          gh release upload "${OUR_VER}" -R "${{ github.repository }}" \
+            --clobber "meizu-meizu20-armada-${OUR_VER}.img.xz.??" SHA256SUMS
+          gh release view "${OUR_VER}" -R "${{ github.repository }}" \
             --json assets --jq '.assets[] | "\(.name) \(.size)"'

@@ -31,7 +31,7 @@ SRC_IMG="${SRC_DIR}/rootfs.img"
 ESP_REF="${REPO}/work/cache/esp-recovery-v65.img"
 SF="${REPO}/system_files"
 FW_FALLBACK="${REPO}/work/layer/usr/lib/firmware"
-OUT_IMG="${REPO}/work/meizu-meizu20-armada-r84.img"
+OUT_IMG="${REPO}/work/meizu-meizu20-armada-${OUR_VER}.img"
 ROOT_PW="${ROOT_PW:-123456}"
 # PUBKEY 可选：发布/云端构建不注入 authorized_keys（root 密码 123456 = 文档口径）；
 # 本机调试口径由 Justfile 显式传。
