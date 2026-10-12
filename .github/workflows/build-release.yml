@@ -46,7 +46,8 @@ jobs:
           curl -fsSL --retry 3 -o "work/cache/${ESP_ASSET}" "${DL}/${ESP_ASSET}"
           echo "${KERNEL_APK_SHA256}  work/armada-m2381/apk/${APK_ASSET}" | sha256sum -c -
           echo "${FIRMWARE_APK_SHA256}  work/armada-m2381/apk/${FW_ASSET}" | sha256sum -c -
-          gunzip -kc "work/cache/${ESP_ASSET}" | sha256sum -c <<< "${ESP_IMG_SHA256}  -"
+          gunzip -kc "work/cache/${ESP_ASSET}" > work/cache/esp-recovery-v65.img
+          echo "${ESP_IMG_SHA256}  work/cache/esp-recovery-v65.img" | sha256sum -c -
 
       - name: Build image (adapt → shrink → verify)
         run: sudo bash build_files/build.sh
