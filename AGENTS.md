@@ -301,9 +301,10 @@
   给 nura。**在役 = 4d9b179b 固化盘全绿**（gamescope/音频/Vulkan/槽位/EXT4 零错，
   用户普通用户测试中）。**发布前清理（ada4d2d）**：删 config.sh（死钉子）+
   .github/workflows 旧管线两件；README/Justfile/flashing 全部 r81→r84 现态修正；
-  docs/README 索引重整。**推送完成（2026-10-12 午，用户发令）**：orphan 单提交
-  publish-main（9e56d66，76 文件）force 接管公开仓
-  RiverKawa271828/armada-meizu-m2381 main；**不推 = AGENTS.md + docs/M2381-NURA-
+  docs/README 索引重整。**推送完成（2026-10-12 午，用户发令；后按用户要求改 fork 兼容形态）**：
+  公开仓 main = **0432337** = 上游 armada-sheng 7cf8163 + 单适配提交（树 ≡ publish-main
+  76 文件逐字节一致）——fork 页面显示「1 commit ahead」无冲突提示；旧 orphan 形态
+  （9e56d66）已弃；**不推 = AGENTS.md + docs/M2381-NURA-
   RELAY-*（6 信）+ ISSUE-DRAFT**（本地 main 继续跟踪；历史含 REDACTED-SSID SSID → 永远
   不推全历史）；publish-main 分支保留供下次发布（流程 = main 收官 → 重建 orphan
   覆盖 publish-main → force 推）。Release notes/tag 与 issue 发送待用户令。
