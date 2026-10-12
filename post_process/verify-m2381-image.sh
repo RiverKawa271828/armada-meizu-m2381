@@ -22,6 +22,7 @@ chk "PAS/geni 黑名单"       "grep -q qcom_q6v5_pas ${MNT}/etc/modprobe.d/50-m
 chk "NCM gadget 件"         "test -x ${MNT}/usr/lib/steamos/m2381-ncm-gadget && test -f ${MNT}/etc/systemd/system/m2381-ncm-gadget.service"
 chk "usb0-ip 172.16.42.1"   "grep -q 172.16.42.1 ${MNT}/etc/systemd/system/m2381-usb0-ip.service"
 chk "root authorized_keys（可选：未注入=发布口径，注入时必非空）" "test -s ${MNT}/root/.ssh/authorized_keys || [ ! -d ${MNT}/root/.ssh ]"
+chk "sshd root 密码放行 drop-in（r84 首发密码 SSH 必拒 bug 修复）" "grep -q '^PermitRootLogin yes' ${MNT}/etc/ssh/sshd_config.d/30-m2381-root-pw.conf && grep -q '^PasswordAuthentication yes' ${MNT}/etc/ssh/sshd_config.d/30-m2381-root-pw.conf"
 chk "armada 用户在位"       "grep -q '^armada:' ${MNT}/etc/passwd"
 chk "fake-suspend 单元"     "test -f ${MNT}/usr/libexec/armada/fake-suspend && test -f ${MNT}/usr/lib/systemd/system/systemd-suspend.service.d/10-armada-suspend.conf"
 chk "SUSPEND_MODE=fake"     "grep -q 'ARMADA_SUSPEND_MODE=fake' ${MNT}/usr/lib/armada/devices/meizu-meizu20.conf"

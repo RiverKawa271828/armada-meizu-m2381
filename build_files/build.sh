@@ -234,6 +234,13 @@ if [ -n "${PUBKEY}" ]; then
     sudo install -d -m0700 "${MNT}/root/.ssh"
     sudo install -m0600 "${PUBKEY}" "${MNT}/root/.ssh/authorized_keys"
 fi
+# root 密码 SSH：上游 Fedora 底盘无生效 PermitRootLogin = 默认 prohibit-password，
+# 密码登录在策略层被拒（r84 云端盘首发实锤：shadow 哈希与 crypt(123456) 对拍一致仍必拒，
+# 本地时代 authorized_keys 兜底从未真测密码路径）——drop-in 显式放行；
+# 30- 前缀先于 40/50 redhat 件被读到（sshd 配置首见为准）
+sudo install -d -m0755 "${MNT}/etc/ssh/sshd_config.d"
+printf 'PermitRootLogin yes\nPasswordAuthentication yes\n' \
+    | sudo tee "${MNT}/etc/ssh/sshd_config.d/30-m2381-root-pw.conf" >/dev/null
 echo meizu20 | sudo tee "${MNT}/etc/hostname" >/dev/null
 
 # ---------------------------------------------------------------- 5) 手术

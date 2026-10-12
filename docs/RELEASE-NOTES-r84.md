@@ -7,6 +7,8 @@
 - boot / recovery 腿（ESP 内核）、内核 apk、固件 apk → 全部从 [nura 项目 Release r84](https://github.com/RiverKawa271828/nura-meizu-m2381/releases/tag/r84) 获取（**内核 apk r84 + ESP v65 与本镜像逐字节配对**）。
 - 镜像 = 上游 [armada-sheng](https://github.com/code002-2/armada-sheng) v1.2 底盘 + r84 内核腿（7.3.0-rc6 #85）+ meizu 设备层；steam 客户端已预种，首启可离线进会话。
 
+> **2026-10-12 晚重发布**：① 修复 root 密码 SSH 必拒（上游底盘 sshd 默认 `PermitRootLogin prohibit-password`，现以 drop-in 显式放行，密码 `123456` 可登录）；② 切片由 500M×11 改为 1900M×3。首刷过旧版件的请重新下载并按 SHA256SUMS 校验。
+
 ## 使用
 
 ```bash
