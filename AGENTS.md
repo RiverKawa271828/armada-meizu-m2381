@@ -308,6 +308,20 @@
   RELAY-*（6 信）+ ISSUE-DRAFT**（本地 main 继续跟踪；历史含 REDACTED-SSID SSID → 永远
   不推全历史）；publish-main 分支保留供下次发布（流程 = main 收官 → 重建 orphan
   覆盖 publish-main → force 推）。Release notes/tag 与 issue 发送待用户令。
+  **▶▶ 下会话执行单（2026-10-12 午用户拍板，取代上段推送形态）——转独立仓 + 历史清洗**：
+  用户终决 = **独立仓**（非 fork；fork 提示/Sync 风险一劳永逸）+ **清洗后完整开发
+  历史推公开**（用户口径：nura 协作细节等开发史「无妨」可公开，**只清隐私实值**）。
+  序：①用户在 GitHub 删现有仓 → 重建同名独立空仓（不 fork、不初始化文件），等
+  用户确认建好；②本地先备份：git bundle create ../armada-m2381-full.bak --all
+  （清洗不可逆，bundle 放 work/ 外）；③**全历史敏感扫描产出清单**（git log -p
+  扫 SSID/PSK/密码/token 实值；已知 REDACTED-SSID 在 558830c/9a9f0bc 等旧 AGENTS；123456
+  = 有意公开默认不动），清单过目后定 replace-text 映射；④git filter-repo
+  --replace-text（pip 装 git-filter-repo；⚠ 重写全部哈希 + 删 remotes + 要
+  --force，AGENTS/文档/记忆里的历史哈希引用全失效——接受并在 AGENTS 注记）；
+  ⑤验证 git log --all -S "REDACTED-SSID" 应为空 + 工作树完整；⑥origin 指向新独立仓 →
+  push origin main（完整历史）；⑦publish-main/publish-fork 分支过时可删；
+  ⑧Release（tag+notes）/issue 发送/ABL bug 整理给 nura 仍待用户令。设备在役
+  4d9b179b 全绿不受影响。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
