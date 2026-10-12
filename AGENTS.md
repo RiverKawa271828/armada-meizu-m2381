@@ -427,6 +427,12 @@
   准）**：扬声器出声/手柄进游戏受控/QAM/电源键睡眠唤醒一循环。**坑（本轮 zsh）：Bash
   工具 shell = zsh 不分词，`$VAR cmd` 形态整串当命令名本地 127——远程命令函数包装或
   字面全写；`reboot` 裸命令非交互 PATH 不含 sbin，用 `systemctl reboot -i`。**
+  **★ 用户验收通过（2026-10-13，判词四项全过：扬声器出声/手柄进游戏受控/QAM/电源键
+  睡眠唤醒）= 云端盘首发全案闭环**。最终态：设备现役 = 云端盘 0a631c2e（云端构建管线
+  转正 + 用户功能验收双盖章）；Release r84 = 切片×3 终态公开；发新版 SOP = 改 BUILD.env
+  → gh workflow run。剩待用户令：issue 发送（docs/ISSUE-DRAFT-armada-sheng.md）/ ABL
+  bug 整理给 nura；temp/ 旧盘 OLD-r84-broken-sshd-DO-NOT-FLASH.img 与 r84-repub 切片
+  留刷后窗自行清理（磁盘 281G 富余不急）。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
