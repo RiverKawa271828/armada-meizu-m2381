@@ -33,7 +33,7 @@ while [ "$i" -lt 180 ]; do
 		modprobe snd_soc_lpass_va_macro 2>/dev/null
 		n=0
 		while [ "$n" -lt 25 ] && [ ! -d /sys/bus/platform/drivers/va_macro ]; do
-			usleep 200000
+			sleep 0.2
 			n=$((n + 1))
 		done
 	fi
@@ -43,7 +43,7 @@ while [ "$i" -lt 180 ]; do
 		echo "meizu-sndcard-bind: card MEIZU20 attached (round $i)"
 		exit 0
 	fi
-	usleep 2000000
+	sleep 2
 	i=$((i + 1))
 done
 echo "meizu-sndcard-bind: card MEIZU20 never attached (180 rounds; ADSP up? amps bound?)"

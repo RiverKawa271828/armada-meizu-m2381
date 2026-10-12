@@ -273,6 +273,25 @@
   B 实锤，现场留 nura 会诊。检查单①对拍脚本 `post_process/compare-pmos-
   rootfs.sh` 已预制并以 v1 替身自测跑通（定位从「找病灶」降为「补档确认」），
   nura 料件到手即跑。
+  **⓪d v4 刷写轮 + 写伤实锤 + 全案终局（2026-10-12 上午，全文 = 审计档 §9）**：
+  用户令开刷 → flash-meizu.sh 刷 v4（17 块 OKAY；set_active 后 ABL 命令环僵态
+  6min、fastboot 假应答，用户长按电源强启）→ **boot#1 早期死亡实锤**：黑屏落
+  KDE + 无音频。健康采样抓获**机制 A 活体证据**（EXT4-fs error 目录块校验和 +
+  fs "clean with errors"）。**黑屏根因链**：boot#1 早期死+强断电 → 撕裂写散在
+  30+ 文件（13 个 Vulkan ICD/layer JSON + 17 散件）→ vkCreateInstance -9 →
+  gamescope SIGABRT×4 → armada takeover 切 Plasma 兜底；音频 = nura apk 不带
+  MEIZU20-tplg.bin（独立缺件）+ sndcard-bind.sh usleep 失灵（180 轮 1 秒空转）。
+  **修复（设备在役）**：kexec 去 rw+fsck.mode=force 修元数据（⚠ 本机 cmdline 带
+  rw → systemd-fsck-root 条件恒不满足 = boot 期 fsck 从来不会跑，kexec fsck =
+  标准救机程序）+ base 盘逐字节 cmp 回填 30+ 数据件 + scp tplg（card0 ✓）+
+  session-control default-gamemode + 开持久 journal。**boot#3 回归全绿**：3 boots
+  successful 恒 1、EXT4 零错、failed=0、Turnip 枚举、**gamescope 会话+四旗标
+  接管**。机制 B（GPT 写坏）排除、机制 C 弱化。**固化全回写（v5 = ea2148eb
+  VERIFY 全绿 31 项）**：build.sh 固件段 apk 后再叠 layer（tplg 缺件根修）+
+  journal 持久目录 + sndcard-bind usleep→sleep + verify/health 脚本各 +2 项。
+  **现态：在役实机 = v4+热修（与 v5 内容等价）、v5 盘固化版待刷（下个窗口刷后
+  复采一次即完全闭环）；boot#1 早期死亡第一因待持久 journal 下轮取证（growfs
+  卡死/会话拉起竞争候选）。**发布链恢复：v5 刷写验证 → 冒烟 → 推 fork+Release。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart

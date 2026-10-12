@@ -156,6 +156,14 @@ if [ -n "${FAPK}" ] && [ "$(sha256sum "${FAPK}" | cut -d' ' -f1)" = "${FIRMWARE_
     sudo rsync -aHA "${FWSTAGE}/lib/firmware/" "${MNT}/usr/lib/firmware/"
     sudo rm -rf "${FWSTAGE}"
     log "  固件叠加 nura apk（$(basename "${FAPK}")）→ /usr/lib/firmware：qcom/sm8550 zap/ADSP/meizu 件"
+    # v4 热修实锤（2026-10-12）：apk 不带 MEIZU20-tplg.bin（音频拓扑）——内核
+    # snd-sc8280xp probe 拿不到 tplg = card 永不出现 = audio-route 8 分钟重试后
+    # failed。layer 回退树（r80 时代 proven 集）必叠，且最后叠 = meizu 专属件以
+    # layer 为准。apk 缺失时走 elif 同款。
+    if [ -d "${FW_FALLBACK}/qcom/sm8550" ]; then
+        sudo rsync -aHA "${FW_FALLBACK}/" "${MNT}/usr/lib/firmware/"
+        log "  固件再叠 layer 回退（$(du -sh "${FW_FALLBACK}" | cut -f1)，tplg/meizu 专属件补齐）"
+    fi
 elif [ -d "${FW_FALLBACK}/qcom/sm8550" ]; then
     sudo rsync -aHA "${FW_FALLBACK}/" "${MNT}/usr/lib/firmware/"
     log "  固件回退自 work/layer（$(du -sh "${FW_FALLBACK}" | cut -f1)）"
@@ -165,6 +173,11 @@ else
 fi
 
 # ---------------------------------------------------------------- 4) enable 集 + 调试件
+# 持久 journal（v4 热修实锤：boot#1 早期死亡无从取证——volatile journal 随断电
+# 蒸发；journald Storage=auto 见目录即持久）。目录属 root 0755，tmpfiles 惯例。
+sudo mkdir -p "${MNT}/var/log/journal"
+sudo chmod 0755 "${MNT}/var/log/journal"
+
 log "4) enable：meizu 编排链 + 调试件（软链进 multi-user.target.wants，按落点选目标）"
 for u in m2381-ncm-gadget m2381-usb0-ip gpu-idle-damp meizu-audio-wireplumber-kick \
          meizu-pas meizu-touch meizu-amps meizu-audio meizu-sndcard-bind \

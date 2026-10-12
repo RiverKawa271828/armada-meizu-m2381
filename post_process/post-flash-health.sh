@@ -6,7 +6,7 @@
 # 现场是唯一物证，禁止直接重刷覆盖。
 set -u
 IP="${1:-172.16.42.1}"
-SSH="ssh -o ConnectTimeout=8 -o StrictHostKeyChecking=no root@$IP"
+SSH="ssh -o ConnectTimeout=8 -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$IP"
 say(){ echo "[postflash] $*"; }
 FAIL=0
 
@@ -35,6 +35,12 @@ $SSH 'tune2fs -l $(findmnt -n -o SOURCE /) 2>/dev/null | grep -E "Mount count|Ma
 say "== 会话态 =="
 $SSH 'systemctl --failed --no-legend | head -10; systemctl --failed --no-legend | wc -l' | sed 's/^/  /'
 $SSH 'systemctl is-active gamescope-session 2>/dev/null; loginctl list-sessions --no-legend 2>/dev/null | head -3' | sed 's/^/  /'
+
+say "== Vulkan 栈（v4 写伤实证口：JSON 可读性 = 数据块健康代理）=="
+$SSH 'timeout 25 su armada -c "vulkaninfo --summary 2>&1" | grep -c "Invalid JSON"' | { read -r N; [ "$N" = "0" ] && say "PASS Vulkan JSON 全可读" || { say "FAIL Invalid JSON ×$N（数据块撕裂，见审计档 §5-A）"; FAIL=1; }; }
+$SSH 'timeout 25 su armada -c "vulkaninfo --summary 2>&1" | grep -m1 deviceName' | sed 's/^/  /'
+say "== 会话归属（gamescope=PASS / plasma=会话回退）=="
+$SSH 'ps -eo comm= | grep -q "^gamescope$" && echo gamescope || (ps -eo comm= | grep -q plasmashell && echo plasma || echo none)' | { read -r S; [ "$S" = "gamescope" ] && say "PASS gamescope 会话" || say "WARN 会话=$S（gamescope 未接管）"; }
 
 say "== 供电（机制 C 辅证）=="
 $SSH 'cat /sys/class/power_supply/battery/status /sys/class/power_supply/battery/capacity 2>/dev/null' | sed 's/^/  /'
