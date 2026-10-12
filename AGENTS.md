@@ -308,20 +308,22 @@
   RELAY-*（6 信）+ ISSUE-DRAFT**（本地 main 继续跟踪；历史含 REDACTED-SSID SSID → 永远
   不推全历史）；publish-main 分支保留供下次发布（流程 = main 收官 → 重建 orphan
   覆盖 publish-main → force 推）。Release notes/tag 与 issue 发送待用户令。
-  **▶▶ 下会话执行单（2026-10-12 午用户拍板，取代上段推送形态）——转独立仓 + 历史清洗**：
-  用户终决 = **独立仓**（非 fork；fork 提示/Sync 风险一劳永逸）+ **清洗后完整开发
-  历史推公开**（用户口径：nura 协作细节等开发史「无妨」可公开，**只清隐私实值**）。
-  序：①用户在 GitHub 删现有仓 → 重建同名独立空仓（不 fork、不初始化文件），等
-  用户确认建好；②本地先备份：git bundle create ../armada-m2381-full.bak --all
-  （清洗不可逆，bundle 放 work/ 外）；③**全历史敏感扫描产出清单**（git log -p
-  扫 SSID/PSK/密码/token 实值；已知 REDACTED-SSID 在 558830c/9a9f0bc 等旧 AGENTS；123456
-  = 有意公开默认不动），清单过目后定 replace-text 映射；④git filter-repo
-  --replace-text（pip 装 git-filter-repo；⚠ 重写全部哈希 + 删 remotes + 要
-  --force，AGENTS/文档/记忆里的历史哈希引用全失效——接受并在 AGENTS 注记）；
-  ⑤验证 git log --all -S "REDACTED-SSID" 应为空 + 工作树完整；⑥origin 指向新独立仓 →
-  push origin main（完整历史）；⑦publish-main/publish-fork 分支过时可删；
-  ⑧Release（tag+notes）/issue 发送/ABL bug 整理给 nura 仍待用户令。设备在役
-  4d9b179b 全绿不受影响。
+  **★ 历史清洗收官（2026-10-12 午后，独立仓已推）**：①独立空仓已建好（用户侧）；
+  ②备份 = `/home/ri/work/armada-m2381-full.bak`（424MB bundle，清洗前全部 refs——
+  旧哈希考古唯一出处，真名 SSID 在内）；③扫描定谳：**唯一隐私实值 = 家庭 SSID**
+  （现文中作 REDACTED-SSID；12 处：31 个提交的 AGENTS.md blob + 两代提交信息正文；
+  密码/token/私钥/shadow 哈希/MAC/手机号/字面 ssid= 全零命中）；**保留项** =
+  123456（有意公开）、上游继承 11 提交（7e90d5d→bbc6065，nura 公开仓身份与邮箱，
+  协作史保留）、上游 workflow 默认 SSH pubkey（公钥非机密）、172.16.42.1（NCM
+  设计值）；④映射 `LZ-5G==>REDACTED-SSID`（replace-text + replace-message 双落，
+  git-filter-repo 2.47.0）；⑤验证全绿：`-S "LZ-5G"`/全 diff 流字面/提交信息三路
+  皆零 + 82 提交数不变 + 工作树 clean；⑥remotes 全删（origin 已重建指独立仓；
+  upstream/armada-os/frame-upstream 不重建，work/ref/ 有独立 clone），
+  publish-fork/publish-main 分支已删（bundle 留档），tag frame-base-20260922
+  重写后留本地不推。**公开仓 main = e2c78c2（清洗后全历史 82 提交）已推**；
+  ⚠ 全部历史哈希失效已接受（AGENTS/文档/记忆里的旧哈希只具考古价值，对拍走
+  bundle）。**剩待用户令**：Release（tag+notes）/ issue 发送（docs/ISSUE-DRAFT-
+  armada-sheng.md）/ ABL bug 整理给 nura。设备在役 4d9b179b 全绿不受影响。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
