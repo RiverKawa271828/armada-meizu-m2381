@@ -377,10 +377,27 @@
   work/r84-release/ 备查。**发新版 SOP = 改 BUILD.env（OUR_VER + sha 钉子）→
   gh workflow run build-release.yml**。剩待用户令：issue 发送/ABL bug 整理
   给 nura。设备在役 4d9b179b 全绿不受影响。
-  **▶▶ 下会话执行单（2026-10-12 晚用户排定）——云端盘首发实机验证（用户手动刷，我方检测）**：
-  背景 = 用户下载 Release r84 资产后**手动从头刷**（手动刷+正常重启 = 零撕已证路径），
-  在役 4d9b179b 将被覆盖——**回滚 = 重刷 4d9b179b（work/.cst-bak.img 在）+ 30 秒退出惯例**。
-  云端盘与本机在役盘唯一设计差异 = 无 authorized_keys（SSH 密码登录）。**检测序**：
+  **▶▶ 下会话执行单（2026-10-12 深夜更新）——密码 SSH 虫已修 + Release r84 重发布（切片×3），等用户重刷后跑检测序**：
+  **本轮战报**：①首查即截停——SSH root 密码 123456 必拒（服务器提供 password 认证但
+  凭据被拒，armada@ 同拒）；debugfs 对拍已刷发布盘三连定位：root 哈希 = crypt(123456)
+  **一致** ✓、shadow mode 0000（上游新式默认，root 可读不拦）、**真因 = 上游 Fedora
+  底盘无生效 PermitRootLogin → sshd 默认 prohibit-password**（PAM 本可过、策略层拦；
+  本地时代 authorized_keys 兜底，密码路径从未真测——README 密码承诺对首刷用户是坏的）。
+  ②免重刷救活判死（armada 密码 = yescrypt 未知，14 候选全不中；sudoers NOPASSWD 仅
+  sddm/session-control 白名单）→ 定案重建重发。③修复 = build.sh 增
+  `30-m2381-root-pw.conf` drop-in（PermitRootLogin yes + PasswordAuthentication yes；
+  30- 先于 40/50 redhat 件被读、sshd 首见为准）+ verify 加第 33 项；**切片 500M×11 →
+  1900M×3**（用户拍板 ≤2G 口径，GitHub 资产 2GiB 限内）；commit 6939138 已推公开仓 →
+  run 38244035649 全绿 → **Release r84 终态 = 切片 ×3（1992294400×2 + 1316617448）+
+  新 SUMS（dacaa08e/398083f8/6a3141d9）**，残留旧切片 .03-.10 已 API 清除，notes 增
+  重发布注记。④新件已拉回 **temp/r84-repub/ 刷前校验全绿**：SUMS ✓ → 重组 cmp ✓ →
+  xz 零错 → **整盘 sha256 = 0a631c2e…（旧 8d3a91dc 作废）** → e2fsck 零错（179,730
+  文件 = 旧盘 +1 = drop-in 旁证）→ 宿主 verify 33 项全绿 → drop-in 内容/root 哈希 =
+  crypt(123456) 定点 ✓；旧盘已改名 temp/OLD-r84-broken-sshd-DO-NOT-FLASH.img 防误刷。
+  **用户重刷序 = 只刷 userdata**（腿无变化：boot_b mu-r69 + recovery_a v65 在设备
+  不动）：fastboot flash userdata temp/r84-repub/meizu-meizu20-armada-r84.img，手动刷 +
+  正常重启（零撕已证路径）。在役 4d9b179b 将被覆盖——**回滚 = 重刷 4d9b179b
+  （work/.cst-bak.img 在）**。**检测序（照旧，②密码 SSH = 本轮修复的重点验证项）**：
   ①插线等待 NCM 90s 内枚举（不通 = post-flash-health.sh 只读采样取证，**FAIL 停手勿重刷**）；
   ②SSH root@172.16.42.1（**密码 123456 登录 = authorized_keys 缺席的预期形态**）；
   ③`post_process/post-flash-health.sh` 只读采样（槽位四元组 successful=1/EXT4 error/
