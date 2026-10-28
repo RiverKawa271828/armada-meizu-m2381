@@ -40,9 +40,13 @@ jobs:
           fi
           mkdir -p work/armada-m2381/apk work/cache
           ASSETS=$(gh api repos/${NURA_REPO}/releases/tags/${TAG} --jq '.assets[].name')
-          APK_ASSET=$(echo "${ASSETS}" | grep -E '^linux-meizu-meizu20-.*\.apk$')
-          FW_ASSET=$(echo "${ASSETS}"   | grep -E '^firmware-meizu-meizu20-.*\.apk$' | head -1)
-          ESP_ASSET=$(echo "${ASSETS}"  | grep -E '^esp-recovery-v[0-9]+\.img\.gz$')
+          # r91 起固件改 tarball 分发（无 apk）——正则同时接受两种形态；head -1 防多件多行
+          APK_ASSET=$(echo "${ASSETS}" | grep -E '^linux-meizu-meizu20-.*\.apk$' | head -1)
+          FW_ASSET=$(echo "${ASSETS}"   | grep -E '^firmware-meizu-meizu20.*\.(apk|tar\.gz)$' | head -1)
+          ESP_ASSET=$(echo "${ASSETS}"  | grep -E '^esp-recovery-v[0-9]+\.img\.gz$' | head -1)
+          for a in "${APK_ASSET}" "${FW_ASSET}" "${ESP_ASSET}"; do
+            [ -n "${a}" ] || { echo "ERROR: nura latest（${TAG}）缺料件资产（apk/固件/ESP）" >&2; exit 1; }
+          done
           echo "料件：${APK_ASSET} / ${FW_ASSET} / ${ESP_ASSET}"
           DL=https://github.com/${NURA_REPO}/releases/download/${TAG}
           curl -fsSL --retry 3 -o "work/armada-m2381/apk/${APK_ASSET}" "${DL}/${APK_ASSET}"
@@ -50,8 +54,10 @@ jobs:
           curl -fsSL --retry 3 -o "work/cache/${ESP_ASSET}" "${DL}/${ESP_ASSET}"
           echo "${KERNEL_APK_SHA256}  work/armada-m2381/apk/${APK_ASSET}" | sha256sum -c -
           echo "${FIRMWARE_APK_SHA256}  work/armada-m2381/apk/${FW_ASSET}" | sha256sum -c -
-          gunzip -kc "work/cache/${ESP_ASSET}" > work/cache/esp-recovery-v65.img
-          echo "${ESP_IMG_SHA256}  work/cache/esp-recovery-v65.img" | sha256sum -c -
+          # ESP 版本名随资产走（esp-recovery-vNN.img）——build.sh ESP_REF 与翻钉同轮更版
+          ESP_VER=$(echo "${ESP_ASSET}" | sed -E 's/^esp-recovery-(v[0-9]+)\.img\.gz$/\1/')
+          gunzip -kc "work/cache/${ESP_ASSET}" > "work/cache/esp-recovery-${ESP_VER}.img"
+          echo "${ESP_IMG_SHA256}  work/cache/esp-recovery-${ESP_VER}.img" | sha256sum -c -
 
       - name: Build image (adapt → shrink → verify)
         run: sudo bash build_files/build.sh

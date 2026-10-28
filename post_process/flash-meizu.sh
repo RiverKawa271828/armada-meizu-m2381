@@ -7,7 +7,7 @@
 # 例:
 #   post_process/flash-meizu.sh \
 #     userdata=work/meizu-meizu20-armada-r84.img \
-#     recovery_a=work/esp-recovery-v65.img --set-active --reboot
+#     recovery_a=work/cache/esp-recovery-v65.img --set-active --reboot
 set -euo pipefail
 LOCK=/tmp/sm20-fastboot.lock
 LOG=/tmp/zcode/flash-meizu.log

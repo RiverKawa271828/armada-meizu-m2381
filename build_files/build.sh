@@ -7,9 +7,9 @@
 #   work/armada-m2381/dl/rootfs.img        上游 rootfs（fetch-base.sh 产物，裸 ext4）
 #   work/armada-m2381/apk/linux-meizu-meizu20-*-r*.apk  内核腿 apk（fetch.sh，版本钉 BUILD.env）
 #   system_files/                          m2381 覆盖层（git 真身；固件缺省回退 work/layer）
-#   work/cache/esp-recovery-v62.img        现役 boot 腿（腿配对对拍基准，只读）
+#   work/cache/esp-recovery-v71.img        现役 boot 腿（腿配对对拍基准，只读）
 # 输出:
-#   work/meizu-meizu20-armada-r81.img (+ .sha256 / .MANIFEST.txt)
+#   work/meizu-meizu20-armada-${OUR_VER}.img (+ .sha256 / .MANIFEST.txt)
 #
 # 阶段:
 #   A. 容器根验收（v1.2 = container-export 裸 ext4，无 ostree；清残迹）
@@ -28,7 +28,7 @@ source "${REPO}/kernel-m2381/BUILD.env"
 SRC_DIR="${REPO}/work/armada-m2381/dl"
 APK_DIR="${REPO}/work/armada-m2381/apk"
 SRC_IMG="${SRC_DIR}/rootfs.img"
-ESP_REF="${REPO}/work/cache/esp-recovery-v65.img"
+ESP_REF="${REPO}/work/cache/esp-recovery-v71.img"
 SF="${REPO}/system_files"
 FW_FALLBACK="${REPO}/work/layer/usr/lib/firmware"
 OUT_IMG="${REPO}/work/meizu-meizu20-armada-${OUR_VER}.img"
@@ -136,17 +136,18 @@ sudo rsync -aHA --exclude='sm20-nosleep.conf' \
 sudo rsync -aHA --exclude='modules' --exclude='firmware' \
     "${SF}/usr/" "${MNT}/usr/"
 # 固件：底盘自带 Fedora linux-firmware（ath12k 等通用件）+ **无条件叠加** nura
-# 固件 apk（meizu 专属：qcom/sm8550 a740_zap/ADSP/meizu 编排件——底盘不含；
+# 固件包（meizu 专属：qcom/sm8550 a740_zap/ADSP/meizu 编排件——底盘不含；
 # r84 首启实锤：「有 ath12k 就跳过」= zap/ADSP 全缺 → GPU init 重试风暴）。
 # tar 覆盖语义，不删底盘件。回退 = work/layer（pmOS 时代 193M 树，本机便利）。
-FAPK="$(ls -1t "${APK_DIR}"/firmware-meizu-meizu20-*.apk 2>/dev/null | head -1 || true)"
+# r91 起 nura Release 固件改回 tarball（.tar.gz）——apk/tarball 同为 gzip 流、
+# 顶层同为 lib/firmware/，解包路径共用；变量名 FIRMWARE_APK_* 沿用历史。
+FAPK="$(ls -1t "${APK_DIR}"/firmware-meizu-meizu20*.apk "${APK_DIR}"/firmware-meizu-meizu20*.tar.gz 2>/dev/null | head -1 || true)"
 # 本地缺/失配且钉了 URL → 直接从 nura Release 拉（下载件 sha 门禁兜底）
 if { [ -z "${FAPK}" ] || [ "$(sha256sum "${FAPK}" | cut -d' ' -f1)" != "${FIRMWARE_APK_SHA256}" ]; } \
    && [ -n "${FIRMWARE_APK_URL}" ]; then
-    log "  固件 apk 本地缺/失配 → FIRMWARE_APK_URL 拉取"
-    curl -fsSL --retry 3 -o "${APK_DIR}/firmware-meizu-meizu20-${FIRMWARE_APK_VERSION}.apk" \
-        "${FIRMWARE_APK_URL}"
-    FAPK="${APK_DIR}/firmware-meizu-meizu20-${FIRMWARE_APK_VERSION}.apk"
+    log "  固件包本地缺/失配 → FIRMWARE_APK_URL 拉取"
+    curl -fsSL --retry 3 -o "${APK_DIR}/$(basename "${FIRMWARE_APK_URL}")" "${FIRMWARE_APK_URL}"
+    FAPK="${APK_DIR}/$(basename "${FIRMWARE_APK_URL}")"
 fi
 if [ -n "${FAPK}" ] && [ "$(sha256sum "${FAPK}" | cut -d' ' -f1)" = "${FIRMWARE_APK_SHA256}" ]; then
     # ⚠ 本 rootfs /lib 是真目录（非 usr-merge 软链，r84 首建实锤）：apk 内
@@ -157,7 +158,7 @@ if [ -n "${FAPK}" ] && [ "$(sha256sum "${FAPK}" | cut -d' ' -f1)" = "${FIRMWARE_
     sudo tar -xzf "${FAPK}" -C "${FWSTAGE}"
     sudo rsync -aHA "${FWSTAGE}/lib/firmware/" "${MNT}/usr/lib/firmware/"
     sudo rm -rf "${FWSTAGE}"
-    log "  固件叠加 nura apk（$(basename "${FAPK}")）→ /usr/lib/firmware：qcom/sm8550 zap/ADSP/meizu 件"
+    log "  固件叠加 nura 包（$(basename "${FAPK}")）→ /usr/lib/firmware：qcom/sm8550 zap/ADSP/meizu 件"
     # v4 热修实锤（2026-10-12）：apk 不带 MEIZU20-tplg.bin（音频拓扑）——内核
     # snd-sc8280xp probe 拿不到 tplg = card 永不出现 = audio-route 8 分钟重试后
     # failed。layer 回退树（r80 时代 proven 集）必叠，且最后叠 = meizu 专属件以
@@ -170,7 +171,7 @@ elif [ -d "${FW_FALLBACK}/qcom/sm8550" ]; then
     sudo rsync -aHA "${FW_FALLBACK}/" "${MNT}/usr/lib/firmware/"
     log "  固件回退自 work/layer（$(du -sh "${FW_FALLBACK}" | cut -f1)）"
 else
-    echo "ERROR: 无固件可用——到 nura 线拿 firmware-meizu-meizu20 apk 放 ${APK_DIR}/（sha 见 kernel-m2381/BUILD.env）" >&2
+    echo "ERROR: 无固件可用——到 nura 线拿 firmware-meizu-meizu20 包（apk/tarball）放 ${APK_DIR}/（sha 见 kernel-m2381/BUILD.env）" >&2
     exit 1
 fi
 # tplg 真身收编 system_files（17KB；云端构建无 work/layer 的兜底。注意层注入的

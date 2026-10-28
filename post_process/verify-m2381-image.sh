@@ -2,6 +2,11 @@
 # 点验：挂载成品镜像跑全项检查（任一败项退出非零）。参数 = 成品镜像路径。
 set -uo pipefail
 IMG="${1:?usage: verify-m2381-image.sh <img>}"
+# 模块树版本吃 BUILD.env 钉子（r91 起内核 release=7.3.0，模块目录随钉子走）
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=/dev/null
+[ -f "${REPO}/kernel-m2381/BUILD.env" ] && source "${REPO}/kernel-m2381/BUILD.env"
+KREL="${KERNEL_RELEASE:-7.3.0}"
 MNT=$(mktemp -d /mnt/armada-verify.XXXX)
 LOOP=""
 cleanup() { sudo umount "${MNT}" 2>/dev/null || true; [ -n "${LOOP}" ] && sudo losetup -d "${LOOP}" 2>/dev/null || true; rm -rf "${MNT}"; }
@@ -14,8 +19,8 @@ chk() { if sudo bash -c "$2"; then echo "  ✓ $1"; else echo "  ✗ $1"; FAIL=1
 
 chk "设备档案在位"          "test -f ${MNT}/usr/lib/armada/devices/meizu-meizu20.conf"
 chk "device-env 匹配行"     "grep -q 'meizu-meizu20' ${MNT}/usr/libexec/armada/device-env"
-chk "rc6 模块树"            "test -d ${MNT}/usr/lib/modules/7.3.0-rc6/kernel && ls ${MNT}/usr/lib/modules/7.3.0-rc6/modules.dep"
-chk "ianchb 旧树已清"       "! ls -d ${MNT}/usr/lib/modules/* 2>/dev/null | grep -v '7.3.0-rc6' | grep -q ."
+chk "模块树（${KREL}）"      "d=\$(ls -d ${MNT}/usr/lib/modules/${KREL}* 2>/dev/null | head -1); test -d \${d}/kernel && ls \${d}/modules.dep"
+chk "ianchb 旧树已清"       "! ls ${MNT}/usr/lib/modules/ 2>/dev/null | grep -vx \"${KREL}\" | grep -q ."
 chk "modules-load uinput"   "grep -qh uinput ${MNT}/usr/lib/modules-load.d/*.conf ${MNT}/etc/modules-load.d/*.conf 2>/dev/null"
 chk "modules-load uhid"     "grep -qh uhid ${MNT}/etc/modules-load.d/*.conf ${MNT}/usr/lib/modules-load.d/*.conf 2>/dev/null"
 chk "PAS/geni 黑名单"       "grep -q qcom_q6v5_pas ${MNT}/etc/modprobe.d/50-meizu20-blacklist.conf"

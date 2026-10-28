@@ -5,19 +5,20 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=/dev/null
 source "${REPO}/kernel-m2381/BUILD.env"
 DEST="${REPO}/work/armada-m2381/apk"
-WANT="linux-meizu-meizu20-7.3.0_rc6-${KERNEL_APK_VERSION}.apk"
+# r91 起内核 release=7.3.0 而 apk 文件名 pkgver 惯性仍带 7.3.0_rc6——中缀不硬编码，
+# 统一通配 + sha 门禁判真。
 mkdir -p "${DEST}"
 
 FOUND=""
-for f in "${DEST}/${WANT}" "${DEST}"/linux-meizu-meizu20-*-${KERNEL_APK_VERSION}.apk; do
+for f in "${DEST}"/linux-meizu-meizu20-*-${KERNEL_APK_VERSION}.apk; do
     [ -f "$f" ] && { FOUND="$f"; break; }
 done
 if [ -z "${FOUND}" ] && [ -n "${KERNEL_APK_URL}" ]; then
-    curl -fsSL --retry 3 -o "${DEST}/${WANT}" "${KERNEL_APK_URL}"
-    FOUND="${DEST}/${WANT}"
+    curl -fsSL --retry 3 -o "${DEST}/$(basename "${KERNEL_APK_URL}")" "${KERNEL_APK_URL}"
+    FOUND="${DEST}/$(basename "${KERNEL_APK_URL}")"
 fi
 [ -n "${FOUND}" ] || {
-    echo "ERROR: 找不到 ${KERNEL_APK_VERSION} apk。把设备 /root 的 apk 拷到 ${DEST}/" >&2
+    echo "ERROR: 找不到 ${KERNEL_APK_VERSION} apk。把设备 /root 的 apk 拷到 ${DEST}/ 或填 KERNEL_APK_URL" >&2
     exit 1
 }
 ACTUAL=$(sha256sum "${FOUND}" | cut -d' ' -f1)

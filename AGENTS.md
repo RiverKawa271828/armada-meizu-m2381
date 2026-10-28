@@ -431,8 +431,53 @@
   睡眠唤醒）= 云端盘首发全案闭环**。最终态：设备现役 = 云端盘 0a631c2e（云端构建管线
   转正 + 用户功能验收双盖章）；Release r84 = 切片×3 终态公开；发新版 SOP = 改 BUILD.env
   → gh workflow run。剩待用户令：issue 发送（docs/ISSUE-DRAFT-armada-sheng.md）/ ABL
-  bug 整理给 nura；temp/ 旧盘 OLD-r84-broken-sshd-DO-NOT-FLASH.img 与 r84-repub 切片
-  留刷后窗自行清理（磁盘 281G 富余不急）。
+  bug 整理给 nura。
+  **★ nura r91 跟进轮（2026-10-28，料件验真 + 管线适配；钉子未翻 = 等点火）**：
+  nura 大更新 = **7.3 stable rebase 正式轮（（九十六）10-21 全项收官 + Release r91
+  上线 Latest）**：99 提交零冲突重放到 v7.3（091b0638→c03c1a14），apk r91 + ESP v71 +
+  device r63（depends +iio-sensor-proxy 依赖闭合）+ mu-r91 boot 腿；**内核 release 号
+  7.3.0-rc6 → 7.3.0（模块目录 /usr/lib/modules/7.3.0/；apk 文件名 pkgver 惯性仍带
+  7.3.0_rc6）**；printk 上游未修 = no_console_suspend 留、ath12k 三件 carry 留；nura
+  在机 #92 回归全绿（真睡 rtcwake resume 0.23s/电源键秒醒/音频/GPU 真空闲钳零/WiFi 5G）。
+  **料件实测入册**（nura .relcheck-r91 对拍 Release SHA256SUMS 全等 + mtools 抽 EFI）：
+  CI 对自洽 = CI apk vmlinuz-efi ≡ CI ESP BOOTAA64.EFI = **8b74582b**；**本地对（在机
+  #92）= 4aad92b3（裸 0a102220）——CI/本地构建同号异字节（内核字节不同），各自配对
+  自洽不可混搭**；CI ESP gz f08139e3 → 裸 472cb934；CI apk d2f0c51b（nura 本地
+  df13faa6）；**固件改 tarball 分发（29c1ee88 = r72 时代原串，顶层 lib/firmware/ 与
+  apk 同构，内容同 1-r3）**。**管线适配五件（BUILD.env 钉子未动）**：BUILD.env 增
+  r91 候选块（翻钉清单内册：r91/7.3.0/三 sha/8b74582b/OUR_VER 升版）；fetch.sh apk
+  文件名去硬编码中缀改通配；build.sh 固件通配放宽 .apk+.tar.gz（解包路径共用）+
+  ESP_REF→v71；workflow 固件正则放宽 + ESP 版本名随资产走 + 空资产守卫；verify 模块
+  树改吃 KERNEL_RELEASE 钉子（翻钉自动跟）。料件三件已落 work/（v71 CI 裸 + CI apk +
+  tarball），本地构建随翻钉即就绪。**CI 现态 = sha 门禁自动拦停（nura latest=r91 ≠
+  钉子 r84），不会误发。** nura 另有（九十七）S2IDLE 待机功耗轮（已推 GitHub master）：
+  meizu-wfi（TD-10 WFI workaround）退役矩阵定谳 = **cpuidle 单轴定罪（wowlan 关+
+  cpuidle 开 = 4 试 3 挂确定性挂死）**→ TD-10 留任活保险丝、真睡根治 r92 三选留拍板；
+  **设备随 iOS 轮去向（恢复首项 = 设备现态探测）**。我方点火 = 设备回位后照 nura
+  Release notes 升级路径（不重刷 userdata：机上 apk add --allow-untrusted CI apk +
+  fastboot flash recovery_a CI 裸 ESP，**两腿同轮 + CI 对全家桶**），期望 uname = #92
+  （release 号 7.3.0，# 号 CI 对以实机为准），回归照旧三连重启+冒烟，全绿才翻钉 →
+  workflow 出 r85。**★ 用户拍板（2026-10-28）：跟进即可、点火以后再验——r84/v65/#85
+  现役不动，r91 翻钉挂起待令（设备在 iOS 轮，非阻塞项）。** 带话收讫：docs/AUDIO-METHOD.md（nura §10 蒸馏成文，音频方法论
+  公开版——我方音频链同源在役，作参照收档不行动）。
+  **★ 本地大清理收官（2026-10-13 用户令「回滚锚不需要了」）**：temp/ 全清（旧坏盘
+  13G + r84-repub 切片 23G）+ **三盘回滚锚全清**（r81 / a7d4d1e7-bak / 4d9b179b-cst-bak
+  ≈44G——设备现役云端盘 0a631c2e = 唯一真身，重取 = Release 下载或 workflow 重建）
+  + r84-release 旧 500M 切片 4.8G（远端已换 1900M×3）+ rootfs.img 下载分片 7.4G
+  （拼装校验完的中间产物）+ v65 裸镜像顶层重复副本 + dl/ 顶层 r84.apk（两件均与
+  APK_DIR/cache 逐字节重复，cmp 实证）；mu-r69 boot 腿移 work/cache/ 存档（全仓唯一
+  份）。共回收 ~107G（含死盘 r84.img 14.6G 用户令补删，2026-10-13）。**遗留待拍板候选（均非垃圾，删前过目）**：
+  work/armada-m2381/dl/rootfs.img（14.6G，本地
+  构建唯一大输入，删 = 放弃本地构建能力，fetch-base.sh 随时可拉回）/ cache/steam-arm
+  3.6G + gamescope-master-stack.tar.gz + session.v5（Debian 冻结线遗留，armada
+  build.sh 零引用）/ cache/esp-recovery-v62.img 100M + work/esp-recovery-v63 三件
+  114M + armada-m2381/apk/r81.apk 58M（旧腿旧钉；现役 r84 apk + 固件 6e6dac0a +
+  v65 全在 APK_DIR/cache，BUILD.env 钉齐；esp/ 内 v62 重复份与 apk-tmp scratch 已
+  清）/ r84-mod 172M + r84-verify 14M（apk 解包 scratch，可随时重解）/ work/layer
+  287M（固件回退源已验可删：APK_DIR 固件正中钉 6e6dac0a，回退分支永不触发，云端
+  口径本就无 layer 且实机验收过——删后本地构建与云端输出同构）/ ref/ 427M（上游
+  观察克隆，可随时再 clone，删零永久损失）。保守保留：full.bak（旧哈希考古唯一
+  出处，全仓唯一「删了永久丢」件）/ dl/ v65gz+sha / probe 脚本与 csv（GPU 线档案）。
   ①**发布验证进行到「首启冒烟」被三虫截停（球 = 下会话）**：r84 盘已重建刷入
   （a7d4d1e7 盘 = **作废版**，带三虫）+ 设备手修三件已写盘（**等用户手动重启
   验证**：zz-sddm 件已删 = gamescope 会话应起黑屏解 / bootc-generic-growpart
