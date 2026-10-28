@@ -58,8 +58,7 @@ fastboot reboot
    有伤的修法 = kexec fsck + 从原版 rootfs 回填撕伤文件（见
    M2381-CARDMU-AUDIT-20261012.md §9.3），或直接重刷一遍 userdata。
 
-**待办**：ABL 僵态 bug 待整理给 nura / 上游会诊（复现步骤 = 大体积 sparse
-刷写 → set_active 假应答 → 命令环死）。
+**待办**：已整理成独立 bug 报告 = [ABL-BUG-MU-FASTBOOT-HANG-20261028.md](ABL-BUG-MU-FASTBOOT-HANG-20261028.md)（现象/对照实验/撕裂证据链/排查入口/加固候选），待用户过目后转交 nura / 上游会诊。
 
 ## 首启预期
 

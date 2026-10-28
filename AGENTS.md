@@ -457,8 +457,12 @@
   Release notes 升级路径（不重刷 userdata：机上 apk add --allow-untrusted CI apk +
   fastboot flash recovery_a CI 裸 ESP，**两腿同轮 + CI 对全家桶**），期望 uname = #92
   （release 号 7.3.0，# 号 CI 对以实机为准），回归照旧三连重启+冒烟，全绿才翻钉 →
-  workflow 出 r85。**★ 用户拍板（2026-10-28）：跟进即可、点火以后再验——r84/v65/#85
-  现役不动，r91 翻钉挂起待令（设备在 iOS 轮，非阻塞项）。** 带话收讫：docs/AUDIO-METHOD.md（nura §10 蒸馏成文，音频方法论
+  workflow 出 r85。**★ 用户拍板两连（2026-10-28）：①跟进即可、实机点火以后再验；
+  ②随即下令「发起云端构建」= 钉子先行翻 r91/v71/r85（BUILD.env 现役 = CI 全家桶
+  d2f0c51b/472cb934/8b74582b/固件 tarball 29c1ee88，点火回归转刷后验证）**——
+  r85 关键口径：**模块目录改名 7.3.0，ESP 必须同轮换 v71**（单刷 userdata 在旧 v65
+  ESP 上 = 旧内核加载不到模块 → WiFi/触屏/NCM 灭），notes 已警告；在役 0a631c2e
+  （r84）不受影响，回滚锚不变。 带话收讫：docs/AUDIO-METHOD.md（nura §10 蒸馏成文，音频方法论
   公开版——我方音频链同源在役，作参照收档不行动）。
   **★ 本地大清理收官（2026-10-13 用户令「回滚锚不需要了」）**：temp/ 全清（旧坏盘
   13G + r84-repub 切片 23G）+ **三盘回滚锚全清**（r81 / a7d4d1e7-bak / 4d9b179b-cst-bak
