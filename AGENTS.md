@@ -462,11 +462,18 @@
   d2f0c51b/472cb934/8b74582b/固件 tarball 29c1ee88，点火回归转刷后验证）**——
   r85 关键口径：**模块目录改名 7.3.0，ESP 必须同轮换 v71**（单刷 userdata 在旧 v65
   ESP 上 = 旧内核加载不到模块 → WiFi/触屏/NCM 灭），notes 已警告；在役 0a631c2e
-  （r84）不受影响，回滚锚不变。workflow run 40612209506 已点火（新料件抓取代码
-  首战；**用户令不盯，跑完等通知**——**发布动作 = 用户通知后执行**：核 run 绿 /
-  Release r85 资产齐 / About+topics 发布面）。**ABL bug 定性更新（用户转告）：
+  （r84）不受影响，回滚锚不变。**★ r85 发布完成（2026-10-28，用户通知后核账收官；
+  run 40612209506 十步全绿）**：料件行实锤 = `linux-meizu-meizu20-7.3.0_rc6-r91.apk /
+  firmware-meizu-meizu20.tar.gz / esp-recovery-v71.img.gz`（nura latest=r91 与钉子一致
+  零 WARN，新抓取代码首战全对，sha 门禁三条过）→ Build+verify 绿 → xz 切 1900M×3 →
+  **Release r85 = 已公开非草稿**：切片 ×3（1992294400×2+1342721104 ≈5.3G）+
+  SHA256SUMS（2a54288b/a49e7c37/b267e6c7），notes = RELEASE-NOTES-r85.md 正确挂载
+  （ESP 同轮换 v71 警告在）。**ABL bug 定性更新（用户转告）：
   nura 已知情，官方解决办法 = 等待（勿强启）**——报告
   docs/ABL-BUG-MU-FASTBOOT-HANG-20261028.md 转存档备查，无需转交。
+  剩 = 用户实机刷写/验证窗口（等用户令）：刷序 = nura r91 教程两腿同轮
+  （userdata=r85 + recovery_a=esp-recovery-v71.img.gz），期望 uname #92（7.3.0），
+  回归 = 三连重启+冒烟（音频/触屏/WiFi/uhid/sleep/four 旗标）。
   带话收讫：docs/AUDIO-METHOD.md（nura §10 蒸馏成文，音频方法论
   公开版——我方音频链同源在役，作参照收档不行动）。
   **★ 本地大清理收官（2026-10-13 用户令「回滚锚不需要了」）**：temp/ 全清（旧坏盘
